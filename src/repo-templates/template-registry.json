@@ -1,18 +1,12 @@
 {
   "templates": [
     {
-      "id": "nextjs-supabase-claude",
-      "name": "Next.js + Supabase + Claude",
-      "description": "Full-stack Next.js app with Supabase database and Claude Code integration",
-      "repository": "https://github.com/geenius/template-nextjs-supabase",
+      "id": "nextjs-supabase",
+      "name": "Next.js + Supabase",
+      "description": "Full-stack Next.js app with Supabase database",
+      "repository": "https://github.com/mxn2020/template-nextjs-supabase",
       "branch": "main",
-      "stack": ["Next.js", "Supabase", "Claude Code", "TypeScript", "Tailwind CSS"],
-      "aiProvider": "anthropic",
-      "aiConfig": {
-        "model": "claude-3-5-sonnet-20241022",
-        "tools": ["file-editor", "terminal", "supabase-cli"],
-        "systemPrompt": "You are a Next.js expert working with Supabase. Focus on type-safe code, proper error handling, and following Next.js best practices."
-      },
+      "stack": ["Next.js", "Supabase", "TypeScript", "Tailwind CSS"],
       "features": [
         "Authentication with Supabase Auth",
         "PostgreSQL database with Supabase",
@@ -24,14 +18,13 @@
       "envVars": [
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "SUPABASE_SERVICE_KEY",
-        "ANTHROPIC_API_KEY"
+        "SUPABASE_SERVICE_KEY"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-nextjs-supabase/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-nextjs-supabase/blob/main/README.md",
       "tags": ["fullstack", "database", "auth", "ssr", "popular"],
       "difficulty": "intermediate",
       "lastUpdated": "2024-03-15T10:00:00Z",
@@ -39,18 +32,12 @@
       "license": "MIT"
     },
     {
-      "id": "vite-react-mongo-gemini",
-      "name": "Vite + React + MongoDB + Gemini",
-      "description": "Modern React app with Vite, MongoDB, and Gemini AI integration",
-      "repository": "https://github.com/geenius/template-vite-react-mongo",
+      "id": "vite-react-mongo",
+      "name": "Vite + React + MongoDB",
+      "description": "Modern React app with Vite and MongoDB",
+      "repository": "https://github.com/mxn2020/geenius-template-vite-react-mongo",
       "branch": "main",
-      "stack": ["Vite", "React", "MongoDB", "Gemini AI", "TypeScript", "Netlify Functions"],
-      "aiProvider": "google",
-      "aiConfig": {
-        "model": "gemini-pro",
-        "tools": ["file-editor", "terminal", "mongodb-cli"],
-        "systemPrompt": "You are a React developer using Vite and MongoDB. Focus on modern React patterns, hooks, and efficient database operations."
-      },
+      "stack": ["Vite", "React", "MongoDB", "TypeScript", "Netlify Functions"],
       "features": [
         "Fast development with Vite",
         "MongoDB Atlas integration",
@@ -62,14 +49,13 @@
       "envVars": [
         "VITE_MONGODB_URI",
         "VITE_API_URL",
-        "GOOGLE_API_KEY",
         "NETLIFY_FUNCTIONS_URL"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "netlify deploy --prod",
-      "documentation": "https://github.com/geenius/template-vite-react-mongo/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/README.md",
       "tags": ["frontend", "nosql", "serverless", "fast"],
       "difficulty": "beginner",
       "lastUpdated": "2024-03-14T15:30:00Z",
@@ -77,36 +63,28 @@
       "license": "MIT"
     },
     {
-      "id": "react-indexeddb-jwt-openai",
-      "name": "React + IndexedDB + JWT + OpenAI",
-      "description": "Client-side React app with IndexedDB storage, JWT auth, and OpenAI integration",
-      "repository": "https://github.com/geenius/template-react-indexeddb-jwt",
+      "id": "react-indexeddb-jwt",
+      "name": "React + IndexedDB + JWT",
+      "description": "Client-side React app with IndexedDB storage and JWT auth",
+      "repository": "https://github.com/mxn2020/template-react-indexeddb-jwt",
       "branch": "main",
-      "stack": ["React", "IndexedDB", "JWT", "OpenAI", "TypeScript", "Vite"],
-      "aiProvider": "openai",
-      "aiConfig": {
-        "model": "gpt-4-turbo",
-        "tools": ["file-editor", "terminal", "browser-dev-tools"],
-        "systemPrompt": "You are a React developer focusing on client-side applications. Emphasize performance, offline capability, and secure authentication."
-      },
+      "stack": ["React", "IndexedDB", "JWT", "TypeScript", "Vite"],
       "features": [
         "Client-side only application",
         "IndexedDB for persistent storage",
         "JWT authentication",
         "Offline capability",
-        "PWA support",
-        "OpenAI integration"
+        "PWA support"
       ],
       "envVars": [
         "VITE_JWT_SECRET",
-        "VITE_API_URL",
-        "OPENAI_API_KEY"
+        "VITE_API_URL"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-react-indexeddb-jwt/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-react-indexeddb-jwt/blob/main/README.md",
       "tags": ["client-side", "offline", "pwa", "auth"],
       "difficulty": "intermediate",
       "lastUpdated": "2024-03-13T09:15:00Z",
@@ -114,18 +92,12 @@
       "license": "MIT"
     },
     {
-      "id": "vue-pinia-firebase-gemini",
-      "name": "Vue 3 + Pinia + Firebase + Gemini",
-      "description": "Vue 3 app with Pinia state management, Firebase backend, and Gemini AI",
-      "repository": "https://github.com/geenius/template-vue-pinia-firebase",
+      "id": "vue-pinia-firebase",
+      "name": "Vue 3 + Pinia + Firebase",
+      "description": "Vue 3 app with Pinia state management and Firebase backend",
+      "repository": "https://github.com/mxn2020/template-vue-pinia-firebase",
       "branch": "main",
-      "stack": ["Vue 3", "Pinia", "Firebase", "Gemini AI", "TypeScript", "Vite"],
-      "aiProvider": "google",
-      "aiConfig": {
-        "model": "gemini-pro",
-        "tools": ["file-editor", "terminal", "firebase-cli"],
-        "systemPrompt": "You are a Vue.js expert working with Firebase. Focus on composition API, reactive patterns, and Firebase best practices."
-      },
+      "stack": ["Vue 3", "Pinia", "Firebase", "TypeScript", "Vite"],
       "features": [
         "Vue 3 with Composition API",
         "Pinia for state management",
@@ -137,14 +109,13 @@
       "envVars": [
         "VITE_FIREBASE_API_KEY",
         "VITE_FIREBASE_PROJECT_ID",
-        "VITE_FIREBASE_APP_ID",
-        "GOOGLE_API_KEY"
+        "VITE_FIREBASE_APP_ID"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "firebase deploy",
-      "documentation": "https://github.com/geenius/template-vue-pinia-firebase/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-vue-pinia-firebase/blob/main/README.md",
       "tags": ["vue", "firebase", "realtime", "state-management"],
       "difficulty": "intermediate",
       "lastUpdated": "2024-03-12T14:20:00Z",
@@ -152,18 +123,12 @@
       "license": "MIT"
     },
     {
-      "id": "svelte-drizzle-planetscale-claude",
-      "name": "SvelteKit + Drizzle + PlanetScale + Claude",
-      "description": "SvelteKit app with Drizzle ORM, PlanetScale database, and Claude integration",
-      "repository": "https://github.com/geenius/template-svelte-drizzle-planetscale",
+      "id": "svelte-drizzle-planetscale",
+      "name": "SvelteKit + Drizzle + PlanetScale",
+      "description": "SvelteKit app with Drizzle ORM and PlanetScale database",
+      "repository": "https://github.com/mxn2020/template-svelte-drizzle-planetscale",
       "branch": "main",
-      "stack": ["SvelteKit", "Drizzle ORM", "PlanetScale", "Claude", "TypeScript", "Tailwind CSS"],
-      "aiProvider": "anthropic",
-      "aiConfig": {
-        "model": "claude-3-5-sonnet-20241022",
-        "tools": ["file-editor", "terminal", "drizzle-cli"],
-        "systemPrompt": "You are a SvelteKit expert working with modern database tools. Focus on performance, type safety, and edge-ready applications."
-      },
+      "stack": ["SvelteKit", "Drizzle ORM", "PlanetScale", "TypeScript", "Tailwind CSS"],
       "features": [
         "SvelteKit full-stack framework",
         "Drizzle ORM for type-safe queries",
@@ -174,14 +139,13 @@
       ],
       "envVars": [
         "DATABASE_URL",
-        "PLANETSCALE_TOKEN",
-        "ANTHROPIC_API_KEY"
+        "PLANETSCALE_TOKEN"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-svelte-drizzle-planetscale/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-svelte-drizzle-planetscale/blob/main/README.md",
       "tags": ["svelte", "orm", "edge", "modern"],
       "difficulty": "advanced",
       "lastUpdated": "2024-03-11T11:45:00Z",
@@ -189,18 +153,12 @@
       "license": "MIT"
     },
     {
-      "id": "astro-content-collections-openai",
-      "name": "Astro + Content Collections + OpenAI",
-      "description": "Static site with Astro, content collections, MDX, and OpenAI integration",
-      "repository": "https://github.com/geenius/template-astro-content-collections",
+      "id": "astro-content-collections",
+      "name": "Astro + Content Collections",
+      "description": "Static site with Astro, content collections, and MDX",
+      "repository": "https://github.com/mxn2020/template-astro-content-collections",
       "branch": "main",
-      "stack": ["Astro", "Content Collections", "MDX", "OpenAI", "TypeScript", "Tailwind CSS"],
-      "aiProvider": "openai",
-      "aiConfig": {
-        "model": "gpt-4-turbo",
-        "tools": ["file-editor", "terminal", "astro-cli"],
-        "systemPrompt": "You are an Astro expert focusing on static site generation and content management. Emphasize performance, SEO, and content structure."
-      },
+      "stack": ["Astro", "Content Collections", "MDX", "TypeScript", "Tailwind CSS"],
       "features": [
         "Static site generation",
         "Content collections",
@@ -211,14 +169,13 @@
       ],
       "envVars": [
         "SITE_URL",
-        "CONTENT_DIR",
-        "OPENAI_API_KEY"
+        "CONTENT_DIR"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-astro-content-collections/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-astro-content-collections/blob/main/README.md",
       "tags": ["static", "content", "seo", "performance"],
       "difficulty": "beginner",
       "lastUpdated": "2024-03-10T16:30:00Z",
@@ -226,18 +183,12 @@
       "license": "MIT"
     },
     {
-      "id": "express-prisma-postgres-grok",
-      "name": "Express + Prisma + PostgreSQL + Grok",
-      "description": "Express.js API with Prisma ORM, PostgreSQL database, and Grok AI integration",
-      "repository": "https://github.com/geenius/template-express-prisma-postgres",
+      "id": "express-prisma-postgres",
+      "name": "Express + Prisma + PostgreSQL",
+      "description": "Express.js API with Prisma ORM and PostgreSQL database",
+      "repository": "https://github.com/mxn2020/template-express-prisma-postgres",
       "branch": "main",
-      "stack": ["Express.js", "Prisma", "PostgreSQL", "Grok AI", "TypeScript", "JWT"],
-      "aiProvider": "grok",
-      "aiConfig": {
-        "model": "grok-beta",
-        "tools": ["file-editor", "terminal", "prisma-cli"],
-        "systemPrompt": "You are a backend API expert using Express.js and Prisma. Focus on scalable architecture, security, and database optimization."
-      },
+      "stack": ["Express.js", "Prisma", "PostgreSQL", "TypeScript", "JWT"],
       "features": [
         "Express.js REST API",
         "Prisma ORM integration",
@@ -249,14 +200,13 @@
       "envVars": [
         "DATABASE_URL",
         "JWT_SECRET",
-        "PORT",
-        "GROK_API_KEY"
+        "PORT"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-express-prisma-postgres/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-express-prisma-postgres/blob/main/README.md",
       "tags": ["backend", "api", "database", "auth"],
       "difficulty": "intermediate",
       "lastUpdated": "2024-03-09T13:10:00Z",
@@ -264,18 +214,12 @@
       "license": "MIT"
     },
     {
-      "id": "remix-sqlite-auth-claude",
-      "name": "Remix + SQLite + Auth + Claude",
+      "id": "remix-sqlite-auth",
+      "name": "Remix + SQLite + Auth",
       "description": "Remix full-stack app with SQLite database and built-in authentication",
-      "repository": "https://github.com/geenius/template-remix-sqlite-auth",
+      "repository": "https://github.com/mxn2020/template-remix-sqlite-auth",
       "branch": "main",
-      "stack": ["Remix", "SQLite", "Prisma", "Claude", "TypeScript", "Tailwind CSS"],
-      "aiProvider": "anthropic",
-      "aiConfig": {
-        "model": "claude-3-5-sonnet-20241022",
-        "tools": ["file-editor", "terminal", "remix-cli"],
-        "systemPrompt": "You are a Remix expert focusing on full-stack development. Emphasize progressive enhancement, web standards, and performance."
-      },
+      "stack": ["Remix", "SQLite", "Prisma", "TypeScript", "Tailwind CSS"],
       "features": [
         "Remix full-stack framework",
         "SQLite database",
@@ -286,14 +230,13 @@
       ],
       "envVars": [
         "DATABASE_URL",
-        "SESSION_SECRET",
-        "ANTHROPIC_API_KEY"
+        "SESSION_SECRET"
       ],
       "testCommand": "npm run test",
       "buildCommand": "npm run build",
       "devCommand": "npm run dev",
       "deployCommand": "npm run deploy",
-      "documentation": "https://github.com/geenius/template-remix-sqlite-auth/blob/main/README.md",
+      "documentation": "https://github.com/mxn2020/template-remix-sqlite-auth/blob/main/README.md",
       "tags": ["remix", "sqlite", "auth", "fullstack"],
       "difficulty": "intermediate",
       "lastUpdated": "2024-03-08T08:25:00Z",
@@ -306,31 +249,31 @@
       "id": "fullstack",
       "name": "Full-Stack Applications",
       "description": "Complete applications with frontend and backend",
-      "templates": ["nextjs-supabase-claude", "remix-sqlite-auth-claude", "svelte-drizzle-planetscale-claude"]
+      "templates": ["nextjs-supabase", "remix-sqlite-auth", "svelte-drizzle-planetscale"]
     },
     {
       "id": "frontend",
       "name": "Frontend Applications",
       "description": "Client-side applications and SPAs",
-      "templates": ["vite-react-mongo-gemini", "react-indexeddb-jwt-openai", "vue-pinia-firebase-gemini"]
+      "templates": ["vite-react-mongo", "react-indexeddb-jwt", "vue-pinia-firebase"]
     },
     {
       "id": "backend",
       "name": "Backend APIs",
       "description": "Server-side APIs and services",
-      "templates": ["express-prisma-postgres-grok"]
+      "templates": ["express-prisma-postgres"]
     },
     {
       "id": "static",
       "name": "Static Sites",
       "description": "Static site generators and JAMstack",
-      "templates": ["astro-content-collections-openai"]
+      "templates": ["astro-content-collections"]
     },
     {
       "id": "popular",
       "name": "Popular Templates",
       "description": "Most commonly used templates",
-      "templates": ["nextjs-supabase-claude", "vite-react-mongo-gemini", "react-indexeddb-jwt-openai"]
+      "templates": ["nextjs-supabase", "vite-react-mongo", "react-indexeddb-jwt"]
     }
   ],
   "providers": [
@@ -366,4 +309,3 @@
     "registry": "https://registry.geenius.com"
   }
 }
-

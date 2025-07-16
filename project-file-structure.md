@@ -42,7 +42,7 @@ ai-dev-workflow/
 │       └── index.ts                    # CLI command registration
 # Templates are now separate GitHub repositories:
 # https://github.com/ai-dev-workflow/template-nextjs-supabase
-# https://github.com/ai-dev-workflow/template-vite-react-mongo
+# https://github.com/ai-dev-workflow/geenius-template-vite-react-mongo
 # https://github.com/ai-dev-workflow/template-react-indexeddb-jwt
 # https://github.com/ai-dev-workflow/template-vue-pinia-firebase
 # https://github.com/ai-dev-workflow/template-svelte-drizzle-planetscale
