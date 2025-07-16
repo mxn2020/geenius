@@ -1,0 +1,369 @@
+{
+  "templates": [
+    {
+      "id": "nextjs-supabase-claude",
+      "name": "Next.js + Supabase + Claude",
+      "description": "Full-stack Next.js app with Supabase database and Claude Code integration",
+      "repository": "https://github.com/geenius/template-nextjs-supabase",
+      "branch": "main",
+      "stack": ["Next.js", "Supabase", "Claude Code", "TypeScript", "Tailwind CSS"],
+      "aiProvider": "anthropic",
+      "aiConfig": {
+        "model": "claude-3-5-sonnet-20241022",
+        "tools": ["file-editor", "terminal", "supabase-cli"],
+        "systemPrompt": "You are a Next.js expert working with Supabase. Focus on type-safe code, proper error handling, and following Next.js best practices."
+      },
+      "features": [
+        "Authentication with Supabase Auth",
+        "PostgreSQL database with Supabase",
+        "Real-time subscriptions",
+        "Server-side rendering",
+        "API routes",
+        "Tailwind CSS styling"
+      ],
+      "envVars": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-nextjs-supabase/blob/main/README.md",
+      "tags": ["fullstack", "database", "auth", "ssr", "popular"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-15T10:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vite-react-mongo-gemini",
+      "name": "Vite + React + MongoDB + Gemini",
+      "description": "Modern React app with Vite, MongoDB, and Gemini AI integration",
+      "repository": "https://github.com/geenius/template-vite-react-mongo",
+      "branch": "main",
+      "stack": ["Vite", "React", "MongoDB", "Gemini AI", "TypeScript", "Netlify Functions"],
+      "aiProvider": "google",
+      "aiConfig": {
+        "model": "gemini-pro",
+        "tools": ["file-editor", "terminal", "mongodb-cli"],
+        "systemPrompt": "You are a React developer using Vite and MongoDB. Focus on modern React patterns, hooks, and efficient database operations."
+      },
+      "features": [
+        "Fast development with Vite",
+        "MongoDB Atlas integration",
+        "Netlify Functions for API",
+        "React 18 with hooks",
+        "TypeScript support",
+        "Hot module replacement"
+      ],
+      "envVars": [
+        "VITE_MONGODB_URI",
+        "VITE_API_URL",
+        "GOOGLE_API_KEY",
+        "NETLIFY_FUNCTIONS_URL"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/geenius/template-vite-react-mongo/blob/main/README.md",
+      "tags": ["frontend", "nosql", "serverless", "fast"],
+      "difficulty": "beginner",
+      "lastUpdated": "2024-03-14T15:30:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "react-indexeddb-jwt-openai",
+      "name": "React + IndexedDB + JWT + OpenAI",
+      "description": "Client-side React app with IndexedDB storage, JWT auth, and OpenAI integration",
+      "repository": "https://github.com/geenius/template-react-indexeddb-jwt",
+      "branch": "main",
+      "stack": ["React", "IndexedDB", "JWT", "OpenAI", "TypeScript", "Vite"],
+      "aiProvider": "openai",
+      "aiConfig": {
+        "model": "gpt-4-turbo",
+        "tools": ["file-editor", "terminal", "browser-dev-tools"],
+        "systemPrompt": "You are a React developer focusing on client-side applications. Emphasize performance, offline capability, and secure authentication."
+      },
+      "features": [
+        "Client-side only application",
+        "IndexedDB for persistent storage",
+        "JWT authentication",
+        "Offline capability",
+        "PWA support",
+        "OpenAI integration"
+      ],
+      "envVars": [
+        "VITE_JWT_SECRET",
+        "VITE_API_URL",
+        "OPENAI_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-react-indexeddb-jwt/blob/main/README.md",
+      "tags": ["client-side", "offline", "pwa", "auth"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-13T09:15:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-pinia-firebase-gemini",
+      "name": "Vue 3 + Pinia + Firebase + Gemini",
+      "description": "Vue 3 app with Pinia state management, Firebase backend, and Gemini AI",
+      "repository": "https://github.com/geenius/template-vue-pinia-firebase",
+      "branch": "main",
+      "stack": ["Vue 3", "Pinia", "Firebase", "Gemini AI", "TypeScript", "Vite"],
+      "aiProvider": "google",
+      "aiConfig": {
+        "model": "gemini-pro",
+        "tools": ["file-editor", "terminal", "firebase-cli"],
+        "systemPrompt": "You are a Vue.js expert working with Firebase. Focus on composition API, reactive patterns, and Firebase best practices."
+      },
+      "features": [
+        "Vue 3 with Composition API",
+        "Pinia for state management",
+        "Firebase Authentication",
+        "Firestore database",
+        "Cloud Functions",
+        "Real-time updates"
+      ],
+      "envVars": [
+        "VITE_FIREBASE_API_KEY",
+        "VITE_FIREBASE_PROJECT_ID",
+        "VITE_FIREBASE_APP_ID",
+        "GOOGLE_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "firebase deploy",
+      "documentation": "https://github.com/geenius/template-vue-pinia-firebase/blob/main/README.md",
+      "tags": ["vue", "firebase", "realtime", "state-management"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-12T14:20:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "svelte-drizzle-planetscale-claude",
+      "name": "SvelteKit + Drizzle + PlanetScale + Claude",
+      "description": "SvelteKit app with Drizzle ORM, PlanetScale database, and Claude integration",
+      "repository": "https://github.com/geenius/template-svelte-drizzle-planetscale",
+      "branch": "main",
+      "stack": ["SvelteKit", "Drizzle ORM", "PlanetScale", "Claude", "TypeScript", "Tailwind CSS"],
+      "aiProvider": "anthropic",
+      "aiConfig": {
+        "model": "claude-3-5-sonnet-20241022",
+        "tools": ["file-editor", "terminal", "drizzle-cli"],
+        "systemPrompt": "You are a SvelteKit expert working with modern database tools. Focus on performance, type safety, and edge-ready applications."
+      },
+      "features": [
+        "SvelteKit full-stack framework",
+        "Drizzle ORM for type-safe queries",
+        "PlanetScale edge database",
+        "Server-side rendering",
+        "API routes",
+        "Edge deployment ready"
+      ],
+      "envVars": [
+        "DATABASE_URL",
+        "PLANETSCALE_TOKEN",
+        "ANTHROPIC_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-svelte-drizzle-planetscale/blob/main/README.md",
+      "tags": ["svelte", "orm", "edge", "modern"],
+      "difficulty": "advanced",
+      "lastUpdated": "2024-03-11T11:45:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "astro-content-collections-openai",
+      "name": "Astro + Content Collections + OpenAI",
+      "description": "Static site with Astro, content collections, MDX, and OpenAI integration",
+      "repository": "https://github.com/geenius/template-astro-content-collections",
+      "branch": "main",
+      "stack": ["Astro", "Content Collections", "MDX", "OpenAI", "TypeScript", "Tailwind CSS"],
+      "aiProvider": "openai",
+      "aiConfig": {
+        "model": "gpt-4-turbo",
+        "tools": ["file-editor", "terminal", "astro-cli"],
+        "systemPrompt": "You are an Astro expert focusing on static site generation and content management. Emphasize performance, SEO, and content structure."
+      },
+      "features": [
+        "Static site generation",
+        "Content collections",
+        "MDX support",
+        "TypeScript integration",
+        "SEO optimized",
+        "Fast performance"
+      ],
+      "envVars": [
+        "SITE_URL",
+        "CONTENT_DIR",
+        "OPENAI_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-astro-content-collections/blob/main/README.md",
+      "tags": ["static", "content", "seo", "performance"],
+      "difficulty": "beginner",
+      "lastUpdated": "2024-03-10T16:30:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "express-prisma-postgres-grok",
+      "name": "Express + Prisma + PostgreSQL + Grok",
+      "description": "Express.js API with Prisma ORM, PostgreSQL database, and Grok AI integration",
+      "repository": "https://github.com/geenius/template-express-prisma-postgres",
+      "branch": "main",
+      "stack": ["Express.js", "Prisma", "PostgreSQL", "Grok AI", "TypeScript", "JWT"],
+      "aiProvider": "grok",
+      "aiConfig": {
+        "model": "grok-beta",
+        "tools": ["file-editor", "terminal", "prisma-cli"],
+        "systemPrompt": "You are a backend API expert using Express.js and Prisma. Focus on scalable architecture, security, and database optimization."
+      },
+      "features": [
+        "Express.js REST API",
+        "Prisma ORM integration",
+        "PostgreSQL database",
+        "JWT authentication",
+        "TypeScript support",
+        "API documentation"
+      ],
+      "envVars": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "PORT",
+        "GROK_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-express-prisma-postgres/blob/main/README.md",
+      "tags": ["backend", "api", "database", "auth"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-09T13:10:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "remix-sqlite-auth-claude",
+      "name": "Remix + SQLite + Auth + Claude",
+      "description": "Remix full-stack app with SQLite database and built-in authentication",
+      "repository": "https://github.com/geenius/template-remix-sqlite-auth",
+      "branch": "main",
+      "stack": ["Remix", "SQLite", "Prisma", "Claude", "TypeScript", "Tailwind CSS"],
+      "aiProvider": "anthropic",
+      "aiConfig": {
+        "model": "claude-3-5-sonnet-20241022",
+        "tools": ["file-editor", "terminal", "remix-cli"],
+        "systemPrompt": "You are a Remix expert focusing on full-stack development. Emphasize progressive enhancement, web standards, and performance."
+      },
+      "features": [
+        "Remix full-stack framework",
+        "SQLite database",
+        "Built-in authentication",
+        "Progressive enhancement",
+        "Server-side rendering",
+        "Web standards focus"
+      ],
+      "envVars": [
+        "DATABASE_URL",
+        "SESSION_SECRET",
+        "ANTHROPIC_API_KEY"
+      ],
+      "testCommand": "npm run test",
+      "buildCommand": "npm run build",
+      "devCommand": "npm run dev",
+      "deployCommand": "npm run deploy",
+      "documentation": "https://github.com/geenius/template-remix-sqlite-auth/blob/main/README.md",
+      "tags": ["remix", "sqlite", "auth", "fullstack"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-08T08:25:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    }
+  ],
+  "categories": [
+    {
+      "id": "fullstack",
+      "name": "Full-Stack Applications",
+      "description": "Complete applications with frontend and backend",
+      "templates": ["nextjs-supabase-claude", "remix-sqlite-auth-claude", "svelte-drizzle-planetscale-claude"]
+    },
+    {
+      "id": "frontend",
+      "name": "Frontend Applications",
+      "description": "Client-side applications and SPAs",
+      "templates": ["vite-react-mongo-gemini", "react-indexeddb-jwt-openai", "vue-pinia-firebase-gemini"]
+    },
+    {
+      "id": "backend",
+      "name": "Backend APIs",
+      "description": "Server-side APIs and services",
+      "templates": ["express-prisma-postgres-grok"]
+    },
+    {
+      "id": "static",
+      "name": "Static Sites",
+      "description": "Static site generators and JAMstack",
+      "templates": ["astro-content-collections-openai"]
+    },
+    {
+      "id": "popular",
+      "name": "Popular Templates",
+      "description": "Most commonly used templates",
+      "templates": ["nextjs-supabase-claude", "vite-react-mongo-gemini", "react-indexeddb-jwt-openai"]
+    }
+  ],
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic (Claude)",
+      "description": "Best for coding and technical tasks",
+      "models": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI (GPT)",
+      "description": "Most versatile, great for general development",
+      "models": ["gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"]
+    },
+    {
+      "id": "google",
+      "name": "Google (Gemini)",
+      "description": "Creative problem solving and analysis",
+      "models": ["gemini-pro", "gemini-pro-vision", "gemini-ultra"]
+    },
+    {
+      "id": "grok",
+      "name": "X.AI (Grok)",
+      "description": "Fast responses with unique perspectives",
+      "models": ["grok-beta", "grok-1"]
+    }
+  ],
+  "meta": {
+    "lastUpdated": "2024-03-15T12:00:00Z",
+    "version": "1.0.0",
+    "totalTemplates": 8,
+    "registry": "https://registry.geenius.com"
+  }
+}
+
