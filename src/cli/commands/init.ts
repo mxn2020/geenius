@@ -1,4 +1,5 @@
 // src/cli/commands/init.ts
+import 'dotenv/config';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -38,6 +39,29 @@ export async function initCommand(): Promise<void> {
     // Get template registry
     const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN);
     const templates = await templateRegistry.getAllTemplates();
+
+    // Check for existing API keys and show status
+    const availableProviders = [];
+    if (process.env.ANTHROPIC_API_KEY) availableProviders.push('anthropic');
+    if (process.env.OPENAI_API_KEY) availableProviders.push('openai');
+    if (process.env.GOOGLE_API_KEY) availableProviders.push('google');
+    if (process.env.GROK_API_KEY) availableProviders.push('grok');
+
+    if (availableProviders.length > 0) {
+      console.log(chalk.green(`✅ Found API keys for: ${availableProviders.map(p => p.toUpperCase()).join(', ')}`));
+    } else {
+      console.log(chalk.yellow('⚠️  No API keys found in environment. You will be prompted to enter them.'));
+    }
+
+    // Check for existing GitHub configuration
+    const githubConfig = [];
+    if (process.env.GITHUB_USERNAME) githubConfig.push('username');
+    if (process.env.GITHUB_ORG) githubConfig.push('organization');
+    if (githubConfig.length > 0) {
+      console.log(chalk.green(`✅ Found GitHub ${githubConfig.join(', ')} in environment`));
+    }
+
+    console.log(); // Add spacing
 
     // AI Provider and mode selection
     const responses = await inquirer.prompt([
@@ -88,7 +112,8 @@ export async function initCommand(): Promise<void> {
         name: 'apiKey',
         message: (answers) => `Enter your ${answers.aiProvider.toUpperCase()} API key:`,
         mask: '*',
-        validate: (input) => input.length > 0 || 'API key is required'
+        validate: (input) => input.length > 0 || 'API key is required',
+        when: (answers) => !getExistingApiKey(answers.aiProvider)
       },
       {
         type: 'input',
@@ -99,8 +124,10 @@ export async function initCommand(): Promise<void> {
       {
         type: 'input',
         name: 'githubOrg',
-        message: 'GitHub organization/username:',
-        validate: (input) => input.length > 0 || 'GitHub org is required'
+        message: 'GitHub organization/username (where to fork the repo):',
+        default: process.env.GITHUB_ORG || process.env.GITHUB_USERNAME,
+        validate: (input) => input.length > 0 || 'GitHub org/username is required',
+        when: () => !process.env.GITHUB_ORG && !process.env.GITHUB_USERNAME
       },
       {
         type: 'input',
@@ -115,6 +142,20 @@ export async function initCommand(): Promise<void> {
         default: true
       }
     ]);
+
+    // Use existing API key if available, otherwise use the prompted one
+    const finalApiKey = responses.apiKey || getExistingApiKey(responses.aiProvider);
+    if (!finalApiKey) {
+      throw new Error(`No API key found for ${responses.aiProvider}. Please set ${getApiKeyEnvName(responses.aiProvider)} in your .env file or enter it when prompted.`);
+    }
+    responses.apiKey = finalApiKey;
+
+    // Use existing GitHub org/username if available, otherwise use the prompted one
+    const finalGithubOrg = responses.githubOrg || process.env.GITHUB_ORG || process.env.GITHUB_USERNAME;
+    if (!finalGithubOrg) {
+      throw new Error('No GitHub organization/username found. Please set GITHUB_ORG or GITHUB_USERNAME in your .env file or enter it when prompted.');
+    }
+    responses.githubOrg = finalGithubOrg;
 
     // Validate input
     const validatedInput = validateInput(InitCommandSchema, responses);
@@ -139,23 +180,36 @@ export async function initCommand(): Promise<void> {
     // Setup Netlify project
     let netlifyProject;
     if (validatedInput.autoSetup) {
-      spinner.text = 'Setting up Netlify project...';
-      netlifyProject = await netlify.createProject(validatedInput.projectName, repoUrl);
-      
-      // Set environment variables
-      await netlify.setupEnvironmentVariables(netlifyProject.id, {
-        ...getEnvVarsForProvider(validatedInput.aiProvider, validatedInput.apiKey, validatedInput.model),
-        ...template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {})
-      });
+      if (!process.env.NETLIFY_TOKEN) {
+        spinner.warn('Netlify token not found - skipping deployment setup');
+        console.log(chalk.yellow('⚠️  NETLIFY_TOKEN not found in environment. Skipping Netlify setup.'));
+        console.log(chalk.gray('Add NETLIFY_TOKEN to your .env file to enable auto-deployment.'));
+        netlifyProject = null;
+      } else {
+        try {
+          spinner.text = 'Setting up Netlify project...';
+          netlifyProject = await netlify.createProject(validatedInput.projectName, repoUrl);
+          
+          // Set environment variables
+          await netlify.setupEnvironmentVariables(netlifyProject.id, {
+            ...getEnvVarsForProvider(validatedInput.aiProvider, validatedInput.apiKey, validatedInput.model),
+            ...template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {})
+          });
 
-      // Configure branch deployments
-      await netlify.configureBranchDeployments(netlifyProject.id, {
-        main: { production: true },
-        develop: { preview: true },
-        'feature/*': { preview: true }
-      });
-      
-      logger.info('Netlify project configured', { projectId: netlifyProject.id });
+          // Configure branch deployments
+          await netlify.configureBranchDeployments(netlifyProject.id, {
+            main: { production: true },
+            develop: { preview: true },
+            'feature/*': { preview: true }
+          });
+          
+          logger.info('Netlify project configured', { projectId: netlifyProject.id });
+        } catch (error) {
+          spinner.fail('Netlify setup failed');
+          console.log(chalk.red(`❌ Netlify setup failed: ${error.message}`));
+          throw error; // Don't continue if Netlify setup was requested but failed
+        }
+      }
     }
 
     // Initialize AI agent service
@@ -186,7 +240,7 @@ export async function initCommand(): Promise<void> {
       apiKey: validatedInput.apiKey,
       model: validatedInput.model,
       netlifyProject: netlifyProject?.id,
-      systemPrompt: template.aiConfig.systemPrompt,
+      systemPrompt: getSystemPromptForTemplate(template.id),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -206,12 +260,44 @@ export async function initCommand(): Promise<void> {
     
     if (netlifyProject) {
       console.log(chalk.gray('Netlify:'), netlifyProject.ssl_url);
+      console.log(chalk.gray('Netlify Project:'), `https://app.netlify.com/sites/${netlifyProject.id}/overview`);
     }
 
-    console.log(chalk.blue('\n🎉 Ready to develop! Try:'));
-    console.log(chalk.gray('  dev-agent develop'));
-    console.log(chalk.gray('  dev-agent status'));
-    console.log(chalk.gray('  dev-agent compare-agents'));
+    console.log(chalk.blue('\n🎉 Ready to develop!'));
+    
+    // Show interactive menu
+    const { nextAction } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'nextAction',
+        message: 'What would you like to do next?',
+        choices: [
+          { name: '🚀 Start Development Session', value: 'develop' },
+          { name: '📊 Check Project Status', value: 'status' },
+          { name: '⚖️  Compare AI Providers', value: 'compare' },
+          { name: '🚪 Exit', value: 'exit' }
+        ]
+      }
+    ]);
+
+    switch (nextAction) {
+      case 'develop':
+        const { developCommand } = await import('./develop');
+        await developCommand();
+        break;
+      case 'status':
+        const { statusCommand } = await import('./status');
+        await statusCommand();
+        break;
+      case 'compare':
+        const { compareAgentsCommand } = await import('./compare-agents');
+        await compareAgentsCommand();
+        break;
+      case 'exit':
+        console.log(chalk.green('\n👋 Thanks for using Geenius! Happy coding!'));
+        process.exit(0);
+        break;
+    }
 
   } catch (error) {
     logger.error('Init command failed', error);
@@ -222,13 +308,44 @@ export async function initCommand(): Promise<void> {
 
 function getDefaultModel(provider: string): string {
   const defaults = {
-    anthropic: 'claude-3-5-sonnet-20241022',
+    anthropic: 'claude-sonnet-4-20250514',
     openai: 'gpt-4-turbo',
     google: 'gemini-pro',
     grok: 'grok-beta'
   };
   
   return defaults[provider] || 'gpt-4';
+}
+
+function getExistingApiKey(provider: string): string | null {
+  const envVarName = getApiKeyEnvName(provider);
+  return process.env[envVarName] || null;
+}
+
+function getApiKeyEnvName(provider: string): string {
+  const envNames = {
+    anthropic: 'ANTHROPIC_API_KEY',
+    openai: 'OPENAI_API_KEY',
+    google: 'GOOGLE_API_KEY',
+    grok: 'GROK_API_KEY'
+  };
+  
+  return envNames[provider] || 'API_KEY';
+}
+
+function getSystemPromptForTemplate(templateId: string): string {
+  const prompts = {
+    'nextjs-supabase': 'You are a Next.js expert working with Supabase. Focus on type-safe code, proper error handling, and following Next.js best practices.',
+    'vite-react-mongo': 'You are a React developer using Vite and MongoDB. Focus on modern React patterns, hooks, and efficient database operations.',
+    'react-indexeddb-jwt': 'You are a React developer focusing on client-side applications. Emphasize performance, offline capability, and secure authentication.',
+    'vue-pinia-firebase': 'You are a Vue.js expert working with Firebase. Focus on composition API, reactive patterns, and Firebase best practices.',
+    'svelte-drizzle-planetscale': 'You are a SvelteKit expert working with modern database tools. Focus on performance, type safety, and edge-ready applications.',
+    'astro-content-collections': 'You are an Astro expert focusing on static site generation and content management. Emphasize performance, SEO, and content structure.',
+    'express-prisma-postgres': 'You are a backend API expert using Express.js and Prisma. Focus on scalable architecture, security, and database optimization.',
+    'remix-sqlite-auth': 'You are a Remix expert focusing on full-stack development. Emphasize progressive enhancement, web standards, and performance.'
+  };
+  
+  return prompts[templateId] || 'You are an expert developer. Focus on writing clean, maintainable, and well-documented code following industry best practices.';
 }
 
 function getEnvVarsForProvider(provider: string, apiKey: string, model?: string): Record<string, string> {

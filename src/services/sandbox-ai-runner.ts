@@ -66,9 +66,13 @@ export class SandboxAIService implements SandboxAIRunner {
     return envVars.join('\n');
   }
 
-  async installAITools(provider: 'claude' | 'gemini' | 'openai' | 'custom'): Promise<void> {
+  async installAITools(provider: 'claude' | 'gemini' | 'openai' | 'custom' | 'anthropic'): Promise<void> {
     const installCommands: Record<string, string[]> = {
       claude: [
+        'npm install -g @anthropic-ai/claude-code',
+        'npm install @anthropic-ai/sdk'
+      ],
+      anthropic: [
         'npm install -g @anthropic-ai/claude-code',
         'npm install @anthropic-ai/sdk'
       ],
@@ -76,14 +80,28 @@ export class SandboxAIService implements SandboxAIRunner {
         'npm install -g @google/generative-ai',
         'npm install @google/generative-ai'
       ],
+      google: [
+        'npm install -g @google/generative-ai',
+        'npm install @google/generative-ai'
+      ],
       openai: [
         'npm install -g openai',
         'npm install openai'
       ],
+      grok: [
+        'npm install -g grok-ai',
+        'npm install grok-ai'
+      ],
       custom: []
     };
 
-    for (const command of installCommands[provider]) {
+    const commands = installCommands[provider];
+    if (!commands) {
+      console.warn(`No install commands found for provider: ${provider}`);
+      return;
+    }
+
+    for (const command of commands) {
       await this.stackblitz.runCommand(this.project, command);
     }
   }
@@ -367,7 +385,7 @@ export const aiEnabledTemplates: AIEnabledTemplate[] = [
     envVars: ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_KEY", "ANTHROPIC_API_KEY"],
     aiProvider: "claude",
     aiConfig: {
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-20250514",
       tools: ["file-editor", "terminal", "supabase-cli"],
       systemPrompt: "You are a Next.js expert working with Supabase. Focus on type-safe code, proper error handling, and following Next.js best practices."
     }

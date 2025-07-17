@@ -1,4 +1,5 @@
 // src/cli/index.ts
+import 'dotenv/config';
 import { Command } from 'commander';
 import { initCommand } from './commands/init';
 import { developCommand } from './commands/develop';

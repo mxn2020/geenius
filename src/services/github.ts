@@ -5,62 +5,113 @@ export class GitHubService {
   private octokit: Octokit;
 
   constructor() {
+    if (!process.env.GITHUB_TOKEN) {
+      throw new Error('GITHUB_TOKEN environment variable is required. Please set it with your GitHub personal access token.');
+    }
     this.octokit = new Octokit({
       auth: process.env.GITHUB_TOKEN
     });
   }
 
   async forkTemplate(templateRepo: string, projectName: string, org: string): Promise<string> {
-    const [templateOwner, templateName] = templateRepo.split('/');
+    const { owner: templateOwner, repo: templateName } = this.parseRepoUrl(templateRepo);
+    
+    // Check if org is actually an organization or a user account
+    let forkParams: any = {
+      owner: templateOwner,
+      repo: templateName
+    };
+
+    try {
+      // Try to get organization info
+      await this.octokit.rest.orgs.get({ org });
+      // If successful, it's an organization
+      forkParams.organization = org;
+    } catch (error) {
+      // If it fails, it's likely a user account - don't include organization parameter
+      // The fork will be created under the authenticated user's account
+    }
     
     // Fork the template repository
-    const { data: fork } = await this.octokit.rest.repos.createFork({
-      owner: templateOwner,
-      repo: templateName,
-      organization: org,
-      name: projectName
-    });
+    const { data: fork } = await this.octokit.rest.repos.createFork(forkParams);
 
     // Wait for fork to be ready
-    await this.waitForRepo(org, projectName);
+    await this.waitForRepo(fork.owner.login, fork.name);
 
+    // Always find an available name to ensure we create a new repo
+    const finalRepoName = await this.findAvailableRepoName(fork.owner.login, projectName);
+    
+    // Rename the forked repository to the available name
+    if (fork.name !== finalRepoName) {
+      await this.octokit.rest.repos.update({
+        owner: fork.owner.login,
+        repo: fork.name,
+        name: finalRepoName
+      });
+    }
+    
     // Set up branch protection and default branches
-    await this.setupBranches(org, projectName);
+    await this.setupBranches(fork.owner.login, finalRepoName);
 
-    return fork.html_url;
+    // Return the correct URL with the final name
+    return `https://github.com/${fork.owner.login}/${finalRepoName}`;
   }
 
   async setupBranches(owner: string, repo: string) {
-    // Create develop branch from main
-    const { data: mainBranch } = await this.octokit.rest.repos.getBranch({
-      owner,
-      repo,
-      branch: 'main'
-    });
+    try {
+      // Create develop branch from main
+      const { data: mainBranch } = await this.octokit.rest.repos.getBranch({
+        owner,
+        repo,
+        branch: 'main'
+      });
 
-    await this.octokit.rest.git.createRef({
-      owner,
-      repo,
-      ref: 'refs/heads/develop',
-      sha: mainBranch.commit.sha
-    });
+      // Check if develop branch already exists (inherited from template)
+      try {
+        await this.octokit.rest.repos.getBranch({
+          owner,
+          repo,
+          branch: 'develop'
+        });
+        // Branch exists from template - this is normal and expected
+      } catch (error) {
+        // Branch doesn't exist, create it
+        try {
+          await this.octokit.rest.git.createRef({
+            owner,
+            repo,
+            ref: 'refs/heads/develop',
+            sha: mainBranch.commit.sha
+          });
+        } catch (createError) {
+          console.warn(`Could not create develop branch: ${createError.message}`);
+        }
+      }
 
-    // Set up branch protection for main
-    await this.octokit.rest.repos.updateBranchProtection({
-      owner,
-      repo,
-      branch: 'main',
-      required_status_checks: {
-        strict: true,
-        contexts: ['netlify/build']
-      },
-      enforce_admins: false,
-      required_pull_request_reviews: {
-        required_approving_review_count: 1,
-        dismiss_stale_reviews: true
-      },
-      restrictions: null
-    });
+      // Set up branch protection for main (optional, may fail for personal repos)
+      try {
+        await this.octokit.rest.repos.updateBranchProtection({
+          owner,
+          repo,
+          branch: 'main',
+          required_status_checks: {
+            strict: true,
+            contexts: ['netlify/build']
+          },
+          enforce_admins: false,
+          required_pull_request_reviews: {
+            required_approving_review_count: 1,
+            dismiss_stale_reviews: true
+          },
+          restrictions: null
+        });
+      } catch (error) {
+        // Branch protection may fail for personal repos or insufficient permissions
+        console.log('Branch protection setup skipped (may require organization or pro account)');
+      }
+    } catch (error) {
+      console.warn('Branch setup failed:', error.message);
+    }
   }
 
   async createBranch(repoUrl: string, branchName: string, baseBranch: string = 'main'): Promise<void> {
@@ -218,12 +269,82 @@ export class GitHubService {
     return data.map(branch => branch.name);
   }
 
+  // Netlify integration methods
+  async getRepositoryId(owner: string, repo: string): Promise<number> {
+    try {
+      const { data } = await this.octokit.rest.repos.get({
+        owner,
+        repo
+      });
+      return data.id;
+    } catch (error: any) {
+      if (error.status === 404) {
+        throw new Error(`Repository ${owner}/${repo} not found or not accessible`);
+      }
+      throw new Error(`Failed to get repository ID: ${error.message}`);
+    }
+  }
+
+  async addDeployKey(owner: string, repo: string, publicKey: string, title: string): Promise<void> {
+    try {
+      await this.octokit.rest.repos.createDeployKey({
+        owner,
+        repo,
+        title,
+        key: publicKey,
+        read_only: true
+      });
+      console.log('   Deploy key successfully added to GitHub');
+    } catch (error: any) {
+      if (error.status === 422 && error.response?.data?.errors?.some((e: any) => e.message?.includes('key is already in use'))) {
+        console.log('   Deploy key already exists, continuing...');
+        return;
+      }
+      console.error('❌ Error adding deploy key to GitHub:', error.message);
+      throw new Error(`Failed to add deploy key to GitHub: ${error.message}`);
+    }
+  }
+
+  async removeDeployKey(owner: string, repo: string, keyId: number): Promise<void> {
+    try {
+      console.log(`🔑 Removing deploy key ${keyId} from ${owner}/${repo}`);
+      await this.octokit.rest.repos.deleteDeployKey({
+        owner,
+        repo,
+        key_id: keyId
+      });
+      console.log('✅ Deploy key removed from GitHub repository');
+    } catch (error: any) {
+      console.warn('⚠️  Could not remove deploy key:', error.message);
+      // Don't throw here as this is cleanup
+    }
+  }
+
+  async deleteRepository(repoUrl: string): Promise<void> {
+    try {
+      const { owner, repo } = this.parseRepoUrl(repoUrl);
+      console.log(`🗑️  Deleting GitHub repository ${owner}/${repo}`);
+      
+      await this.octokit.rest.repos.delete({
+        owner,
+        repo
+      });
+      
+      console.log('✅ GitHub repository deleted successfully');
+    } catch (error: any) {
+      console.error('❌ Error deleting GitHub repository:', error.message);
+      throw new Error(`Failed to delete GitHub repository: ${error.message}`);
+    }
+  }
+
   private parseRepoUrl(repoUrl: string): { owner: string; repo: string } {
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!match) {
       throw new Error('Invalid GitHub repository URL');
     }
-    return { owner: match[1], repo: match[2] };
+    // Remove .git suffix if present
+    const repo = match[2].replace(/\.git$/, '');
+    return { owner: match[1], repo };
   }
 
   private async waitForRepo(owner: string, repo: string, maxAttempts: number = 10): Promise<void> {
@@ -235,6 +356,47 @@ export class GitHubService {
         if (i === maxAttempts - 1) throw error;
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
+    }
+  }
+
+  private async findAvailableRepoName(owner: string, baseName: string): Promise<string> {
+    const randomWords = [
+      'alpha', 'beta', 'gamma', 'delta', 'echo', 'foxtrot', 'golf', 'hotel',
+      'india', 'juliet', 'kilo', 'lima', 'mike', 'november', 'oscar', 'papa',
+      'quebec', 'romeo', 'sierra', 'tango', 'uniform', 'victor', 'whiskey',
+      'xray', 'yankee', 'zulu', 'fire', 'earth', 'water', 'wind', 'storm',
+      'cloud', 'star', 'moon', 'sun', 'sky', 'ocean', 'forest', 'mountain'
+    ];
+
+    // First try the base name
+    if (await this.isRepoNameAvailable(owner, baseName)) {
+      return baseName;
+    }
+
+    // Try with random words
+    for (let i = 0; i < 10; i++) {
+      const randomWord = randomWords[Math.floor(Math.random() * randomWords.length)];
+      const newName = `${baseName}-${randomWord}`;
+      
+      if (await this.isRepoNameAvailable(owner, newName)) {
+        return newName;
+      }
+    }
+
+    // Fallback to timestamp
+    const timestamp = Date.now().toString(36);
+    return `${baseName}-${timestamp}`;
+  }
+
+  private async isRepoNameAvailable(owner: string, name: string): Promise<boolean> {
+    try {
+      await this.octokit.rest.repos.get({ owner, repo: name });
+      return false; // Repo exists
+    } catch (error) {
+      if (error.status === 404) {
+        return true; // Repo doesn't exist, name is available
+      }
+      throw error; // Other error
     }
   }
 }

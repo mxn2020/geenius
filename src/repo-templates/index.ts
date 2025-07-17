@@ -31,7 +31,9 @@ export class TemplateRegistry {
 
   async getTemplatesByProvider(provider: string): Promise<ProjectTemplate[]> {
     const templates = await this.getAllTemplates();
-    return templates.filter(t => t.aiProvider === provider);
+    // Since we removed aiProvider from templates, return all templates
+    // User will configure AI provider in settings
+    return templates;
   }
 
   async getTemplatesByCategory(category: string): Promise<ProjectTemplate[]> {

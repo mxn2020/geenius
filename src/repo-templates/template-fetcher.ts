@@ -1,6 +1,13 @@
 // src/templates/template-fetcher.ts
 import { Octokit } from 'octokit';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import type { ProjectTemplate } from '../types/template';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export class TemplateFetcher {
   private octokit: Octokit;
@@ -20,7 +27,14 @@ export class TemplateFetcher {
       return await response.json();
     } catch (error) {
       console.warn('Failed to fetch remote registry, using local fallback');
-      return require('./template-registry.json');
+      try {
+        const registryPath = join(__dirname, 'template-registry.json');
+        const registryContent = readFileSync(registryPath, 'utf8');
+        return JSON.parse(registryContent);
+      } catch (readError) {
+        console.error('Failed to read local registry:', readError);
+        return { templates: [] };
+      }
     }
   }
 
