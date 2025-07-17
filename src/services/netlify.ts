@@ -86,9 +86,22 @@ export class NetlifyService {
         message: error.message
       });
       
-      // Handle specific error cases
+      // Handle specific error cases with better error messages
       if (error.status === 422 && (error.json?.errors?.name || error.json?.errors?.subdomain)) {
-        console.log(`Name ${availableName} was taken or invalid, trying with timestamp...`);
+        const errorDetails = error.json?.errors || {};
+        const subdomainErrors = errorDetails.subdomain || [];
+        const nameErrors = errorDetails.name || [];
+        
+        console.log(`❌ Site name validation failed:`);
+        if (subdomainErrors.length > 0) {
+          console.log(`   Subdomain errors: ${subdomainErrors.join(', ')}`);
+        }
+        if (nameErrors.length > 0) {
+          console.log(`   Name errors: ${nameErrors.join(', ')}`);
+        }
+        
+        console.log(`🔄 Attempting to create site with timestamp fallback...`);
+        
         // If our name detection failed, try with a timestamp fallback
         const timestamp = Date.now().toString(36);
         const fallbackName = `${name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${timestamp}`;
@@ -129,7 +142,14 @@ export class NetlifyService {
           return fallbackSite;
         } catch (fallbackError: any) {
           console.error('❌ Fallback site creation also failed:', fallbackError);
-          throw new Error(`Failed to create Netlify site: ${fallbackError.message}`);
+          
+          // Provide more specific error information for the fallback failure
+          if (fallbackError.status === 422) {
+            const fallbackErrorDetails = fallbackError.json?.errors || {};
+            console.error('   Fallback validation errors:', JSON.stringify(fallbackErrorDetails, null, 2));
+          }
+          
+          throw new Error(`Failed to create Netlify site even with fallback name. Original error: ${error.message}. Fallback error: ${fallbackError.message}`);
         }
       }
 
@@ -338,7 +358,7 @@ export class NetlifyService {
     try {
       console.log(`🔧 Setting up environment variables for site ${siteId}`);
       
-      // Get the site to find the account ID
+      // Get the site to find the account ID and site details
       const site = await this.client.getSite({ siteId });
       const accountId = site.account_id;
       
@@ -346,8 +366,22 @@ export class NetlifyService {
         throw new Error('Could not determine account ID for environment variables');
       }
 
+      // Add Netlify-specific environment variables
+      const siteUrl = site.ssl_url || site.url || `https://${site.name}.netlify.app`;
+      const netlifyVars = {
+        NETLIFY_FUNCTIONS_URL: `${siteUrl}/.netlify/functions`,
+        NETLIFY_SITE_ID: siteId,
+        NETLIFY_SITE_URL: siteUrl,
+        NETLIFY_SITE_NAME: site.name,
+        VITE_API_URL: `${siteUrl}/api`,
+        NODE_ENV: 'production'
+      };
+
+      // Merge with provided variables
+      const allVariables = { ...variables, ...netlifyVars };
+
       // Convert variables to the format expected by the API
-      const envVars = Object.entries(variables).map(([key, value]) => ({
+      const envVars = Object.entries(allVariables).map(([key, value]) => ({
         key,
         values: [{
           value,
@@ -363,9 +397,16 @@ export class NetlifyService {
       });
 
       console.log('✅ Environment variables configured successfully');
-      for (const [key, value] of Object.entries(variables)) {
-        console.log(`   - ${key}=${value ? '[CONFIGURED]' : '[EMPTY]'}`);
+      console.log('   Netlify-specific variables:');
+      for (const [key, value] of Object.entries(netlifyVars)) {
+        console.log(`     - ${key}=${value}`);
       }
+      console.log('   Project-specific variables:');
+      for (const [key, value] of Object.entries(variables)) {
+        console.log(`     - ${key}=${value ? '[CONFIGURED]' : '[EMPTY]'}`);
+      }
+
+      return netlifyVars;
     } catch (error: any) {
       console.warn('⚠️  Environment variables setup failed:', error.message);
       console.log('You can set these environment variables manually in the Netlify dashboard:');
@@ -375,6 +416,7 @@ export class NetlifyService {
       }
       
       console.log(`Visit: https://app.netlify.com/sites/${siteId}/settings/deploys#environment-variables`);
+      return {};
     }
   }
 
@@ -419,15 +461,15 @@ export class NetlifyService {
     const cleanName = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     console.log(`🔍 Checking Netlify name availability for: ${cleanName}`);
 
-    // First try the base name
+    // First try the exact base name (GitHub repo name)
     if (await this.isNetlifyNameAvailable(cleanName)) {
       console.log(`✅ Base name ${cleanName} is available`);
       return cleanName;
     }
 
-    console.log(`❌ Base name ${cleanName} is taken, trying with random words...`);
+    console.log(`❌ Base name ${cleanName} is taken, trying with additional random words...`);
 
-    // Try with random words
+    // Try with random words appended to maintain correlation
     for (let i = 0; i < 10; i++) {
       const randomWord = randomWords[Math.floor(Math.random() * randomWords.length)];
       const newName = `${cleanName}-${randomWord}`;
@@ -438,7 +480,7 @@ export class NetlifyService {
       }
     }
 
-    // Fallback to timestamp
+    // Final fallback to timestamp
     const timestamp = Date.now().toString(36);
     const fallbackName = `${cleanName}-${timestamp}`;
     console.log(`🔄 Using timestamp fallback: ${fallbackName}`);
@@ -514,6 +556,7 @@ export class NetlifyService {
         url: site.url,
         ssl_url: site.ssl_url,
         admin_url: site.admin_url,
+        project_url: `https://app.netlify.com/sites/${site.id}/overview`,
         deploy_url: site.deploy_url,
         state: site.state,
         created_at: site.created_at,
@@ -557,6 +600,49 @@ export class NetlifyService {
     } catch (error: any) {
       console.warn('⚠️  Could not delete deploy key:', error.message);
       // Don't throw here as this is cleanup - the main site deletion succeeded
+    }
+  }
+
+  async listSites() {
+    try {
+      const sites = await this.client.listSites();
+      return sites;
+    } catch (error: any) {
+      console.error('❌ Error listing sites:', error.message);
+      throw new Error(`Failed to list sites: ${error.message}`);
+    }
+  }
+
+  async updateSite(siteId: string, updates: any) {
+    try {
+      const updatedSite = await this.client.updateSite({
+        siteId,
+        body: updates
+      });
+      return updatedSite;
+    } catch (error: any) {
+      console.error('❌ Error updating site:', error.message);
+      throw new Error(`Failed to update site: ${error.message}`);
+    }
+  }
+
+  async listDeployments(siteId: string) {
+    try {
+      const deployments = await this.client.listSiteDeploys({ siteId });
+      return deployments;
+    } catch (error: any) {
+      console.error('❌ Error listing deployments:', error.message);
+      throw new Error(`Failed to list deployments: ${error.message}`);
+    }
+  }
+
+  async deleteDeployment(deployId: string) {
+    try {
+      await this.client.deleteSiteDeploy({ deployId });
+      return { success: true, message: 'Deployment deleted successfully' };
+    } catch (error: any) {
+      console.error('❌ Error deleting deployment:', error.message);
+      throw new Error(`Failed to delete deployment: ${error.message}`);
     }
   }
 }

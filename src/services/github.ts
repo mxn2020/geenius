@@ -399,4 +399,70 @@ export class GitHubService {
       throw error; // Other error
     }
   }
+
+  async listRepositories(): Promise<any[]> {
+    try {
+      const { data } = await this.octokit.rest.repos.listForAuthenticatedUser({
+        visibility: 'all',
+        sort: 'updated',
+        per_page: 100
+      });
+      return data;
+    } catch (error: any) {
+      console.error('❌ Error listing repositories:', error.message);
+      throw new Error(`Failed to list repositories: ${error.message}`);
+    }
+  }
+
+  async updateRepository(owner: string, repo: string, updates: any): Promise<any> {
+    try {
+      const { data } = await this.octokit.rest.repos.update({
+        owner,
+        repo,
+        ...updates
+      });
+      return data;
+    } catch (error: any) {
+      console.error('❌ Error updating repository:', error.message);
+      throw new Error(`Failed to update repository: ${error.message}`);
+    }
+  }
+
+  async deleteRepository(owner: string, repo: string): Promise<void> {
+    try {
+      await this.octokit.rest.repos.delete({
+        owner,
+        repo
+      });
+    } catch (error: any) {
+      console.error('❌ Error deleting repository:', error.message);
+      throw new Error(`Failed to delete repository: ${error.message}`);
+    }
+  }
+
+  async listDeployKeys(owner: string, repo: string): Promise<any[]> {
+    try {
+      const { data } = await this.octokit.rest.repos.listDeployKeys({
+        owner,
+        repo
+      });
+      return data;
+    } catch (error: any) {
+      console.error('❌ Error listing deploy keys:', error.message);
+      throw new Error(`Failed to list deploy keys: ${error.message}`);
+    }
+  }
+
+  async deleteDeployKey(owner: string, repo: string, keyId: number): Promise<void> {
+    try {
+      await this.octokit.rest.repos.deleteDeployKey({
+        owner,
+        repo,
+        key_id: keyId
+      });
+    } catch (error: any) {
+      console.error('❌ Error deleting deploy key:', error.message);
+      throw new Error(`Failed to delete deploy key: ${error.message}`);
+    }
+  }
 }

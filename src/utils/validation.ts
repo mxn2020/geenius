@@ -15,7 +15,6 @@ export const InitCommandSchema = z.object({
   aiProvider: z.enum(['anthropic', 'openai', 'google', 'grok']),
   agentMode: z.enum(['single', 'orchestrated', 'hybrid']),
   orchestrationStrategy: z.enum(['sequential', 'parallel', 'hierarchical', 'collaborative']).optional(),
-  apiKey: ApiKeySchema,
   model: z.string().optional(),
   autoSetup: z.boolean().default(true),
   netlifyTeam: z.string().optional()

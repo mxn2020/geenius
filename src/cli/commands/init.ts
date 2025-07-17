@@ -9,12 +9,27 @@ import { logger } from '../../utils/logger';
 import { TemplateRegistry } from '../../repo-templates/index';
 import { GitHubService } from '../../services/github';
 import { NetlifyService } from '../../services/netlify';
+import { MongoDBService } from '../../services/mongodb';
 import { EnhancedAgentService } from '../../agent/enhanced-agent-service';
 import type { InitOptions, ProjectConfig } from '../../types/config';
 
 export async function initCommand(): Promise<void> {
   console.log(chalk.blue.bold('🚀 AI Development Agent v3.0'));
-  console.log(chalk.gray('Advanced AI agents with orchestration capabilities!\n'));
+  console.log(chalk.gray('Advanced AI agents with orchestration capabilities!'));
+  console.log(chalk.gray('🔧 Auto-setup: GitHub repos, Netlify deployment, MongoDB databases'));
+  
+  // Show environment setup status
+  const envStatus = {
+    github: !!process.env.GITHUB_TOKEN,
+    netlify: !!process.env.NETLIFY_TOKEN,
+    mongodb: !!(process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY)
+  };
+  
+  console.log(chalk.gray('\n📋 Environment Setup Status:'));
+  console.log(chalk.gray(`   GitHub: ${envStatus.github ? '✅ Configured' : '❌ Missing GITHUB_TOKEN'}`));
+  console.log(chalk.gray(`   Netlify: ${envStatus.netlify ? '✅ Configured' : '⚠️  Missing NETLIFY_TOKEN (optional)'}`));
+  console.log(chalk.gray(`   MongoDB: ${envStatus.mongodb ? '✅ Configured' : '⚠️  Missing MONGODB_ATLAS_* keys (optional)'}`));
+  console.log();
 
   const configManager = new ConfigManager();
   
@@ -108,14 +123,6 @@ export async function initCommand(): Promise<void> {
         }))
       },
       {
-        type: 'password',
-        name: 'apiKey',
-        message: (answers) => `Enter your ${answers.aiProvider.toUpperCase()} API key:`,
-        mask: '*',
-        validate: (input) => input.length > 0 || 'API key is required',
-        when: (answers) => !getExistingApiKey(answers.aiProvider)
-      },
-      {
         type: 'input',
         name: 'projectName',
         message: 'Project name:',
@@ -143,12 +150,10 @@ export async function initCommand(): Promise<void> {
       }
     ]);
 
-    // Use existing API key if available, otherwise use the prompted one
-    const finalApiKey = responses.apiKey || getExistingApiKey(responses.aiProvider);
-    if (!finalApiKey) {
-      throw new Error(`No API key found for ${responses.aiProvider}. Please set ${getApiKeyEnvName(responses.aiProvider)} in your .env file or enter it when prompted.`);
+    // Validate that API key is available in environment
+    if (!getExistingApiKey(responses.aiProvider)) {
+      throw new Error(`No API key found for ${responses.aiProvider}. Please set ${getApiKeyEnvName(responses.aiProvider)} in your .env file.`);
     }
-    responses.apiKey = finalApiKey;
 
     // Use existing GitHub org/username if available, otherwise use the prompted one
     const finalGithubOrg = responses.githubOrg || process.env.GITHUB_ORG || process.env.GITHUB_USERNAME;
@@ -177,6 +182,46 @@ export async function initCommand(): Promise<void> {
     
     logger.info('Repository forked successfully', { repoUrl, template: template.id });
 
+    // Extract the final repository name from the URL for Netlify
+    const repoMatch = repoUrl.match(/github\.com\/[^\/]+\/([^\/]+)/);
+    const finalRepoName = repoMatch ? repoMatch[1] : validatedInput.projectName;
+    
+    console.log(`Using repository name '${finalRepoName}' for Netlify project`);
+
+    // Setup MongoDB database if template requires it
+    let mongodbProject;
+    if (template.envVars.includes('VITE_MONGODB_URI') || template.envVars.includes('MONGODB_URI')) {
+      if (!process.env.MONGODB_ATLAS_PUBLIC_KEY || !process.env.MONGODB_ATLAS_PRIVATE_KEY) {
+        spinner.warn('MongoDB Atlas API keys not found - skipping database setup');
+        console.log(chalk.yellow('⚠️  MongoDB Atlas API keys not found. Skipping MongoDB setup.'));
+        console.log(chalk.gray('Add MONGODB_ATLAS_PUBLIC_KEY and MONGODB_ATLAS_PRIVATE_KEY to your .env file to enable auto-database creation.'));
+        mongodbProject = null;
+      } else {
+        try {
+          spinner.text = 'Creating MongoDB Atlas database...';
+          const mongodb = new MongoDBService();
+          mongodbProject = await mongodb.createProject(finalRepoName);
+          
+          console.log(chalk.green(`🍃 MongoDB database created successfully!`));
+          console.log(chalk.green(`   📊 Database: ${mongodbProject.databaseName}`));
+          console.log(chalk.green(`   🔗 Cluster: ${mongodbProject.clusterName}`));
+          console.log(chalk.green(`   👤 Username: ${mongodbProject.username}`));
+          console.log(chalk.gray(`   🔐 Password: ${mongodbProject.password}`));
+          
+          logger.info('MongoDB project created', { 
+            projectId: mongodbProject.id, 
+            clusterName: mongodbProject.clusterName,
+            databaseName: mongodbProject.databaseName
+          });
+        } catch (error) {
+          spinner.fail('MongoDB setup failed');
+          console.log(chalk.red(`❌ MongoDB setup failed: ${error.message}`));
+          console.log(chalk.yellow('💡 You can create a MongoDB database manually and update the environment variables later.'));
+          mongodbProject = null;
+        }
+      }
+    }
+
     // Setup Netlify project
     let netlifyProject;
     if (validatedInput.autoSetup) {
@@ -188,13 +233,40 @@ export async function initCommand(): Promise<void> {
       } else {
         try {
           spinner.text = 'Setting up Netlify project...';
-          netlifyProject = await netlify.createProject(validatedInput.projectName, repoUrl);
+          // Use the final repository name instead of the original project name
+          netlifyProject = await netlify.createProject(finalRepoName, repoUrl);
           
+          // Prepare environment variables
+          const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+          
+          // Add MongoDB connection details if database was created
+          if (mongodbProject) {
+            if (template.envVars.includes('VITE_MONGODB_URI')) {
+              templateEnvVars['VITE_MONGODB_URI'] = mongodbProject.connectionString;
+            }
+            if (template.envVars.includes('MONGODB_URI')) {
+              templateEnvVars['MONGODB_URI'] = mongodbProject.connectionString;
+            }
+            // Add additional MongoDB variables
+            templateEnvVars['MONGODB_DATABASE_NAME'] = mongodbProject.databaseName;
+            templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
+            templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
+            templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
+          }
+
           // Set environment variables
-          await netlify.setupEnvironmentVariables(netlifyProject.id, {
-            ...getEnvVarsForProvider(validatedInput.aiProvider, validatedInput.apiKey, validatedInput.model),
-            ...template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {})
+          const netlifyVars = await netlify.setupEnvironmentVariables(netlifyProject.id, {
+            ...getEnvVarsForProvider(validatedInput.aiProvider, configManager.getApiKey(validatedInput.aiProvider), validatedInput.model),
+            ...templateEnvVars
           });
+          
+          // Log the important URLs for the user
+          if (netlifyVars.NETLIFY_FUNCTIONS_URL) {
+            console.log(chalk.green(`🔗 Netlify Functions URL: ${netlifyVars.NETLIFY_FUNCTIONS_URL}`));
+          }
+          if (netlifyVars.NETLIFY_SITE_URL) {
+            console.log(chalk.green(`🌐 Site URL: ${netlifyVars.NETLIFY_SITE_URL}`));
+          }
 
           // Configure branch deployments
           await netlify.configureBranchDeployments(netlifyProject.id, {
@@ -230,14 +302,13 @@ export async function initCommand(): Promise<void> {
     spinner.succeed('Advanced AI development environment initialized!');
     
     // Create project configuration
-    const config: ProjectConfig = {
+    const projectConfig: ProjectConfig = {
       template: template.id,
-      name: validatedInput.projectName,
+      name: finalRepoName, // Use the final repository name
       repoUrl,
       aiProvider: validatedInput.aiProvider,
       agentMode: validatedInput.agentMode,
       orchestrationStrategy: validatedInput.orchestrationStrategy,
-      apiKey: validatedInput.apiKey,
       model: validatedInput.model,
       netlifyProject: netlifyProject?.id,
       systemPrompt: getSystemPromptForTemplate(template.id),
@@ -245,7 +316,7 @@ export async function initCommand(): Promise<void> {
       updatedAt: new Date().toISOString()
     };
 
-    await configManager.saveConfig(config);
+    await configManager.saveConfig(projectConfig);
     
     // Success output
     console.log(chalk.green('\n✅ Setup complete!'));
@@ -261,6 +332,12 @@ export async function initCommand(): Promise<void> {
     if (netlifyProject) {
       console.log(chalk.gray('Netlify:'), netlifyProject.ssl_url);
       console.log(chalk.gray('Netlify Project:'), `https://app.netlify.com/sites/${netlifyProject.id}/overview`);
+    }
+    
+    if (mongodbProject) {
+      console.log(chalk.gray('MongoDB:'), mongodbProject.connectionString);
+      console.log(chalk.gray('Database:'), mongodbProject.databaseName);
+      console.log(chalk.gray('MongoDB Project:'), `https://cloud.mongodb.com/v2/${mongodbProject.id}#/overview`);
     }
 
     console.log(chalk.blue('\n🎉 Ready to develop!'));
@@ -372,4 +449,3 @@ function getEnvVarsForProvider(provider: string, apiKey: string, model?: string)
   
   return vars;
 }
-

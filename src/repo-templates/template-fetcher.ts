@@ -13,10 +13,12 @@ export class TemplateFetcher {
   private octokit: Octokit;
   private registryUrl: string;
 
-  constructor(githubToken?: string) {
-    this.octokit = new Octokit({ auth: githubToken });
-    this.registryUrl = 'https://raw.githubusercontent.com/ai-dev-workflow/registry/main/templates.json';
-  }
+constructor(githubToken?: string, registryUrl?: string) {
+  this.octokit = new Octokit({ auth: githubToken });
+  this.registryUrl = registryUrl || 
+    process.env.TEMPLATE_REGISTRY_URL || 
+    'https://raw.githubusercontent.com/mxn2020/geenius/registry/main/template-registry.json';
+}
 
   async fetchTemplateRegistry(): Promise<any> {
     try {
@@ -28,7 +30,7 @@ export class TemplateFetcher {
     } catch (error) {
       console.warn('Failed to fetch remote registry, using local fallback');
       try {
-        const registryPath = join(__dirname, 'template-registry.json');
+        const registryPath = join(__dirname, '../../registry/main/template-registry.json');
         const registryContent = readFileSync(registryPath, 'utf8');
         return JSON.parse(registryContent);
       } catch (readError) {
