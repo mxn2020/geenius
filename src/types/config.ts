@@ -8,7 +8,6 @@ export interface ProjectConfig {
   aiProvider: 'anthropic' | 'openai' | 'google' | 'grok';
   agentMode: 'single' | 'orchestrated' | 'hybrid';
   orchestrationStrategy?: 'sequential' | 'parallel' | 'hierarchical' | 'collaborative';
-  apiKey: string;
   model?: string;
   maxConcurrency?: number;
   crossValidation?: boolean;
@@ -25,7 +24,6 @@ export interface InitOptions {
   aiProvider: 'anthropic' | 'openai' | 'google' | 'grok';
   agentMode: 'single' | 'orchestrated' | 'hybrid';
   orchestrationStrategy?: 'sequential' | 'parallel' | 'hierarchical' | 'collaborative';
-  apiKey: string;
   model?: string;
   autoSetup: boolean;
   netlifyTeam?: string;

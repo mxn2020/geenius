@@ -123,6 +123,7 @@ lerna-debug.log*
 
 # AI Agent specific
 .geenius.json
+.dev-agent.json
 agent-memory.json
 logs/
 temp/

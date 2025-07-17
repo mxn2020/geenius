@@ -11,7 +11,6 @@ const ProjectConfigSchema = z.object({
   aiProvider: z.enum(['anthropic', 'openai', 'google', 'grok']),
   agentMode: z.enum(['single', 'orchestrated', 'hybrid']),
   orchestrationStrategy: z.enum(['sequential', 'parallel', 'hierarchical', 'collaborative']).optional(),
-  apiKey: z.string(),
   model: z.string().optional(),
   maxConcurrency: z.number().optional(),
   crossValidation: z.boolean().optional(),
@@ -118,13 +117,28 @@ export class ConfigManager {
       repoUrl: '',
       aiProvider: 'openai',
       agentMode: 'single',
-      apiKey: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...overrides
     };
 
     return defaultConfig;
+  }
+
+  getApiKey(provider: string): string {
+    const envVars = {
+      anthropic: 'ANTHROPIC_API_KEY',
+      openai: 'OPENAI_API_KEY',
+      google: 'GOOGLE_API_KEY',
+      grok: 'GROK_API_KEY'
+    };
+
+    const envVar = envVars[provider];
+    if (!envVar) {
+      throw new Error(`Unknown AI provider: ${provider}`);
+    }
+
+    return this.getEnvVar(envVar);
   }
 
   async configExists(): Promise<boolean> {
