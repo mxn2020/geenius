@@ -2,10 +2,10 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config.js';
-import { logger } from '../../utils/logger.js';
-import { validateApiKey } from '../../utils/validation.js';
-import { EnhancedAgentService } from '../../agent/enhanced-agent-service.js';
+import { ConfigManager } from '../../utils/config';
+import { logger } from '../../utils/logger';
+import { validateApiKey } from '../../utils/validation';
+import { AgentService } from '../../agent/agent-service';
 
 export async function switchProviderCommand(): Promise<void> {
   const configManager = new ConfigManager();
@@ -54,7 +54,7 @@ export async function switchProviderCommand(): Promise<void> {
     
     try {
       // Initialize agent service with current config
-      const agentService = new EnhancedAgentService(config.repoUrl, {
+      const agentService = new AgentService(config.repoUrl, {
         type: config.agentMode,
         provider: config.aiProvider
       });

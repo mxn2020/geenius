@@ -2,13 +2,13 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config.js';
-import { validateInput, DevelopCommandSchema } from '../../utils/validation.js';
-import { logger } from '../../utils/logger.js';
-import { generateTaskId } from '../../utils/helpers.js';
-import { GitHubService } from '../../services/github.js';
-import { EnhancedAgentService } from '../../agent/enhanced-agent-service.js';
-import type { DevelopOptions } from '../../types/config.js';
+import { ConfigManager } from '../../utils/config';
+import { validateInput, DevelopCommandSchema } from '../../utils/validation';
+import { logger } from '../../utils/logger';
+import { generateTaskId } from '../../utils/helpers';
+import { GitHubService } from '../../services/github';
+import { AgentService } from '../../agent/agent-service';
+import type { DevelopOptions } from '../../types/config';
 
 export async function developCommand(options: any = {}): Promise<void> {
   const configManager = new ConfigManager();
@@ -92,7 +92,7 @@ export async function developCommand(options: any = {}): Promise<void> {
     });
     
     // Initialize agent service
-    const agentService = new EnhancedAgentService(config.repoUrl, {
+    const agentService = new AgentService(config.repoUrl, {
       type: config.agentMode,
       provider: config.aiProvider,
       orchestrationStrategy: config.orchestrationStrategy

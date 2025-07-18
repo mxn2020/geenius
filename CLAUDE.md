@@ -46,8 +46,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Agent System (`src/agent/`)**
 - `custom-ai-agent.ts` - Base AI agent implementation
 - `agent-orchestrator.ts` - Multi-agent coordination system with specialized roles (architect, developer, tester, reviewer, documenter)
-- `enhanced-agent-service.ts` - Enhanced agent capabilities
-- `enhanced-coding-agent.ts` - Specialized coding agent
+- `agent-service.ts` -  agent capabilities
+- `coding-agent.ts` - Specialized coding agent
 
 **Template System (`src/repo-templates/`)**
 - `template-registry.json` - Repository of AI-enabled project templates

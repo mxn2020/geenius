@@ -1,8 +1,8 @@
-// src/agent/enhanced-coding-agent.ts
-import { SandboxAIService } from '../services/sandbox-ai-runner.js';
-import { GitHubService } from '../services/github.js';
-import { TestRunner } from '../services/test-runner.js';
-import { StackBlitzService } from '../services/stackblitz.js';
+// src/agent/coding-agent.ts
+import { SandboxAIService } from '../services/sandbox-ai-runner';
+import { GitHubService } from '../services/github';
+import { TestRunner } from '../services/test-runner';
+import { StackBlitzService } from '../services/stackblitz';
 
 interface AgentConfig {
   aiProvider: 'claude' | 'gemini' | 'openai';
@@ -11,7 +11,7 @@ interface AgentConfig {
   systemPrompt?: string;
 }
 
-export class EnhancedCodingAgent {
+export class CodingAgent {
   private github: GitHubService;
   private stackblitz: StackBlitzService;
   private testRunner: TestRunner;

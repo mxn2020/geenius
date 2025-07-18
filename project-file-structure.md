@@ -8,7 +8,7 @@ ai-dev-workflow/
 │   ├── agent/
 │   │   ├── custom-ai-agent.ts          # Core custom AI agent with multi-provider support
 │   │   ├── agent-orchestrator.ts       # Multi-agent orchestration system
-│   │   ├── enhanced-agent-service.ts   # Main service integrating all agents
+│   │   ├── agent-service.ts   # Main service integrating all agents
 │   │   └── coding-agent.ts             # Original coding agent (legacy)
 │   ├── services/
 │   │   ├── github.ts                   # GitHub API integration
@@ -54,7 +54,7 @@ ai-dev-workflow/
 │   │   ├── agent/
 │   │   │   ├── custom-ai-agent.test.ts
 │   │   │   ├── agent-orchestrator.test.ts
-│   │   │   └── enhanced-agent-service.test.ts
+│   │   │   └── agent-service.test.ts
 │   │   ├── services/
 │   │   │   ├── github.test.ts
 │   │   │   ├── netlify.test.ts
@@ -172,7 +172,7 @@ ai-dev-workflow/
 Core AI agent implementations:
 - **custom-ai-agent.ts**: Multi-provider agent with reasoning, memory, and tool usage
 - **agent-orchestrator.ts**: Manages team of specialized agents
-- **enhanced-agent-service.ts**: Main service that integrates everything
+- **agent-service.ts**: Main service that integrates everything
 
 ### 📁 `src/services/`
 External service integrations:
@@ -230,7 +230,7 @@ src/services/github.ts (fork template)
   ↓
 src/services/netlify.ts (setup deployment)
   ↓
-src/agent/enhanced-agent-service.ts (initialize AI)
+src/agent/agent-service.ts (initialize AI)
   ↓
 .dev-agent.json (save config)
 ```
@@ -243,7 +243,7 @@ dev-agent develop
 # Which executes
 src/cli/commands/develop.ts
   ↓
-src/agent/enhanced-agent-service.ts
+src/agent/agent-service.ts
   ↓
 src/agent/custom-ai-agent.ts OR src/agent/agent-orchestrator.ts
   ↓

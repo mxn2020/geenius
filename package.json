@@ -10,7 +10,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli/index.ts",
+    "server": "tsx src/server.ts",
     "test": "vitest",
+    "test:skip": "echo 'Tests skipped for dev mode'",
     "start": "node bin/geenius.js"
   },
   "dependencies": {
@@ -55,6 +57,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.14",
+    "@upstash/redis": "^1.35.1",
     "@vite-pwa/assets-generator": "^1.0.0",
     "ai": "^4.3.19",
     "autumn-js": "^0.0.101",

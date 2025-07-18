@@ -320,14 +320,27 @@ export class GitHubService {
     }
   }
 
-  async deleteRepository(repoUrl: string): Promise<void> {
+  async deleteRepository(ownerOrUrl: string, repo?: string): Promise<void> {
     try {
-      const { owner, repo } = this.parseRepoUrl(repoUrl);
-      console.log(`🗑️  Deleting GitHub repository ${owner}/${repo}`);
+      let owner: string;
+      let repoName: string;
+      
+      if (repo) {
+        // Called with separate owner and repo parameters
+        owner = ownerOrUrl;
+        repoName = repo;
+      } else {
+        // Called with URL parameter
+        const parsed = this.parseRepoUrl(ownerOrUrl);
+        owner = parsed.owner;
+        repoName = parsed.repo;
+      }
+      
+      console.log(`🗑️  Deleting GitHub repository ${owner}/${repoName}`);
       
       await this.octokit.rest.repos.delete({
         owner,
-        repo
+        repo: repoName
       });
       
       console.log('✅ GitHub repository deleted successfully');
@@ -428,17 +441,6 @@ export class GitHubService {
     }
   }
 
-  async deleteRepository(owner: string, repo: string): Promise<void> {
-    try {
-      await this.octokit.rest.repos.delete({
-        owner,
-        repo
-      });
-    } catch (error: any) {
-      console.error('❌ Error deleting repository:', error.message);
-      throw new Error(`Failed to delete repository: ${error.message}`);
-    }
-  }
 
   async listDeployKeys(owner: string, repo: string): Promise<any[]> {
     try {

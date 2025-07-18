@@ -2,9 +2,9 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config.js';
-import { logger } from '../../utils/logger.js';
-import { EnhancedAgentService } from '../../agent/enhanced-agent-service.js';
+import { ConfigManager } from '../../utils/config';
+import { logger } from '../../utils/logger';
+import { AgentService } from '../../agent/agent-service';
 
 export async function memoryCommand(options: any = {}): Promise<void> {
   const configManager = new ConfigManager();
@@ -16,7 +16,7 @@ export async function memoryCommand(options: any = {}): Promise<void> {
   }
 
   try {
-    const agentService = new EnhancedAgentService(config.repoUrl, {
+    const agentService = new AgentService(config.repoUrl, {
       type: config.agentMode,
       provider: config.aiProvider
     });

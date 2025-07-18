@@ -1,78 +1,21 @@
-// src/agent/custom-ai-agent.ts
-import { generateText, generateObject, streamText, tool } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
+import { tool } from 'ai';
 import { z } from 'zod';
 
-// Custom provider for Grok (X.AI)
-class GrokProvider {
-  private apiKey: string;
-  private baseUrl: string = 'https://api.x.ai/v1';
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
-
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: options.model || 'grok-beta',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 4000,
-        stream: false
-      })
-    });
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  }
-
-  async generateStream(prompt: string, options: any = {}): Promise<ReadableStream> {
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: options.model || 'grok-beta',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 4000,
-        stream: true
-      })
-    });
-
-    return response.body!;
-  }
-}
-
-// AI Provider configuration
-interface AIProviderConfig {
-  provider: 'openai' | 'anthropic' | 'google' | 'grok';
-  apiKey: string;
-  model: string;
-  temperature?: number;
-  maxTokens?: number;
-  systemPrompt?: string;
-}
-
-// Agent memory for context management
-interface AgentMemory {
-  conversation: Array<{ role: string; content: string; timestamp: number }>;
+interface AgentConfig {
+  sessionId: string;
+  sandbox: any;
+  repositoryUrl: string;
   projectContext: {
-    structure: string;
+    componentRegistry: any;
     dependencies: Record<string, string>;
     framework: string;
-    lastAnalysis: string;
+    structure: string;
   };
+}
+
+interface AgentMemory {
+  conversation: Array<{ role: string; content: string; timestamp: number }>;
+  projectContext: any;
   taskHistory: Array<{
     task: string;
     approach: string;
@@ -87,515 +30,682 @@ interface AgentMemory {
   }>;
 }
 
-// Agent reasoning and planning
-interface AgentPlan {
-  goal: string;
-  steps: Array<{
-    id: string;
-    description: string;
-    type: 'analyze' | 'code' | 'test' | 'refactor' | 'document';
-    dependencies: string[];
-    estimatedTime: number;
-    tools: string[];
+interface AgentResult {
+  success: boolean;
+  result?: any;
+  error?: string;
+  reasoning: string[];
+  executionSteps: Array<{
+    step: string;
+    result: string;
+    success: boolean;
+    tool?: string;
+    parameters?: any;
   }>;
-  constraints: string[];
-  successCriteria: string[];
 }
 
 export class CustomAIAgent {
-  private config: AIProviderConfig;
+  private config: AgentConfig;
   private memory: AgentMemory;
-  private grokProvider?: GrokProvider;
-  private toolRegistry: Map<string, any>;
-  private reasoningDepth: number = 3;
+  private tools: Map<string, any>;
+  private aiProvider: string;
+  private apiKey: string;
+  private model: string;
 
-  constructor(config: AIProviderConfig) {
+  constructor(config: AgentConfig) {
     this.config = config;
     this.memory = this.initializeMemory();
-    this.toolRegistry = new Map();
-    
-    if (config.provider === 'grok') {
-      this.grokProvider = new GrokProvider(config.apiKey);
-    }
+    this.tools = new Map();
+    this.aiProvider = process.env.CUSTOM_AI_PROVIDER || 'anthropic';
+    this.apiKey = this.getAPIKey();
+    this.model = this.getModel();
+  }
 
-    this.registerTools();
+  private getAPIKey(): string {
+    switch (this.aiProvider) {
+      case 'anthropic':
+        return process.env.ANTHROPIC_API_KEY || '';
+      case 'openai':
+        return process.env.OPENAI_API_KEY || '';
+      case 'google':
+        return process.env.GOOGLE_API_KEY || '';
+      case 'grok':
+        return process.env.GROK_API_KEY || '';
+      default:
+        throw new Error(`Unsupported AI provider: ${this.aiProvider}`);
+    }
+  }
+
+  private getModel(): string {
+    const modelMap = {
+      'anthropic': 'claude-3-5-sonnet-20241022',
+      'openai': 'gpt-4-turbo',
+      'google': 'gemini-pro',
+      'grok': 'grok-beta'
+    };
+    return modelMap[this.aiProvider] || 'gpt-4-turbo';
   }
 
   private initializeMemory(): AgentMemory {
     return {
       conversation: [],
-      projectContext: {
-        structure: '',
-        dependencies: {},
-        framework: '',
-        lastAnalysis: ''
-      },
+      projectContext: this.config.projectContext,
       taskHistory: [],
       codePatterns: []
     };
   }
 
-  private getProvider() {
-    switch (this.config.provider) {
-      case 'openai':
-        return openai(this.config.apiKey);
-      case 'anthropic':
-        return anthropic(this.config.apiKey);
-      case 'google':
-        return google(this.config.apiKey);
-      case 'grok':
-        return this.grokProvider!;
-      default:
-        throw new Error(`Unsupported provider: ${this.config.provider}`);
+  async initialize(): Promise<void> {
+    await this.registerTools();
+    await this.setupAgentEnvironment();
+  }
+
+  private async registerTools(): Promise<void> {
+    // File system tools
+    this.tools.set('read_file', tool({
+      description: 'Read the contents of a file in the sandbox',
+      parameters: z.object({
+        path: z.string().describe('File path to read')
+      }),
+      execute: async ({ path }) => {
+        return await this.sandbox.readFile(path);
+      }
+    }));
+
+    this.tools.set('write_file', tool({
+      description: 'Write or update a file in the sandbox',
+      parameters: z.object({
+        path: z.string().describe('File path to write'),
+        content: z.string().describe('File content')
+      }),
+      execute: async ({ path, content }) => {
+        return await this.sandbox.writeFile(path, content);
+      }
+    }));
+
+    this.tools.set('list_files', tool({
+      description: 'List files and directories in a given path',
+      parameters: z.object({
+        path: z.string().optional().describe('Directory path to list (defaults to current directory)')
+      }),
+      execute: async ({ path = '.' }) => {
+        return await this.sandbox.listFiles(path);
+      }
+    }));
+
+    // Git operations
+    this.tools.set('git_clone', tool({
+      description: 'Clone a repository into the sandbox',
+      parameters: z.object({
+        repositoryUrl: z.string().describe('Git repository URL'),
+        branch: z.string().optional().describe('Branch to checkout (defaults to main)')
+      }),
+      execute: async ({ repositoryUrl, branch = 'main' }) => {
+        return await this.sandbox.gitClone(repositoryUrl, branch);
+      }
+    }));
+
+    this.tools.set('git_create_branch', tool({
+      description: 'Create and switch to a new git branch',
+      parameters: z.object({
+        branchName: z.string().describe('Name of the new branch')
+      }),
+      execute: async ({ branchName }) => {
+        return await this.sandbox.gitCreateBranch(branchName);
+      }
+    }));
+
+    this.tools.set('git_commit', tool({
+      description: 'Commit changes to git',
+      parameters: z.object({
+        message: z.string().describe('Commit message')
+      }),
+      execute: async ({ message }) => {
+        return await this.sandbox.gitCommit(message);
+      }
+    }));
+
+    // Project analysis tools
+    this.tools.set('analyze_component', tool({
+      description: 'Analyze a React component and its dependencies',
+      parameters: z.object({
+        componentId: z.string().describe('Component ID to analyze'),
+        deep: z.boolean().optional().describe('Whether to perform deep analysis')
+      }),
+      execute: async ({ componentId, deep = false }) => {
+        return await this.analyzeComponent(componentId, deep);
+      }
+    }));
+
+    this.tools.set('get_project_structure', tool({
+      description: 'Get the overall project structure and dependencies',
+      parameters: z.object({}),
+      execute: async () => {
+        return await this.getProjectStructure();
+      }
+    }));
+
+    // Testing tools
+    this.tools.set('run_tests', tool({
+      description: 'Run the project test suite',
+      parameters: z.object({
+        testPath: z.string().optional().describe('Specific test file or directory to run')
+      }),
+      execute: async ({ testPath }) => {
+        return await this.sandbox.runTests(testPath);
+      }
+    }));
+
+    this.tools.set('create_test', tool({
+      description: 'Create a test file for a component',
+      parameters: z.object({
+        componentPath: z.string().describe('Path to the component file'),
+        testType: z.enum(['unit', 'integration', 'e2e']).describe('Type of test to create')
+      }),
+      execute: async ({ componentPath, testType }) => {
+        return await this.createTest(componentPath, testType);
+      }
+    }));
+
+    // Command execution
+    this.tools.set('run_command', tool({
+      description: 'Run a shell command in the sandbox',
+      parameters: z.object({
+        command: z.string().describe('Command to execute'),
+        workingDir: z.string().optional().describe('Working directory for the command')
+      }),
+      execute: async ({ command, workingDir = '.' }) => {
+        return await this.sandbox.runCommand(command, { cwd: workingDir });
+      }
+    }));
+
+    // External AI CLI tools (Claude Code, Gemini CLI)
+    this.tools.set('run_claude_code', tool({
+      description: 'Run Claude Code CLI with a specific prompt',
+      parameters: z.object({
+        prompt: z.string().describe('Prompt for Claude Code'),
+        files: z.array(z.string()).optional().describe('Specific files to focus on')
+      }),
+      execute: async ({ prompt, files }) => {
+        return await this.runClaudeCode(prompt, files);
+      }
+    }));
+
+    this.tools.set('run_gemini_cli', tool({
+      description: 'Run Gemini CLI with a specific prompt',
+      parameters: z.object({
+        prompt: z.string().describe('Prompt for Gemini CLI'),
+        context: z.string().optional().describe('Additional context for Gemini')
+      }),
+      execute: async ({ prompt, context }) => {
+        return await this.runGeminiCLI(prompt, context);
+      }
+    }));
+
+    // GitHub operations
+    this.tools.set('create_pull_request', tool({
+      description: 'Create a pull request on GitHub',
+      parameters: z.object({
+        title: z.string().describe('PR title'),
+        changes: z.array(z.any()).describe('List of changes made'),
+        sessionId: z.string().describe('Session ID for tracking')
+      }),
+      execute: async ({ title, changes, sessionId }) => {
+        return await this.createPullRequest(title, changes, sessionId);
+      }
+    }));
+
+    // Deployment monitoring
+    this.tools.set('wait_for_deployment', tool({
+      description: 'Wait for and monitor deployment status',
+      parameters: z.object({
+        branchName: z.string().describe('Branch name to monitor')
+      }),
+      execute: async ({ branchName }) => {
+        return await this.waitForDeployment(branchName);
+      }
+    }));
+  }
+
+  private async setupAgentEnvironment(): Promise<void> {
+    // Setup Claude Code if anthropic provider
+    if (this.aiProvider === 'anthropic') {
+      await this.sandbox.runCommand('npm install -g @anthropic-ai/claude-code');
+      await this.sandbox.writeFile('.env', `ANTHROPIC_API_KEY=${this.apiKey}`);
     }
+
+    // Setup Gemini CLI if google provider
+    if (this.aiProvider === 'google') {
+      await this.sandbox.runCommand('npm install -g @google/generative-ai');
+      await this.sandbox.writeFile('.env', `GOOGLE_API_KEY=${this.apiKey}`);
+    }
+
+    // Install project dependencies
+    await this.sandbox.runCommand('npm install');
   }
 
-  private getModel() {
-    return this.config.model;
-  }
-
-  private registerTools() {
-    this.toolRegistry.set('analyze_code', tool({
-      description: 'Analyze code for patterns, issues, and improvements',
-      parameters: z.object({
-        code: z.string().describe('The code to analyze'),
-        focus: z.string().optional().describe('Specific aspect to focus on')
-      }),
-      execute: async ({ code, focus }) => {
-        return await this.analyzeCode(code, focus);
-      }
-    }));
-
-    this.toolRegistry.set('generate_plan', tool({
-      description: 'Generate a detailed implementation plan',
-      parameters: z.object({
-        goal: z.string().describe('The main goal to achieve'),
-        constraints: z.array(z.string()).optional().describe('Any constraints to consider')
-      }),
-      execute: async ({ goal, constraints }) => {
-        return await this.generatePlan(goal, constraints);
-      }
-    }));
-
-    this.toolRegistry.set('execute_step', tool({
-      description: 'Execute a specific step from the plan',
-      parameters: z.object({
-        stepId: z.string().describe('The step ID to execute'),
-        context: z.string().optional().describe('Additional context for execution')
-      }),
-      execute: async ({ stepId, context }) => {
-        return await this.executeStep(stepId, context);
-      }
-    }));
-
-    this.toolRegistry.set('reflect_and_improve', tool({
-      description: 'Reflect on recent actions and suggest improvements',
-      parameters: z.object({
-        actions: z.array(z.string()).describe('Recent actions taken'),
-        outcomes: z.array(z.string()).describe('Outcomes of those actions')
-      }),
-      execute: async ({ actions, outcomes }) => {
-        return await this.reflectAndImprove(actions, outcomes);
-      }
-    }));
-
-    this.toolRegistry.set('search_memory', tool({
-      description: 'Search agent memory for relevant information',
-      parameters: z.object({
-        query: z.string().describe('What to search for'),
-        type: z.enum(['conversation', 'tasks', 'patterns']).describe('Type of memory to search')
-      }),
-      execute: async ({ query, type }) => {
-        return await this.searchMemory(query, type);
-      }
-    }));
-  }
-
-  async processTask(task: string, options: {
-    reasoning: boolean;
-    streaming?: boolean;
-    maxSteps?: number;
-  } = { reasoning: true, maxSteps: 10 }): Promise<{
-    result: string;
-    reasoning: string[];
-    plan?: AgentPlan;
-    executionSteps: Array<{ step: string; result: string; success: boolean }>;
-  }> {
+  async processTask(
+    prompt: string, 
+    options: {
+      reasoning: boolean;
+      maxSteps: number;
+      onProgress?: (step: string, agent?: string) => Promise<void>;
+    }
+  ): Promise<AgentResult> {
     const reasoning: string[] = [];
-    const executionSteps: Array<{ step: string; result: string; success: boolean }> = [];
+    const executionSteps: Array<{
+      step: string;
+      result: string;
+      success: boolean;
+      tool?: string;
+      parameters?: any;
+    }> = [];
 
-    // Add task to memory
-    this.memory.conversation.push({
-      role: 'user',
-      content: task,
-      timestamp: Date.now()
-    });
+    try {
+      // Add task to memory
+      this.memory.conversation.push({
+        role: 'user',
+        content: prompt,
+        timestamp: Date.now()
+      });
 
-    // Step 1: Reasoning and Planning
-    if (options.reasoning) {
-      reasoning.push('🧠 Analyzing task and generating plan...');
-      const plan = await this.generatePlan(task);
-      reasoning.push(`📋 Generated plan with ${plan.steps.length} steps`);
-      
-      // Step 2: Execute plan
-      for (let i = 0; i < Math.min(plan.steps.length, options.maxSteps || 10); i++) {
-        const step = plan.steps[i];
-        reasoning.push(`⚡ Executing step ${i + 1}: ${step.description}`);
+      if (options.reasoning) {
+        reasoning.push('🧠 Analyzing task and generating execution plan...');
+        if (options.onProgress) await options.onProgress('Analyzing task and generating execution plan...');
+      }
+
+      // Use the AI provider to reason about the task and decide on tool usage
+      const systemPrompt = `You are an advanced AI development assistant with access to powerful tools for code analysis, file manipulation, testing, and integration with external AI systems.
+
+**AVAILABLE TOOLS:**
+${Array.from(this.tools.keys()).map(tool => `- ${tool}`).join('\n')}
+
+**PROJECT CONTEXT:**
+- Repository: ${this.config.repositoryUrl}
+- Framework: ${this.memory.projectContext.framework}
+- Component Registry: ${JSON.stringify(this.memory.projectContext.componentRegistry, null, 2)}
+
+**YOUR APPROACH:**
+1. Analyze the task thoroughly
+2. Break it down into actionable steps
+3. Use tools strategically to implement the solution
+4. Validate your work with tests
+5. Ensure code quality and maintainability
+
+**IMPORTANT:**
+- Always use tools to interact with the codebase
+- Make incremental changes and test frequently
+- Follow React/TypeScript best practices
+- Consider component relationships and dependencies
+- Document your changes appropriately
+
+For complex tasks, you can leverage external AI tools:
+- Use 'run_claude_code' for advanced code generation and refactoring
+- Use 'run_gemini_cli' for creative problem solving and analysis
+
+Start by analyzing the current codebase structure, then implement the requested changes step by step.`;
+
+      let currentStep = 0;
+      let lastResult = '';
+      let shouldContinue = true;
+
+      while (shouldContinue && currentStep < options.maxSteps) {
+        currentStep++;
         
-        try {
-          const result = await this.executeStepWithReasoning(step, task);
-          executionSteps.push({
-            step: step.description,
-            result: result.content,
-            success: result.success
-          });
-          reasoning.push(`✅ Step ${i + 1} completed: ${result.summary}`);
-        } catch (error) {
-          executionSteps.push({
-            step: step.description,
-            result: `Error: ${error.message}`,
-            success: false
-          });
-          reasoning.push(`❌ Step ${i + 1} failed: ${error.message}`);
+        const stepPrompt = currentStep === 1 
+          ? `${systemPrompt}\n\nTask: ${prompt}\n\nPlease start by analyzing the current state and then implement the required changes.`
+          : `Continue with the implementation. Previous result: ${lastResult}\n\nNext step in the process:`;
+
+        const stepResult = await this.callAIWithTools(stepPrompt);
+        
+        // Parse the AI response and extract tool calls
+        const toolCalls = this.parseToolCalls(stepResult);
+        
+        if (toolCalls.length > 0) {
+          for (const toolCall of toolCalls) {
+            const tool = this.tools.get(toolCall.name);
+            if (tool) {
+              try {
+                const toolResult = await tool.execute(toolCall.parameters);
+                executionSteps.push({
+                  step: `Using ${toolCall.name}`,
+                  result: JSON.stringify(toolResult).slice(0, 500),
+                  success: true,
+                  tool: toolCall.name,
+                  parameters: toolCall.parameters
+                });
+                
+                reasoning.push(`✅ Executed ${toolCall.name} successfully`);
+                if (options.onProgress) await options.onProgress(`Executed ${toolCall.name}`);
+                
+                lastResult = JSON.stringify(toolResult);
+              } catch (error) {
+                executionSteps.push({
+                  step: `Using ${toolCall.name}`,
+                  result: `Error: ${error.message}`,
+                  success: false,
+                  tool: toolCall.name,
+                  parameters: toolCall.parameters
+                });
+                
+                reasoning.push(`❌ Tool ${toolCall.name} failed: ${error.message}`);
+                if (options.onProgress) await options.onProgress(`Tool ${toolCall.name} failed: ${error.message}`);
+              }
+            }
+          }
+        } else {
+          // No more tool calls, task might be complete
+          shouldContinue = false;
+          lastResult = stepResult;
+        }
+
+        // Check if the AI indicates completion
+        if (stepResult.toLowerCase().includes('task completed') || 
+            stepResult.toLowerCase().includes('implementation finished') ||
+            stepResult.toLowerCase().includes('all done')) {
+          shouldContinue = false;
         }
       }
+
+      // Store in memory for learning
+      this.memory.taskHistory.push({
+        task: prompt,
+        approach: `${executionSteps.length} steps executed`,
+        result: lastResult.slice(0, 500),
+        success: true,
+        timestamp: Date.now()
+      });
+
+      return {
+        success: true,
+        result: lastResult,
+        reasoning,
+        executionSteps
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        reasoning,
+        executionSteps
+      };
     }
-
-    // Step 3: Generate final response
-    const finalResult = await this.generateFinalResponse(task, executionSteps);
-    
-    // Step 4: Learn from execution
-    await this.learnFromExecution(task, executionSteps);
-
-    return {
-      result: finalResult,
-      reasoning,
-      plan: options.reasoning ? await this.generatePlan(task) : undefined,
-      executionSteps
-    };
   }
 
-  private async generatePlan(goal: string, constraints: string[] = []): Promise<AgentPlan> {
-    const systemPrompt = `You are an AI agent planning system. Generate a detailed, executable plan for achieving the given goal.
-    
-    Consider:
-    - Breaking down complex tasks into smaller steps
-    - Dependencies between steps
-    - Required tools and resources
-    - Time estimates
-    - Success criteria
-    
-    Project context: ${JSON.stringify(this.memory.projectContext)}
-    Previous similar tasks: ${JSON.stringify(this.memory.taskHistory.slice(-3))}`;
-
-    const provider = this.getProvider();
-    
-    if (this.config.provider === 'grok') {
-      const response = await this.grokProvider!.generateText(
-        `${systemPrompt}\n\nGoal: ${goal}\nConstraints: ${constraints.join(', ')}\n\nGenerate a detailed plan in JSON format.`,
-        { model: this.getModel() }
-      );
-      
-      try {
-        return JSON.parse(response);
-      } catch {
-        // Fallback to structured format
-        return this.parsePlanFromText(response, goal);
-      }
+  async executeCommand(command: string, parameters: any): Promise<any> {
+    const tool = this.tools.get(command);
+    if (!tool) {
+      throw new Error(`Unknown command: ${command}`);
     }
+    
+    return await tool.execute(parameters);
+  }
 
-    const result = await generateObject({
-      model: provider(this.getModel()),
-      system: systemPrompt,
-      prompt: `Goal: ${goal}\nConstraints: ${constraints.join(', ')}\n\nGenerate a detailed plan.`,
-      schema: z.object({
-        goal: z.string(),
-        steps: z.array(z.object({
-          id: z.string(),
-          description: z.string(),
-          type: z.enum(['analyze', 'code', 'test', 'refactor', 'document']),
-          dependencies: z.array(z.string()),
-          estimatedTime: z.number(),
-          tools: z.array(z.string())
-        })),
-        constraints: z.array(z.string()),
-        successCriteria: z.array(z.string())
+  private async callAIWithTools(prompt: string): Promise<string> {
+    // This would integrate with your preferred AI provider
+    // and handle tool calling based on the provider's capabilities
+    
+    switch (this.aiProvider) {
+      case 'anthropic':
+        return await this.callAnthropicWithTools(prompt);
+      case 'openai':
+        return await this.callOpenAIWithTools(prompt);
+      case 'google':
+        return await this.callGoogleWithTools(prompt);
+      default:
+        return await this.callAnthropicWithTools(prompt);
+    }
+  }
+
+  private async callAnthropicWithTools(prompt: string): Promise<string> {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 4000,
+        temperature: 0.1,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        tools: Array.from(this.tools.values()).map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          input_schema: tool.parameters
+        }))
       })
     });
 
-    return result.object;
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.content[0].text;
   }
 
-  private async executeStepWithReasoning(step: any, originalTask: string): Promise<{
-    content: string;
-    success: boolean;
-    summary: string;
-  }> {
-    const tools = Object.fromEntries(this.toolRegistry);
+  private parseToolCalls(aiResponse: string): Array<{ name: string; parameters: any }> {
+    // Parse AI response for tool calls
+    // This is a simplified parser - in practice you'd use the provider's tool calling format
+    const toolCalls = [];
+    const toolCallRegex = /use_tool:\s*(\w+)\s*\((.*?)\)/g;
     
-    const systemPrompt = `You are executing a specific step in a larger plan. 
-    
-    Original task: ${originalTask}
-    Current step: ${step.description}
-    Step type: ${step.type}
-    Available tools: ${step.tools.join(', ')}
-    
-    Execute this step thoroughly and provide detailed output.
-    Use the available tools when appropriate.
-    
-    Context: ${JSON.stringify(this.memory.projectContext)}`;
-
-    const provider = this.getProvider();
-    
-    if (this.config.provider === 'grok') {
-      const response = await this.grokProvider!.generateText(
-        `${systemPrompt}\n\nExecute the step: ${step.description}`,
-        { model: this.getModel() }
-      );
-      
-      return {
-        content: response,
-        success: true,
-        summary: `Executed ${step.description}`
-      };
+    let match;
+    while ((match = toolCallRegex.exec(aiResponse)) !== null) {
+      try {
+        const toolName = match[1];
+        const parametersString = match[2];
+        const parameters = JSON.parse(`{${parametersString}}`);
+        
+        toolCalls.push({
+          name: toolName,
+          parameters
+        });
+      } catch (error) {
+        console.warn('Failed to parse tool call:', match[0]);
+      }
     }
-
-    const result = await generateText({
-      model: provider(this.getModel()),
-      system: systemPrompt,
-      prompt: `Execute step: ${step.description}`,
-      tools,
-      maxSteps: 5
-    });
-
-    return {
-      content: result.text,
-      success: true,
-      summary: `Executed ${step.description}`
-    };
-  }
-
-  private async generateFinalResponse(task: string, executionSteps: any[]): Promise<string> {
-    const systemPrompt = `You are synthesizing the results of a multi-step execution into a final response.
     
-    Original task: ${task}
-    Execution steps completed: ${executionSteps.length}
-    
-    Provide a comprehensive final response that:
-    1. Summarizes what was accomplished
-    2. Highlights key insights or results
-    3. Mentions any limitations or next steps
-    4. Provides concrete deliverables when applicable`;
-
-    const provider = this.getProvider();
-    
-    if (this.config.provider === 'grok') {
-      return await this.grokProvider!.generateText(
-        `${systemPrompt}\n\nTask: ${task}\nExecution steps: ${JSON.stringify(executionSteps, null, 2)}\n\nProvide final response:`,
-        { model: this.getModel() }
-      );
-    }
-
-    const result = await generateText({
-      model: provider(this.getModel()),
-      system: systemPrompt,
-      prompt: `Synthesize results for task: ${task}\n\nExecution steps: ${JSON.stringify(executionSteps, null, 2)}`
-    });
-
-    return result.text;
-  }
-
-  private async learnFromExecution(task: string, executionSteps: any[]): Promise<void> {
-    // Analyze execution for patterns and improvements
-    const successRate = executionSteps.filter(step => step.success).length / executionSteps.length;
-    
-    // Store in memory
-    this.memory.taskHistory.push({
-      task,
-      approach: `${executionSteps.length} steps executed`,
-      result: `${successRate * 100}% success rate`,
-      success: successRate > 0.7,
-      timestamp: Date.now()
-    });
-
-    // Extract patterns for future use
-    const patterns = executionSteps
-      .filter(step => step.success)
-      .map(step => ({
-        pattern: step.step,
-        context: task,
-        effectiveness: step.success ? 1 : 0
-      }));
-
-    this.memory.codePatterns.push(...patterns);
-
-    // Keep memory manageable
-    if (this.memory.taskHistory.length > 100) {
-      this.memory.taskHistory = this.memory.taskHistory.slice(-50);
-    }
-    if (this.memory.codePatterns.length > 200) {
-      this.memory.codePatterns = this.memory.codePatterns.slice(-100);
-    }
+    return toolCalls;
   }
 
   // Tool implementations
-  private async analyzeCode(code: string, focus?: string): Promise<string> {
-    const systemPrompt = `You are a code analysis expert. Analyze the provided code for:
-    - Code quality and best practices
-    - Potential bugs or issues
-    - Performance improvements
-    - Security concerns
-    - Architecture patterns
-    ${focus ? `Focus specifically on: ${focus}` : ''}`;
-
-    const provider = this.getProvider();
-    
-    if (this.config.provider === 'grok') {
-      return await this.grokProvider!.generateText(
-        `${systemPrompt}\n\nCode to analyze:\n${code}`,
-        { model: this.getModel() }
-      );
+  private async analyzeComponent(componentId: string, deep: boolean): Promise<any> {
+    const component = this.memory.projectContext.componentRegistry[componentId];
+    if (!component) {
+      return { error: `Component ${componentId} not found in registry` };
     }
 
-    const result = await generateText({
-      model: provider(this.getModel()),
-      system: systemPrompt,
-      prompt: `Analyze this code:\n\n${code}`
-    });
-
-    return result.text;
-  }
-
-  private async executeStep(stepId: string, context?: string): Promise<string> {
-    // Implementation would execute specific step
-    return `Executed step ${stepId} with context: ${context}`;
-  }
-
-  private async reflectAndImprove(actions: string[], outcomes: string[]): Promise<string> {
-    const systemPrompt = `You are a self-improving AI agent. Analyze the given actions and outcomes to suggest improvements.
+    // Read the component file
+    const componentPath = component.context?.filePath || `src/components/${componentId}.tsx`;
+    const componentCode = await this.sandbox.readFile(componentPath);
     
-    Focus on:
-    - What worked well
-    - What could be improved
-    - Patterns to remember
-    - Adjustments for future tasks`;
+    // Analyze dependencies, props, etc.
+    const analysis = {
+      componentId,
+      filePath: componentPath,
+      codeLength: componentCode.length,
+      dependencies: this.extractDependencies(componentCode),
+      props: this.extractProps(componentCode),
+      state: this.extractState(componentCode),
+      hooks: this.extractHooks(componentCode)
+    };
 
-    const provider = this.getProvider();
-    
-    if (this.config.provider === 'grok') {
-      return await this.grokProvider!.generateText(
-        `${systemPrompt}\n\nActions: ${actions.join(', ')}\nOutcomes: ${outcomes.join(', ')}`,
-        { model: this.getModel() }
-      );
+    if (deep) {
+      // Perform deeper analysis with AI
+      const deepAnalysisPrompt = `Analyze this React component code:
+
+${componentCode}
+
+Provide insights on:
+1. Component architecture and patterns used
+2. Potential improvements or refactoring opportunities
+3. Dependencies and their necessity
+4. Performance considerations
+5. Accessibility and UX aspects
+
+Format your response as a structured analysis.`;
+
+      const aiAnalysis = await this.callAIWithTools(deepAnalysisPrompt);
+      analysis.aiInsights = aiAnalysis;
     }
 
-    const result = await generateText({
-      model: provider(this.getModel()),
-      system: systemPrompt,
-      prompt: `Actions taken: ${actions.join(', ')}\nOutcomes: ${outcomes.join(', ')}`
-    });
-
-    return result.text;
+    return analysis;
   }
 
-  private async searchMemory(query: string, type: 'conversation' | 'tasks' | 'patterns'): Promise<string> {
-    let searchResults: any[] = [];
+  private async getProjectStructure(): Promise<any> {
+    const packageJson = await this.sandbox.readFile('package.json');
+    const srcFiles = await this.sandbox.listFiles('src');
+    
+    return {
+      packageJson: JSON.parse(packageJson),
+      srcStructure: srcFiles,
+      componentRegistry: this.memory.projectContext.componentRegistry,
+      framework: this.memory.projectContext.framework
+    };
+  }
 
-    switch (type) {
-      case 'conversation':
-        searchResults = this.memory.conversation.filter(msg => 
-          msg.content.toLowerCase().includes(query.toLowerCase())
-        );
-        break;
-      case 'tasks':
-        searchResults = this.memory.taskHistory.filter(task => 
-          task.task.toLowerCase().includes(query.toLowerCase()) ||
-          task.approach.toLowerCase().includes(query.toLowerCase())
-        );
-        break;
-      case 'patterns':
-        searchResults = this.memory.codePatterns.filter(pattern => 
-          pattern.pattern.toLowerCase().includes(query.toLowerCase()) ||
-          pattern.context.toLowerCase().includes(query.toLowerCase())
-        );
-        break;
+  private async createTest(componentPath: string, testType: string): Promise<any> {
+    const componentCode = await this.sandbox.readFile(componentPath);
+    const componentName = componentPath.split('/').pop()?.replace('.tsx', '');
+    
+    const testPrompt = `Create a comprehensive ${testType} test for this React component:
+
+Component: ${componentName}
+File: ${componentPath}
+
+Code:
+${componentCode}
+
+Create tests that cover:
+1. Component rendering
+2. Props handling
+3. User interactions
+4. Edge cases
+5. Error states
+
+Use Jest and React Testing Library. Provide the complete test file.`;
+
+    const testCode = await this.callAIWithTools(testPrompt);
+    const testPath = componentPath.replace('.tsx', '.test.tsx');
+    
+    await this.sandbox.writeFile(testPath, testCode);
+    
+    return {
+      testPath,
+      componentPath,
+      testType,
+      created: true
+    };
+  }
+
+  private async runClaudeCode(prompt: string, files?: string[]): Promise<any> {
+    const claudeCommand = files && files.length > 0
+      ? `claude --files ${files.join(',')} "${prompt}"`
+      : `claude "${prompt}"`;
+      
+    return await this.sandbox.runCommand(claudeCommand);
+  }
+
+  private async runGeminiCLI(prompt: string, context?: string): Promise<any> {
+    const fullPrompt = context ? `${context}\n\n${prompt}` : prompt;
+    return await this.sandbox.runCommand(`node scripts/gemini-dev.js "${fullPrompt}"`);
+  }
+
+  private async createPullRequest(title: string, changes: any[], sessionId: string): Promise<any> {
+    // Implementation for GitHub PR creation
+    const description = `# AI-Generated Improvements
+
+This pull request contains ${changes.length} AI-generated improvements:
+
+${changes.map((change, index) => 
+  `## ${index + 1}. ${change.category}: ${change.componentId}\n${change.feedback}\n`
+).join('\n')}
+
+🤖 Generated automatically by Geenius AI Agent
+Session ID: ${sessionId}`;
+
+    return await this.sandbox.createPullRequest(title, description);
+  }
+
+  private async waitForDeployment(branchName: string): Promise<any> {
+    // Implementation for deployment monitoring
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    return {
+      success: true,
+      previewUrl: `https://${branchName.replace('/', '-')}--preview.netlify.app`
+    };
+  }
+
+  // Utility methods for code analysis
+  private extractDependencies(code: string): string[] {
+    const importRegex = /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g;
+    const dependencies = [];
+    let match;
+    
+    while ((match = importRegex.exec(code)) !== null) {
+      dependencies.push(match[1]);
     }
-
-    return JSON.stringify(searchResults.slice(0, 10), null, 2);
+    
+    return dependencies;
   }
 
-  private parsePlanFromText(text: string, goal: string): AgentPlan {
-    // Fallback parser for when JSON parsing fails
-    const lines = text.split('\n');
-    const steps = [];
-    let currentStep = null;
+  private extractProps(code: string): any {
+    const propsRegex = /interface\s+(\w+Props)\s*{([^}]+)}/g;
+    const match = propsRegex.exec(code);
+    
+    if (match) {
+      return {
+        interface: match[1],
+        properties: match[2].trim().split('\n').map(line => line.trim()).filter(Boolean)
+      };
+    }
+    
+    return null;
+  }
 
-    for (const line of lines) {
-      if (line.trim().startsWith('Step') || line.trim().startsWith('-')) {
-        if (currentStep) {
-          steps.push(currentStep);
-        }
-        currentStep = {
-          id: `step-${steps.length + 1}`,
-          description: line.trim(),
-          type: 'code' as const,
-          dependencies: [],
-          estimatedTime: 30,
-          tools: ['analyze_code']
-        };
+  private extractState(code: string): string[] {
+    const stateRegex = /useState[<(]([^>)]+)[>)]?\s*\(/g;
+    const stateVars = [];
+    let match;
+    
+    while ((match = stateRegex.exec(code)) !== null) {
+      stateVars.push(match[1]);
+    }
+    
+    return stateVars;
+  }
+
+  private extractHooks(code: string): string[] {
+    const hookRegex = /use[A-Z]\w*/g;
+    const hooks = [];
+    let match;
+    
+    while ((match = hookRegex.exec(code)) !== null) {
+      if (!hooks.includes(match[0])) {
+        hooks.push(match[0]);
       }
     }
+    
+    return hooks;
+  }
 
-    if (currentStep) {
-      steps.push(currentStep);
-    }
-
+  async getStats(): Promise<any> {
     return {
-      goal,
-      steps,
-      constraints: [],
-      successCriteria: ['Task completion', 'Code quality', 'Tests passing']
+      tasksCompleted: this.memory.taskHistory.length,
+      successRate: this.memory.taskHistory.filter(t => t.success).length / this.memory.taskHistory.length,
+      toolsAvailable: this.tools.size,
+      memoryEntries: this.memory.conversation.length
     };
   }
 
-  // Public methods for external use
-  async getMemoryStats(): Promise<{
-    conversations: number;
-    tasks: number;
-    patterns: number;
-    successRate: number;
-  }> {
-    const successfulTasks = this.memory.taskHistory.filter(t => t.success).length;
-    const totalTasks = this.memory.taskHistory.length;
-
-    return {
-      conversations: this.memory.conversation.length,
-      tasks: totalTasks,
-      patterns: this.memory.codePatterns.length,
-      successRate: totalTasks > 0 ? successfulTasks / totalTasks : 0
-    };
-  }
-
-  async clearMemory(): Promise<void> {
-    this.memory = this.initializeMemory();
-  }
-
-  async exportMemory(): Promise<string> {
-    return JSON.stringify(this.memory, null, 2);
-  }
-
-  async importMemory(memoryData: string): Promise<void> {
-    try {
-      this.memory = JSON.parse(memoryData);
-    } catch (error) {
-      throw new Error('Invalid memory data format');
-    }
-  }
-
-  async switchProvider(newConfig: AIProviderConfig): Promise<void> {
-    this.config = newConfig;
-    if (newConfig.provider === 'grok') {
-      this.grokProvider = new GrokProvider(newConfig.apiKey);
-    }
+  get sandbox() {
+    return this.config.sandbox;
   }
 }

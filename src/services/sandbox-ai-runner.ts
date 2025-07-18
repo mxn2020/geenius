@@ -1,6 +1,6 @@
 // src/services/sandbox-ai-runner.ts
-import { StackBlitzService } from './stackblitz.js';
-import { NetlifyService } from './netlify.js';
+import { StackBlitzService } from './stackblitz';
+import { NetlifyService } from './netlify';
 
 interface AIConfig {
   provider: 'claude' | 'gemini' | 'openai' | 'custom';
@@ -356,7 +356,7 @@ ${config.tools.map(tool => `- ${tool}`).join('\n')}
   }
 }
 
-// Enhanced template with AI integration
+//  template with AI integration
 export interface AIEnabledTemplate extends ProjectTemplate {
   aiProvider: 'claude' | 'gemini' | 'openai';
   aiConfig: {

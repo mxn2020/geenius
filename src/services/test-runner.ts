@@ -1,6 +1,6 @@
 // src/services/test-runner.ts
-import { GitHubService } from './github.js';
-import { StackBlitzService } from './stackblitz.js';
+import { GitHubService } from './github';
+import { StackBlitzService } from './stackblitz';
 
 interface TestResult {
   success: boolean;

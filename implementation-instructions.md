@@ -23,8 +23,8 @@ ai-dev-workflow/
 │   ├── agent/
 │   │   ├── custom-ai-agent.ts          # ALREADY CREATED ✅
 │   │   ├── agent-orchestrator.ts       # ALREADY CREATED ✅
-│   │   ├── enhanced-agent-service.ts   # ALREADY CREATED ✅
-│   │   └── enhanced-coding-agent.ts    # ALREADY CREATED ✅
+│   │   ├── agent-service.ts   # ALREADY CREATED ✅
+│   │   └── coding-agent.ts    # ALREADY CREATED ✅
 │   ├── services/
 │   │   ├── github.ts                   # ALREADY CREATED ✅
 │   │   ├── netlify.ts                  # ALREADY CREATED ✅
@@ -238,7 +238,7 @@ Create `src/cli/commands/develop.ts`:
 ```typescript
 // Extract develop command logic from main CLI file
 // Handle feature development, agent orchestration
-// Use: EnhancedAgentService, AgentOrchestrator
+// Use: AgentService, AgentOrchestrator
 ```
 
 Create `src/cli/commands/status.ts`:
@@ -252,7 +252,7 @@ Create `src/cli/commands/compare-agents.ts`:
 ```typescript
 // Extract compare-agents command logic from main CLI file
 // Run agent comparison across providers
-// Use: EnhancedAgentService
+// Use: AgentService
 ```
 
 Create `src/cli/commands/memory.ts`:
@@ -385,8 +385,8 @@ import { Octokit } from 'octokit';
 import chalk from 'chalk';
 
 // 3. Internal modules (relative imports)
-import { CustomAIAgent } from './custom-ai-agent.js';
-import type { AgentConfig } from '../types/agent.js';
+import { CustomAIAgent } from './custom-ai-agent';
+import type { AgentConfig } from '../types/agent';
 ```
 
 ### Function Documentation
@@ -423,7 +423,7 @@ When implementing each component, read these files for context:
 ### For Agent Components:
 - `src/agent/custom-ai-agent.ts`
 - `src/agent/agent-orchestrator.ts`
-- `src/agent/enhanced-agent-service.ts`
+- `src/agent/agent-service.ts`
 
 ### For Services:
 - `src/services/github.ts`

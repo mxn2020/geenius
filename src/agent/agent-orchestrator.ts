@@ -1,5 +1,5 @@
 // src/agent/agent-orchestrator.ts
-import { CustomAIAgent } from './custom-ai-agent.js';
+import { CustomAIAgent } from './custom-ai-agent';
 import { EventEmitter } from 'events';
 
 interface AgentRole {

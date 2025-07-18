@@ -10,7 +10,7 @@ import { TemplateRegistry } from '../../repo-templates/index';
 import { GitHubService } from '../../services/github';
 import { NetlifyService } from '../../services/netlify';
 import { MongoDBService } from '../../services/mongodb';
-import { EnhancedAgentService } from '../../agent/enhanced-agent-service';
+import { AgentService } from '../../agent/agent-service';
 import type { InitOptions, ProjectConfig } from '../../types/config';
 
 export async function initCommand(): Promise<void> {
@@ -286,7 +286,7 @@ export async function initCommand(): Promise<void> {
 
     // Initialize AI agent service
     spinner.text = 'Initializing AI agent system...';
-    const agentService = new EnhancedAgentService(repoUrl, {
+    const agentService = new AgentService(repoUrl, {
       type: validatedInput.agentMode,
       provider: validatedInput.aiProvider,
       orchestrationStrategy: validatedInput.orchestrationStrategy || 'hierarchical'

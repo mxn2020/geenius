@@ -1,0 +1,49 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  directory = "netlify/functions"
+
+# API Routes
+[[redirects]]
+  from = "/api/process-changes"
+  to = "/.netlify/functions/process-changes"
+  status = 200
+
+[[redirects]]
+  from = "/api/process-changes/:sessionId"
+  to = "/.netlify/functions/process-changes/:sessionId"
+  status = 200
+
+[[redirects]]
+  from = "/api/session/:sessionId"
+  to = "/.netlify/functions/get-session?sessionId=:sessionId"
+  status = 200
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/health"
+  status = 200
+
+# Logs page routes
+[[redirects]]
+  from = "/logs/:sessionId"
+  to = "/logs.html?session=:sessionId"
+  status = 200
+
+[[redirects]]
+  from = "/logs"
+  to = "/logs.html"
+  status = 200
+
+# Default redirect for SPA-like behavior
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  functions = "netlify/functions"
+  port = 8888
+  framework = "#static"

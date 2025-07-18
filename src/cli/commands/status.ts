@@ -1,11 +1,11 @@
 // src/cli/commands/status.ts
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config.js';
-import { logger } from '../../utils/logger.js';
-import { formatDuration } from '../../utils/helpers.js';
-import { EnhancedAgentService } from '../../agent/enhanced-agent-service.js';
-import { NetlifyService } from '../../services/netlify.js';
+import { ConfigManager } from '../../utils/config';
+import { logger } from '../../utils/logger';
+import { formatDuration } from '../../utils/helpers';
+import { AgentService } from '../../agent/agent-service';
+import { NetlifyService } from '../../services/netlify';
 
 export async function statusCommand(): Promise<void> {
   const configManager = new ConfigManager();
@@ -20,7 +20,7 @@ export async function statusCommand(): Promise<void> {
   
   try {
     // Initialize agent service
-    const agentService = new EnhancedAgentService(config.repoUrl, {
+    const agentService = new AgentService(config.repoUrl, {
       type: config.agentMode,
       provider: config.aiProvider,
       orchestrationStrategy: config.orchestrationStrategy
