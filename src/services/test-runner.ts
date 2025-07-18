@@ -138,7 +138,7 @@ export class TestRunner {
       const packageJson = await this.github.getFileContent(repoUrl, 'package.json', branch);
       const pkg = JSON.parse(packageJson);
       
-      const buildCommand = pkg.scripts?.build || 'npm run build';
+      const buildCommand = pkg.scripts?.build || 'pnpm build';
       const project = await this.stackblitz.createFromGitHub(repoUrl, branch);
       const result = await this.stackblitz.runCommand(project, buildCommand);
 

@@ -374,7 +374,7 @@ export const aiEnabledTemplates: AIEnabledTemplate[] = [
     stack: ["Next.js", "Supabase", "Claude Code", "TypeScript"],
     githubRepo: "your-org/template-nextjs-supabase-claude",
     testCommand: "npm run test",
-    buildCommand: "npm run build",
+    buildCommand: "pnpm build",
     devCommand: "npm run dev",
     setupInstructions: [
       "Install dependencies: npm install",
@@ -397,7 +397,7 @@ export const aiEnabledTemplates: AIEnabledTemplate[] = [
     stack: ["Vite", "React", "TypeScript", "Gemini AI"],
     githubRepo: "your-org/template-vite-react-gemini",
     testCommand: "npm run test",
-    buildCommand: "npm run build",
+    buildCommand: "pnpm build",
     devCommand: "npm run dev",
     setupInstructions: [
       "Install dependencies: npm install",

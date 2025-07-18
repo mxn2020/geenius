@@ -16,6 +16,53 @@ export class GitHubService {
   async forkTemplate(templateRepo: string, projectName: string, org: string): Promise<string> {
     const { owner: templateOwner, repo: templateName } = this.parseRepoUrl(templateRepo);
     
+    console.log(`🔄 Processing template: ${templateOwner}/${templateName}`);
+    console.log(`📁 Target project name: ${projectName}`);
+    console.log(`🏢 Target organization/user: ${org}`);
+    
+    // Check if the user is the template owner (should clone instead of fork)
+    const templateOwnerAccount = process.env.GITHUB_TEMPLATE_OWNER || 'mxn2020';
+    const isTemplateOwner = org === templateOwnerAccount;
+    
+    if (isTemplateOwner) {
+      console.log(`🔄 You are the template owner (${templateOwnerAccount}). Creating from template instead of forking...`);
+      return await this.createFromTemplate(templateOwner, templateName, projectName, org);
+    } else {
+      console.log(`🍴 You are not the template owner. Forking repository...`);
+      return await this.forkRepository(templateOwner, templateName, projectName, org);
+    }
+  }
+
+  private async createFromTemplate(templateOwner: string, templateName: string, projectName: string, org: string): Promise<string> {
+    // Find available name for the new repository
+    const finalRepoName = await this.findAvailableRepoName(org, projectName);
+    
+    // Create a new repository from the template
+    console.log(`📁 Creating new repository from template: ${org}/${finalRepoName}`);
+    const { data: newRepo } = await this.octokit.rest.repos.createUsingTemplate({
+      template_owner: templateOwner,
+      template_repo: templateName,
+      name: finalRepoName,
+      owner: org,
+      description: `Project based on ${templateOwner}/${templateName}`,
+      private: false,
+      include_all_branches: false
+    });
+    
+    console.log(`✅ New repository created from template: ${newRepo.full_name}`);
+    
+    // Wait for the new repository to be ready
+    await this.waitForRepo(newRepo.owner.login, newRepo.name);
+    
+    // Set up branches for the new repository
+    await this.setupBranches(newRepo.owner.login, newRepo.name);
+    
+    const finalUrl = `https://github.com/${newRepo.owner.login}/${newRepo.name}`;
+    console.log(`🎉 Final repository URL: ${finalUrl}`);
+    return finalUrl;
+  }
+
+  private async forkRepository(templateOwner: string, templateName: string, projectName: string, org: string): Promise<string> {
     // Check if org is actually an organization or a user account
     let forkParams: any = {
       owner: templateOwner,
@@ -27,34 +74,78 @@ export class GitHubService {
       await this.octokit.rest.orgs.get({ org });
       // If successful, it's an organization
       forkParams.organization = org;
+      console.log(`✅ Forking to organization: ${org}`);
     } catch (error) {
       // If it fails, it's likely a user account - don't include organization parameter
       // The fork will be created under the authenticated user's account
+      console.log(`✅ Forking to user account: ${org}`);
     }
     
+    // Check if we already have a fork of this template
+    let existingFork = null;
+    try {
+      const { data: repos } = await this.octokit.rest.repos.listForAuthenticatedUser({
+        per_page: 100
+      });
+      existingFork = repos.find(repo => 
+        repo.fork && 
+        repo.parent?.full_name === `${templateOwner}/${templateName}`
+      );
+      
+      if (existingFork) {
+        console.log(`⚠️  Found existing fork: ${existingFork.full_name}`);
+        console.log(`🗑️  Deleting existing fork to create a fresh one...`);
+        await this.octokit.rest.repos.delete({
+          owner: existingFork.owner.login,
+          repo: existingFork.name
+        });
+        console.log(`✅ Existing fork deleted`);
+        
+        // Wait a bit for GitHub to process the deletion
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    } catch (error) {
+      console.log(`ℹ️  No existing fork found or couldn't check: ${error.message}`);
+    }
+
     // Fork the template repository
+    console.log(`🍴 Creating fork of ${templateOwner}/${templateName}...`);
     const { data: fork } = await this.octokit.rest.repos.createFork(forkParams);
+    
+    console.log(`✅ Fork created: ${fork.owner.login}/${fork.name}`);
+    console.log(`📍 Original template: ${templateOwner}/${templateName}`);
+    console.log(`📍 Forked repo: ${fork.owner.login}/${fork.name}`);
 
     // Wait for fork to be ready
     await this.waitForRepo(fork.owner.login, fork.name);
 
     // Always find an available name to ensure we create a new repo
     const finalRepoName = await this.findAvailableRepoName(fork.owner.login, projectName);
+    console.log(`🎯 Final repository name will be: ${finalRepoName}`);
     
     // Rename the forked repository to the available name
     if (fork.name !== finalRepoName) {
+      console.log(`✏️  Renaming forked repo from ${fork.name} to ${finalRepoName}`);
+      console.log(`📍 Operating on: ${fork.owner.login}/${fork.name} → ${fork.owner.login}/${finalRepoName}`);
+      
       await this.octokit.rest.repos.update({
         owner: fork.owner.login,
         repo: fork.name,
         name: finalRepoName
       });
+      
+      console.log(`✅ Repository renamed successfully`);
+    } else {
+      console.log(`✅ Repository name ${fork.name} is already correct, no rename needed`);
     }
     
     // Set up branch protection and default branches
     await this.setupBranches(fork.owner.login, finalRepoName);
 
     // Return the correct URL with the final name
-    return `https://github.com/${fork.owner.login}/${finalRepoName}`;
+    const finalUrl = `https://github.com/${fork.owner.login}/${finalRepoName}`;
+    console.log(`🎉 Final repository URL: ${finalUrl}`);
+    return finalUrl;
   }
 
   async setupBranches(owner: string, repo: string) {

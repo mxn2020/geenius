@@ -351,24 +351,24 @@ This PR will create an automatic Netlify deployment for preview and testing.
 
     it('should parse test results correctly', () => {
       const parseTestResults = (output: string) => {
-        const testCount = (output.match(/(\d+) tests?/i) || [])[1];
-        const passed = (output.match(/(\d+) passed/i) || [])[1];
-        const failed = (output.match(/(\d+) failed/i) || [])[1];
-        const coverage = (output.match(/All files[^\d]*(\d+(?:\.\d+)?)%/i) || [])[1];
+        const testCountMatch = output.match(/(\d+) tests?/i);
+        const passedMatch = output.match(/(\d+) passed/i);
+        const failedMatch = output.match(/(\d+) failed/i);
+        const coverageMatch = output.match(/All files[^\d]*(\d+(?:\.\d+)?)%/i);
         
         return {
-          testCount: testCount ? parseInt(testCount) : 0,
-          passed: passed ? parseInt(passed) : 0,
-          failed: failed ? parseInt(failed) : 0,
-          coverage: coverage ? `${coverage}%` : 'Unknown'
+          testCount: testCountMatch ? parseInt(testCountMatch[1]) : 0,
+          passed: passedMatch ? parseInt(passedMatch[1]) : 0,
+          failed: failedMatch ? parseInt(failedMatch[1]) : 0,
+          coverage: coverageMatch ? `${coverageMatch[1]}%` : 'Unknown'
         };
       };
 
-      const testOutput = '5 tests passed, 2 failed, All files 85.5% coverage';
+      const testOutput = '5 tests, 3 passed, 2 failed, All files 85.5% coverage';
       const results = parseTestResults(testOutput);
       
       expect(results.testCount).toBe(5);
-      expect(results.passed).toBe(5);
+      expect(results.passed).toBe(3);
       expect(results.failed).toBe(2);
       expect(results.coverage).toBe('85.5%');
     });

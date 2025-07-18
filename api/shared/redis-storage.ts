@@ -20,15 +20,16 @@ export interface ProcessingSession {
   repositoryUrl: string;
   changes: any[];
   logs: Array<{
-    timestamp: number;
     level: 'info' | 'success' | 'warning' | 'error';
     message: string;
-    metadata?: Record<string, any>;
+    timestamp: number;
+    data?: any;
   }>;
   startTime: number;
   endTime?: number;
-  previewUrl?: string;
   prUrl?: string;
+  branchName?: string;
+  previewUrl?: string;
   error?: string;
 }
 

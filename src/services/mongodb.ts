@@ -70,7 +70,7 @@ export class MongoDBService {
       console.log(`   ✅ Cluster is ready`);
 
       // Get connection string
-      const connectionString = await this.getConnectionString(project.id, clusterName, username, password);
+      const connectionString = await this.getConnectionString(project.id, clusterName, username, password, databaseName);
       console.log(`   ✅ Connection string generated`);
 
       return {
@@ -301,16 +301,53 @@ export class MongoDBService {
     }
   }
 
-  private async getConnectionString(projectId: string, clusterName: string, username: string, password: string): Promise<string> {
+  private async getConnectionString(projectId: string, clusterName: string, username: string, password: string, databaseName?: string): Promise<string> {
     const cluster = await this.getCluster(projectId, clusterName);
 
     if (!cluster.connectionStrings?.standardSrv) {
       throw new Error('Connection string not available');
     }
 
-    const connectionString = cluster.connectionStrings.standardSrv
+    let connectionString = cluster.connectionStrings.standardSrv;
+
+    // Replace placeholders if they exist
+    connectionString = connectionString
       .replace('<username>', username)
       .replace('<password>', password);
+
+    // If the connection string doesn't have username:password format, add it
+    if (!connectionString.includes('@')) {
+      // Format: mongodb+srv://cluster.mongodb.net -> mongodb+srv://username:password@cluster.mongodb.net
+      connectionString = connectionString.replace('mongodb+srv://', `mongodb+srv://${username}:${password}@`);
+    } else if (!connectionString.includes(`${username}:${password}`)) {
+      // If it has @ but not our credentials, replace the credentials part
+      connectionString = connectionString.replace(/mongodb\+srv:\/\/[^@]*@/, `mongodb+srv://${username}:${password}@`);
+    }
+
+    // Add database name if provided
+    if (databaseName) {
+      console.log(`   🔍 Adding database name: ${databaseName}`);
+      console.log(`   🔍 Connection string before: ${connectionString}`);
+      
+      // Check if connection string already has a database name or query parameters
+      if (connectionString.includes('?')) {
+        // Has query parameters, replace or add database name before the ?
+        connectionString = connectionString.replace(/\/[^?]*\?/, `/${databaseName}?`);
+      } else {
+        // No query parameters, just add database name
+        connectionString = connectionString + `/${databaseName}`;
+      }
+      
+      console.log(`   🔍 Connection string after: ${connectionString}`);
+    }
+
+    // Ensure required query parameters are present
+    if (!connectionString.includes('retryWrites=true')) {
+      connectionString += connectionString.includes('?') ? '&retryWrites=true' : '?retryWrites=true';
+    }
+    if (!connectionString.includes('w=majority')) {
+      connectionString += '&w=majority';
+    }
 
     return connectionString;
   }
@@ -482,28 +519,22 @@ export class MongoDBService {
     }
   }
 
-  async createProjectWithSelection(projectName: string): Promise<MongoDBProject> {
+  async createProjectWithSelection(projectName: string, selectedOrgId?: string, selectedProjectId?: string): Promise<MongoDBProject> {
     try {
-      console.log(`🍃 Creating MongoDB Atlas project: ${projectName}`);
+      console.log(`🍃 Creating MongoDB Atlas database for: ${projectName}`);
 
-      // Get all organizations
-      const organizations = await this.getOrganizations();
-      
-      if (organizations.length === 0) {
-        throw new Error('No organizations found. Please ensure your API keys have proper permissions.');
+      let targetOrgId = selectedOrgId;
+      let targetProjectId = selectedProjectId;
+
+      // If no organization selected, use the first one
+      if (!targetOrgId) {
+        const organizations = await this.getOrganizations();
+        if (organizations.length === 0) {
+          throw new Error('No organizations found. Please ensure your API keys have proper permissions.');
+        }
+        targetOrgId = organizations[0].id;
+        console.log(`   🏢 Using organization: ${organizations[0].name} (${targetOrgId})`);
       }
-
-      // For now, use the first organization if only one exists
-      // In a real implementation, this would be selected by the user
-      const selectedOrg = organizations[0];
-      console.log(`   🏢 Using organization: ${selectedOrg.name} (${selectedOrg.id})`);
-
-      // Get existing projects in the organization
-      const existingProjects = await this.getProjects(selectedOrg.id);
-      
-      // Check if user wants to use existing project or create new one
-      // For now, we'll always create a new project
-      console.log(`   📁 Found ${existingProjects.length} existing projects`);
 
       // Generate unique names
       const cleanName = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
@@ -511,9 +542,20 @@ export class MongoDBService {
       const clusterName = `${cleanName}-${uniqueSuffix}`;
       const databaseName = cleanName.replace(/-/g, '_');
 
-      // Create project
-      const project = await this.createAtlasProject(projectName, selectedOrg.id);
-      console.log(`   ✅ Project created: ${project.name} (${project.id})`);
+      let project;
+      if (targetProjectId) {
+        // Use existing project
+        const existingProjects = await this.getProjects(targetOrgId);
+        project = existingProjects.find(p => p.id === targetProjectId);
+        if (!project) {
+          throw new Error(`Project with ID ${targetProjectId} not found`);
+        }
+        console.log(`   📁 Using existing project: ${project.name} (${project.id})`);
+      } else {
+        // Create new project
+        project = await this.createAtlasProject(projectName, targetOrgId);
+        console.log(`   ✅ Project created: ${project.name} (${project.id})`);
+      }
 
       // Create cluster
       const cluster = await this.createCluster(project.id, clusterName);
@@ -534,7 +576,7 @@ export class MongoDBService {
       console.log(`   ✅ Cluster is ready`);
 
       // Get connection string
-      const connectionString = await this.getConnectionString(project.id, clusterName, username, password);
+      const connectionString = await this.getConnectionString(project.id, clusterName, username, password, databaseName);
       console.log(`   ✅ Connection string generated`);
 
       return {
@@ -554,19 +596,6 @@ export class MongoDBService {
     }
   }
 
-  async getConnectionString(projectId: string, clusterName: string, username: string, password: string): Promise<string> {
-    const cluster = await this.getCluster(projectId, clusterName);
-
-    if (!cluster.connectionStrings?.standardSrv) {
-      throw new Error('Connection string not available');
-    }
-
-    const connectionString = cluster.connectionStrings.standardSrv
-      .replace('<username>', username)
-      .replace('<password>', password);
-
-    return connectionString;
-  }
 
   async waitForClusterReady(projectId: string, clusterName: string, maxWait: number = 600000): Promise<void> {
     console.log(`   ⏳ Waiting for cluster ${clusterName} to be ready...`);

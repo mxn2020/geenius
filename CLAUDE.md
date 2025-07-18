@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development
 - `pnpm run dev` - Start development CLI using tsx (for development/testing)
-- `pnpm run build` - Build TypeScript to JavaScript
+- `ppnpm build` - Build TypeScript to JavaScript
 - `pnpm run start` - Run the built CLI tool
 - `pnpm run test` - Run tests with vitest
 

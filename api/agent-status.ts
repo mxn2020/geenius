@@ -1,7 +1,7 @@
 // netlify/functions/agent-status.ts
 // Endpoint for monitoring agent status and performance
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { ProcessingSession, storage } from './shared/redis-storage';
+import { storage } from './shared/redis-storage';
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   const headers = {
@@ -98,7 +98,7 @@ fi
 
 # Build the project
 echo "📦 Building project..."
-npm run build
+pnpm build
 
 # Deploy to Netlify
 echo "🌐 Deploying to Netlify..."
@@ -221,7 +221,7 @@ npm run dev
 npm test
 
 # Build for production
-npm run build
+pnpm build
 ```
 
 ## Contributing
@@ -232,23 +232,5 @@ npm run build
 4. Add tests
 5. Submit a pull request
 
-## License
-
-MIT License - see LICENSE file for details
 */
-
-function getProgressPercentage(status: ProcessingSession['status']): number {
-  const statusOrder = {
-    initializing: 10,
-    sandbox_creating: 20,
-    ai_processing: 50,
-    testing: 70,
-    pr_creating: 80,
-    deploying: 90,
-    completed: 100,
-    failed: 0
-  };
-  
-  return statusOrder[status] || 0;
-}
 

@@ -172,10 +172,10 @@ export class StackBlitzAgentService {
         const command = testPath ? `npm test -- ${testPath}` : 'npm test';
         const result = await this.runCommand(command);
         
-        // Parse test results
-        const testCount = this.parseTestCount(result.output);
-        const passed = this.parsePassedTests(result.output);
-        const failed = this.parseFailedTests(result.output);
+        // Parse test results using the service methods
+        const testCount = service.parseTestCount(result.output);
+        const passed = service.parsePassedTests(result.output);
+        const failed = service.parseFailedTests(result.output);
         
         return {
           success: result.exitCode === 0,
@@ -183,7 +183,7 @@ export class StackBlitzAgentService {
           testCount,
           passed,
           failed,
-          coverage: this.parseCoverage(result.output)
+          coverage: service.parseCoverage(result.output)
         };
       },
       
@@ -192,7 +192,7 @@ export class StackBlitzAgentService {
         // For now, returning mock data
         return {
           success: true,
-          prUrl: `https://github.com/${this.extractRepoPath(repoUrl)}/pull/123`,
+          prUrl: `https://github.com/${service.extractRepoPath(repoUrl)}/pull/123`,
           branchName: 'feature/ai-changes',
           prNumber: 123
         };
@@ -226,27 +226,27 @@ export class StackBlitzAgentService {
     }
   }
 
-  private extractRepoPath(repoUrl: string): string {
+  extractRepoPath(repoUrl: string): string {
     const match = repoUrl.match(/github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
     return match ? match[1] : '';
   }
 
-  private parseTestCount(output: string): number {
+  parseTestCount(output: string): number {
     const match = output.match(/(\d+) tests?/i);
     return match ? parseInt(match[1]) : 0;
   }
 
-  private parsePassedTests(output: string): number {
+  parsePassedTests(output: string): number {
     const match = output.match(/(\d+) passed/i);
     return match ? parseInt(match[1]) : 0;
   }
 
-  private parseFailedTests(output: string): number {
+  parseFailedTests(output: string): number {
     const match = output.match(/(\d+) failed/i);
     return match ? parseInt(match[1]) : 0;
   }
 
-  private parseCoverage(output: string): string {
+  parseCoverage(output: string): string {
     const match = output.match(/All files[^\d]*(\d+(?:\.\d+)?)%/i);
     return match ? `${match[1]}%` : 'Unknown';
   }

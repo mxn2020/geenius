@@ -458,7 +458,7 @@ After implementation:
 npm install
 
 # Build TypeScript
-npm run build
+pnpm build
 
 # Test CLI
 npm run dev -- --help

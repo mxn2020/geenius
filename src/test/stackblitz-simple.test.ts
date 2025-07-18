@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Import the service directly
-import { StackBlitzAgentService } from '../../netlify/functions/shared/stackblitz-agent-service';
+import { StackBlitzAgentService } from '../../api/shared/stackblitz-agent-service';
 
 describe('StackBlitzAgentService', () => {
   let service: StackBlitzAgentService;
@@ -146,6 +146,10 @@ describe('StackBlitzAgentService', () => {
     it('should cache sandboxes correctly', async () => {
       const repoUrl = 'https://github.com/test/repo';
       const sandbox1 = await service.createSandbox(repoUrl);
+      
+      // Wait a bit to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 1));
+      
       const sandbox2 = await service.createSandbox(repoUrl);
       
       // Should create different sandboxes

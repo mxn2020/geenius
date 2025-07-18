@@ -2,23 +2,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock Upstash Redis
-const mockRedis = {
-  setex: vi.fn(),
-  get: vi.fn(),
-  keys: vi.fn(),
-  del: vi.fn()
-};
-
-vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => mockRedis)
-}));
+vi.mock('@upstash/redis', () => {
+  const mockRedis = {
+    setex: vi.fn(),
+    get: vi.fn(),
+    keys: vi.fn(),
+    del: vi.fn()
+  };
+  
+  return {
+    Redis: vi.fn(() => mockRedis)
+  };
+});
 
 // Import after mocking
-import { RedisStorage } from '../../netlify/functions/shared/redis-storage';
+import { RedisStorage } from '../../api/shared/redis-storage';
 
 describe('RedisStorage', () => {
   let storage: RedisStorage;
   let mockSession: any;
+  let mockRedis: any;
 
   beforeEach(() => {
     // Mock environment variables
@@ -26,6 +29,10 @@ describe('RedisStorage', () => {
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
     
     storage = new RedisStorage();
+    
+    // Get the mocked Redis instance
+    const { Redis } = require('@upstash/redis');
+    mockRedis = new Redis();
     
     mockSession = {
       id: 'test-session-123',

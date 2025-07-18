@@ -1,5 +1,3 @@
-
-
 // Environment configuration example (.env file)
 /*
 # GitHub Configuration
@@ -56,7 +54,7 @@ URL=https://your-netlify-app.netlify.app
 /*
 [build]
   functions = "netlify/functions"
-  command = "npm run build"
+  command = "pnpm build"
 
 [functions]
   node_bundler = "esbuild"

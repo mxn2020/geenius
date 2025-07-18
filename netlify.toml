@@ -1,11 +1,11 @@
 [build]
   publish = "public"
-  functions = "netlify/functions"
+  functions = "api"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "api"
 
-# API Routes
+# API Routes - these redirects should now point to /.netlify/functions/
 [[redirects]]
   from = "/api/process-changes"
   to = "/.netlify/functions/process-changes"
@@ -44,6 +44,6 @@
   status = 200
 
 [dev]
-  functions = "netlify/functions"
+  functions = "api"
   port = 8888
   framework = "#static"
