@@ -8,8 +8,10 @@
     "geenius": "./bin/geenius.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:web",
+    "build:web": "vite build",
     "dev": "tsx src/cli/index.ts",
+    "dev:web": "vite dev",
     "server": "tsx src/server.ts",
     "test": "vitest",
     "test:skip": "echo 'Tests skipped for dev mode'",

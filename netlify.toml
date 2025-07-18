@@ -26,6 +26,27 @@
   to = "/.netlify/functions/health"
   status = 200
 
+# Web App API Routes
+[[redirects]]
+  from = "/api/init"
+  to = "/.netlify/functions/web-init"
+  status = 200
+
+[[redirects]]
+  from = "/api/templates"
+  to = "/.netlify/functions/web-templates"
+  status = 200
+
+[[redirects]]
+  from = "/api/env-status"
+  to = "/.netlify/functions/web-env-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/status"
+  to = "/.netlify/functions/web-status"
+  status = 200
+
 # Logs page routes
 [[redirects]]
   from = "/logs/:sessionId"

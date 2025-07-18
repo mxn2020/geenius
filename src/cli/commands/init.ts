@@ -452,9 +452,9 @@ export async function initCommand(): Promise<void> {
             templateEnvVars['RATE_LIMIT_MAX_REQUESTS'] = '100';
           }
 
-          // Set Geenius API URL if specified
+          // Set Geenius API URL to the current Netlify site URL
           if (template.envVars.includes('VITE_GEENIUS_API_URL')) {
-            templateEnvVars['VITE_GEENIUS_API_URL'] = process.env.VITE_GEENIUS_API_URL || 'http://localhost:8888';
+            templateEnvVars['VITE_GEENIUS_API_URL'] = netlifyProject.ssl_url || netlifyProject.url;
           }
 
           // Set environment variables
