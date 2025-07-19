@@ -1,4 +1,4 @@
-// src/cli/index.ts
+// cli/index.ts
 import 'dotenv/config';
 import { Command } from 'commander';
 import chalk from 'chalk';
@@ -9,7 +9,7 @@ import { compareAgentsCommand } from './commands/compare-agents';
 import { memoryCommand } from './commands/memory';
 import { switchProviderCommand } from './commands/switch-provider';
 import { manageCommand } from './commands/manage';
-import { logger } from '../utils/logger';
+import { logger } from '../../src/utils/logger';
 
 const program = new Command();
 

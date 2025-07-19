@@ -1,10 +1,10 @@
-// src/cli/commands/memory.ts
+// cli/commands/memory.ts
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config';
-import { logger } from '../../utils/logger';
-import { AgentService } from '../../agent/agent-service';
+import { ConfigManager } from '../../../src/utils/config';
+import { logger } from '../../../src/utils/logger';
+import { AgentService } from '../agent/agent-service';
 
 export async function memoryCommand(options: any = {}): Promise<void> {
   const configManager = new ConfigManager();

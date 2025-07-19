@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
-import { ConfigManager } from '../../src/utils/config';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 export const handler: Handler = async (event, context) => {
   if (event.httpMethod !== 'GET') {
@@ -10,9 +11,13 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    const configManager = new ConfigManager();
+    // Check for config file in current working directory
+    const configPath = join(process.cwd(), '.dev-agent.json');
     
-    if (!(await configManager.configExists())) {
+    try {
+      const configData = await fs.readFile(configPath, 'utf-8');
+      const config = JSON.parse(configData);
+      
       return {
         statusCode: 200,
         headers: {
@@ -20,25 +25,27 @@ export const handler: Handler = async (event, context) => {
           'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({
-          hasProject: false,
-          message: 'No project initialized'
+          hasProject: true,
+          ...config
         })
       };
+    } catch (fileError: any) {
+      if (fileError.code === 'ENOENT') {
+        // Config file doesn't exist
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({
+            hasProject: false,
+            message: 'No project initialized'
+          })
+        };
+      }
+      throw fileError;
     }
-
-    const config = await configManager.loadConfig();
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({
-        hasProject: true,
-        ...config
-      })
-    };
   } catch (error: any) {
     console.error('Status error:', error);
     return {

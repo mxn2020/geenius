@@ -221,6 +221,43 @@ body {
     color: #666;
 }
 
+.log-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.log-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.copy-success {
+    position: relative;
+}
+
+.copy-success::after {
+    content: "✅ Copied!";
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+    animation: fadeOut 2s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 .loading-overlay {
     position: fixed;
     top: 0;

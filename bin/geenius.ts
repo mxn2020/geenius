@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // bin/geenius.ts (Updated with custom agent support)
 import { Command } from 'commander';
-import { initCommand } from '../src/cli/commands/init';
-import { developCommand } from '../src/cli/commands/develop';
-import { statusCommand } from '../src/cli/commands/status';
-import { compareAgentsCommand } from '../src/cli/commands/compare-agents';
-import { memoryCommand } from '../src/cli/commands/memory';
-import { switchProviderCommand } from '../src/cli/commands/switch-provider';
+import { initCommand } from '../apps/cli/commands/init';
+import { developCommand } from '../apps/cli/commands/develop';
+import { statusCommand } from '../apps/cli/commands/status';
+import { compareAgentsCommand } from '../apps/cli/commands/compare-agents';
+import { memoryCommand } from '../apps/cli/commands/memory';
+import { switchProviderCommand } from '../apps/cli/commands/switch-provider';
 
 const program = new Command();
 

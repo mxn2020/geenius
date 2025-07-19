@@ -192,7 +192,7 @@ Actual template repositories:
 - Ready to fork and customize
 - Include tests, documentation, and deployment config
 
-### 📁 `src/cli/`
+### 📁 `cli/`
 CLI command implementations:
 - Separated by command for maintainability
 - Each command handles its own argument parsing and execution
@@ -224,7 +224,7 @@ Real-world usage examples:
 dev-agent init
 
 # Which executes
-src/cli/commands/init.ts
+cli/commands/init.ts
   ↓
 src/services/github.ts (fork template)
   ↓
@@ -241,7 +241,7 @@ src/agent/agent-service.ts (initialize AI)
 dev-agent develop
 
 # Which executes
-src/cli/commands/develop.ts
+cli/commands/develop.ts
   ↓
 src/agent/agent-service.ts
   ↓

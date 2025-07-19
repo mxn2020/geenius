@@ -1,10 +1,10 @@
-// src/cli/commands/manage.ts
+// cli/commands/manage.ts
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { logger } from '../../utils/logger';
-import { NetlifyService } from '../../services/netlify';
-import { GitHubService } from '../../services/github';
-import { MongoDBService } from '../../services/mongodb';
+import { logger } from '../../../src/utils/logger';
+import { NetlifyService } from '../services/netlify';
+import { GitHubService } from '../services/github';
+import { MongoDBService } from '../services/mongodb';
 
 export async function manageCommand() {
   try {

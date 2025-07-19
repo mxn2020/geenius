@@ -1,350 +1,502 @@
 {
   "templates": [
     {
-      "id": "nextjs-supabase",
-      "name": "Next.js + Supabase",
-      "description": "Full-stack Next.js app with Supabase database",
-      "repository": "https://github.com/mxn2020/template-nextjs-supabase",
-      "branch": "main",
-      "stack": [
-        "Next.js",
-        "Supabase",
-        "TypeScript",
-        "Tailwind CSS"
-      ],
-      "features": [
-        "Authentication with Supabase Auth",
-        "PostgreSQL database with Supabase",
-        "Real-time subscriptions",
-        "Server-side rendering",
-        "API routes",
-        "Tailwind CSS styling"
-      ],
-      "envVars": [
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "SUPABASE_SERVICE_KEY"
-      ],
-      "testCommand": "pnpm test",
-      "buildCommand": "pnpm build",
-      "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-nextjs-supabase/blob/main/README.md",
-      "tags": [
-        "fullstack",
-        "database",
-        "auth",
-        "ssr",
-        "popular"
-      ],
-      "difficulty": "intermediate",
-      "lastUpdated": "2024-03-15T10:00:00Z",
-      "maintainer": "geenius",
-      "license": "MIT"
-    },
-    {
       "id": "vite-react-mongo",
       "name": "Vite + React + MongoDB + BetterAuth",
       "description": "Modern React app with Vite, MongoDB and BetterAuth",
       "repository": "https://github.com/mxn2020/geenius-template-vite-react-mongo",
       "branch": "main",
-      "stack": [
-        "Vite",
-        "React",
-        "MongoDB",
-        "TypeScript",
-        "Netlify Functions",
-        "BetterAuth"
-      ],
-      "features": [
-        "Fast development with Vite",
-        "MongoDB Atlas integration",
-        "Netlify Functions for API",
-        "React 18 with hooks",
-        "TypeScript support",
-        "Hot module replacement",
-        "BetterAuth integration"
-      ],
-      "envVars": [
-        "DATABASE_URL",
-        "MONGODB_URI",
-        "VITE_APP_URL",
-        "VITE_APP_NAME",
-        "VITE_APP_VERSION",
-        "VITE_APP_DESCRIPTION",
-        "VITE_API_URL",
-        "VITE_API_BASE_URL",
-        "NETLIFY_FUNCTIONS_URL",
-        "NODE_ENV",
-        "PORT",
-        "JWT_SECRET",
-        "CORS_ORIGIN",
-        "RATE_LIMIT_WINDOW_MS",
-        "RATE_LIMIT_MAX_REQUESTS",
-        "VITE_GEENIUS_API_URL",
-        "BETTER_AUTH_SECRET",
-        "BETTER_AUTH_URL"
-      ],
+      "stack": ["Vite", "React", "MongoDB", "TypeScript", "Netlify Functions", "BetterAuth"],
+      "features": ["Fast development with Vite", "MongoDB Atlas integration", "Netlify Functions for API", "React 18 with hooks", "TypeScript support", "Hot module replacement", "BetterAuth integration", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "MONGODB_URI", "VITE_APP_URL", "VITE_APP_NAME", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
       "testCommand": "pnpm test",
       "buildCommand": "pnpm build",
       "devCommand": "pnpm dev",
       "deployCommand": "netlify deploy --prod",
       "documentation": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/README.md",
-      "tags": [
-        "frontend",
-        "nosql",
-        "serverless",
-        "fast"
-      ],
+      "tags": ["frontend", "nosql", "serverless", "fast"],
       "difficulty": "beginner",
       "lastUpdated": "2024-03-14T15:30:00Z",
       "maintainer": "geenius",
       "license": "MIT"
     },
     {
-      "id": "react-indexeddb-jwt",
-      "name": "React + IndexedDB + JWT",
-      "description": "Client-side React app with IndexedDB storage and JWT auth",
-      "repository": "https://github.com/mxn2020/template-react-indexeddb-jwt",
+      "id": "vite-react-supabase",
+      "name": "Vite + React + Supabase",
+      "description": "Lightning-fast React app with Vite and Supabase backend",
+      "repository": "https://github.com/mxn2020/template-vite-react-supabase",
       "branch": "main",
-      "stack": [
-        "React",
-        "IndexedDB",
-        "JWT",
-        "TypeScript",
-        "Vite"
-      ],
-      "features": [
-        "Client-side only application",
-        "IndexedDB for persistent storage",
-        "JWT authentication",
-        "Offline capability",
-        "PWA support"
-      ],
-      "envVars": [
-        "VITE_JWT_SECRET",
-        "VITE_API_URL"
-      ],
+      "stack": ["Vite", "React", "Supabase", "TypeScript", "Tailwind CSS"],
+      "features": ["Fast development with Vite", "Supabase authentication", "PostgreSQL database", "Real-time subscriptions", "Row Level Security", "Dev-container integration"],
+      "envVars": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY"],
       "testCommand": "pnpm test",
       "buildCommand": "pnpm build",
       "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-react-indexeddb-jwt/blob/main/README.md",
-      "tags": [
-        "client-side",
-        "offline",
-        "pwa",
-        "auth"
-      ],
-      "difficulty": "intermediate",
-      "lastUpdated": "2024-03-13T09:15:00Z",
-      "maintainer": "geenius",
-      "license": "MIT"
-    },
-    {
-      "id": "vue-pinia-firebase",
-      "name": "Vue 3 + Pinia + Firebase",
-      "description": "Vue 3 app with Pinia state management and Firebase backend",
-      "repository": "https://github.com/mxn2020/template-vue-pinia-firebase",
-      "branch": "main",
-      "stack": [
-        "Vue 3",
-        "Pinia",
-        "Firebase",
-        "TypeScript",
-        "Vite"
-      ],
-      "features": [
-        "Vue 3 with Composition API",
-        "Pinia for state management",
-        "Firebase Authentication",
-        "Firestore database",
-        "Cloud Functions",
-        "Real-time updates"
-      ],
-      "envVars": [
-        "VITE_FIREBASE_API_KEY",
-        "VITE_FIREBASE_PROJECT_ID",
-        "VITE_FIREBASE_APP_ID"
-      ],
-      "testCommand": "pnpm test",
-      "buildCommand": "pnpm build",
-      "devCommand": "pnpm dev",
-      "deployCommand": "firebase deploy",
-      "documentation": "https://github.com/mxn2020/template-vue-pinia-firebase/blob/main/README.md",
-      "tags": [
-        "vue",
-        "firebase",
-        "realtime",
-        "state-management"
-      ],
-      "difficulty": "intermediate",
-      "lastUpdated": "2024-03-12T14:20:00Z",
-      "maintainer": "geenius",
-      "license": "MIT"
-    },
-    {
-      "id": "svelte-drizzle-planetscale",
-      "name": "SvelteKit + Drizzle + PlanetScale",
-      "description": "SvelteKit app with Drizzle ORM and PlanetScale database",
-      "repository": "https://github.com/mxn2020/template-svelte-drizzle-planetscale",
-      "branch": "main",
-      "stack": [
-        "SvelteKit",
-        "Drizzle ORM",
-        "PlanetScale",
-        "TypeScript",
-        "Tailwind CSS"
-      ],
-      "features": [
-        "SvelteKit full-stack framework",
-        "Drizzle ORM for type-safe queries",
-        "PlanetScale edge database",
-        "Server-side rendering",
-        "API routes",
-        "Edge deployment ready"
-      ],
-      "envVars": [
-        "DATABASE_URL",
-        "PLANETSCALE_TOKEN"
-      ],
-      "testCommand": "pnpm test",
-      "buildCommand": "pnpm build",
-      "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-svelte-drizzle-planetscale/blob/main/README.md",
-      "tags": [
-        "svelte",
-        "orm",
-        "edge",
-        "modern"
-      ],
-      "difficulty": "advanced",
-      "lastUpdated": "2024-03-11T11:45:00Z",
-      "maintainer": "geenius",
-      "license": "MIT"
-    },
-    {
-      "id": "astro-content-collections",
-      "name": "Astro + Content Collections",
-      "description": "Static site with Astro, content collections, and MDX",
-      "repository": "https://github.com/mxn2020/template-astro-content-collections",
-      "branch": "main",
-      "stack": [
-        "Astro",
-        "Content Collections",
-        "MDX",
-        "TypeScript",
-        "Tailwind CSS"
-      ],
-      "features": [
-        "Static site generation",
-        "Content collections",
-        "MDX support",
-        "TypeScript integration",
-        "SEO optimized",
-        "Fast performance"
-      ],
-      "envVars": [
-        "SITE_URL",
-        "CONTENT_DIR"
-      ],
-      "testCommand": "pnpm test",
-      "buildCommand": "pnpm build",
-      "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-astro-content-collections/blob/main/README.md",
-      "tags": [
-        "static",
-        "content",
-        "seo",
-        "performance"
-      ],
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vite-react-supabase/blob/main/README.md",
+      "tags": ["frontend", "database", "auth", "realtime", "fast"],
       "difficulty": "beginner",
-      "lastUpdated": "2024-03-10T16:30:00Z",
+      "lastUpdated": "2024-03-16T12:00:00Z",
       "maintainer": "geenius",
       "license": "MIT"
     },
     {
-      "id": "express-prisma-postgres",
-      "name": "Express + Prisma + PostgreSQL",
-      "description": "Express.js API with Prisma ORM and PostgreSQL database",
-      "repository": "https://github.com/mxn2020/template-express-prisma-postgres",
+      "id": "vite-react-planetscale",
+      "name": "Vite + React + PlanetScale",
+      "description": "React app with Vite and PlanetScale edge database",
+      "repository": "https://github.com/mxn2020/template-vite-react-planetscale",
       "branch": "main",
-      "stack": [
-        "Express.js",
-        "Prisma",
-        "PostgreSQL",
-        "TypeScript",
-        "JWT"
-      ],
-      "features": [
-        "Express.js REST API",
-        "Prisma ORM integration",
-        "PostgreSQL database",
-        "JWT authentication",
-        "TypeScript support",
-        "API documentation"
-      ],
-      "envVars": [
-        "DATABASE_URL",
-        "JWT_SECRET",
-        "PORT"
-      ],
+      "stack": ["Vite", "React", "PlanetScale", "Drizzle ORM", "TypeScript"],
+      "features": ["Fast development with Vite", "PlanetScale edge database", "Drizzle ORM integration", "Database branching", "Type-safe queries", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "PLANETSCALE_TOKEN", "VITE_API_URL"],
       "testCommand": "pnpm test",
       "buildCommand": "pnpm build",
       "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-express-prisma-postgres/blob/main/README.md",
-      "tags": [
-        "backend",
-        "api",
-        "database",
-        "auth"
-      ],
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vite-react-planetscale/blob/main/README.md",
+      "tags": ["frontend", "mysql", "edge", "orm", "fast"],
       "difficulty": "intermediate",
-      "lastUpdated": "2024-03-09T13:10:00Z",
+      "lastUpdated": "2024-03-16T13:00:00Z",
       "maintainer": "geenius",
       "license": "MIT"
     },
     {
-      "id": "remix-sqlite-auth",
-      "name": "Remix + SQLite + Auth",
-      "description": "Remix full-stack app with SQLite database and built-in authentication",
-      "repository": "https://github.com/mxn2020/template-remix-sqlite-auth",
+      "id": "vite-react-upstash",
+      "name": "Vite + React + Upstash Redis",
+      "description": "React app with Vite and Upstash Redis for state management",
+      "repository": "https://github.com/mxn2020/template-vite-react-upstash",
       "branch": "main",
-      "stack": [
-        "Remix",
-        "SQLite",
-        "Prisma",
-        "TypeScript",
-        "Tailwind CSS"
-      ],
-      "features": [
-        "Remix full-stack framework",
-        "SQLite database",
-        "Built-in authentication",
-        "Progressive enhancement",
-        "Server-side rendering",
-        "Web standards focus"
-      ],
-      "envVars": [
-        "DATABASE_URL",
-        "SESSION_SECRET"
-      ],
+      "stack": ["Vite", "React", "Upstash Redis", "TypeScript", "Tailwind CSS"],
+      "features": ["Fast development with Vite", "Upstash serverless Redis", "Client-side caching", "Session management", "Real-time features", "Dev-container integration"],
+      "envVars": ["VITE_UPSTASH_REDIS_REST_URL", "VITE_UPSTASH_REDIS_REST_TOKEN", "VITE_API_URL"],
       "testCommand": "pnpm test",
       "buildCommand": "pnpm build",
       "devCommand": "pnpm dev",
-      "deployCommand": "pnpm deploy",
-      "documentation": "https://github.com/mxn2020/template-remix-sqlite-auth/blob/main/README.md",
-      "tags": [
-        "remix",
-        "sqlite",
-        "auth",
-        "fullstack"
-      ],
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vite-react-upstash/blob/main/README.md",
+      "tags": ["frontend", "redis", "caching", "serverless", "fast"],
+      "difficulty": "beginner",
+      "lastUpdated": "2024-03-16T14:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vite-react-indexeddb",
+      "name": "Vite + React + IndexedDB",
+      "description": "Client-side React app with Vite and IndexedDB storage",
+      "repository": "https://github.com/mxn2020/template-vite-react-indexeddb",
+      "branch": "main",
+      "stack": ["Vite", "React", "IndexedDB", "TypeScript", "Tailwind CSS"],
+      "features": ["Fast development with Vite", "Client-side storage", "Offline capabilities", "PWA ready", "No backend required", "Dev-container integration"],
+      "envVars": ["VITE_APP_NAME", "VITE_APP_VERSION"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vite-react-indexeddb/blob/main/README.md",
+      "tags": ["frontend", "offline", "pwa", "client-side"],
+      "difficulty": "beginner",
+      "lastUpdated": "2024-03-17T10:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nextjs-supabase",
+      "name": "Next.js + Supabase",
+      "description": "Full-stack Next.js app with Supabase database",
+      "repository": "https://github.com/mxn2020/template-nextjs-supabase",
+      "branch": "main",
+      "stack": ["Next.js", "Supabase", "TypeScript", "Tailwind CSS"],
+      "features": ["Authentication with Supabase Auth", "PostgreSQL database with Supabase", "Real-time subscriptions", "Server-side rendering", "API routes", "Tailwind CSS styling", "Dev-container integration"],
+      "envVars": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nextjs-supabase/blob/main/README.md",
+      "tags": ["fullstack", "database", "auth", "ssr", "popular"],
       "difficulty": "intermediate",
-      "lastUpdated": "2024-03-08T08:25:00Z",
+      "lastUpdated": "2024-03-15T10:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nextjs-mongodb",
+      "name": "Next.js + MongoDB",
+      "description": "Next.js app with MongoDB database and Prisma ORM",
+      "repository": "https://github.com/mxn2020/template-nextjs-mongodb",
+      "branch": "main",
+      "stack": ["Next.js", "MongoDB", "Prisma", "TypeScript", "Tailwind CSS"],
+      "features": ["Server-side rendering", "MongoDB Atlas integration", "Prisma ORM for type safety", "API routes", "NextAuth.js authentication", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "MONGODB_URI", "NEXTAUTH_SECRET", "NEXTAUTH_URL"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nextjs-mongodb/blob/main/README.md",
+      "tags": ["fullstack", "nosql", "ssr", "auth", "orm"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T11:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nextjs-planetscale",
+      "name": "Next.js + PlanetScale",
+      "description": "Next.js app with PlanetScale MySQL database",
+      "repository": "https://github.com/mxn2020/template-nextjs-planetscale",
+      "branch": "main",
+      "stack": ["Next.js", "PlanetScale", "Drizzle ORM", "TypeScript", "Tailwind CSS"],
+      "features": ["PlanetScale edge database", "Drizzle ORM for type safety", "Database branching support", "Server-side rendering", "API routes", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "PLANETSCALE_TOKEN", "NEXT_PUBLIC_APP_URL"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nextjs-planetscale/blob/main/README.md",
+      "tags": ["fullstack", "mysql", "edge", "orm", "modern"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T11:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nextjs-upstash-redis",
+      "name": "Next.js + Upstash Redis",
+      "description": "Next.js app with Upstash Redis for caching and sessions",
+      "repository": "https://github.com/mxn2020/template-nextjs-upstash-redis",
+      "branch": "main",
+      "stack": ["Next.js", "Upstash Redis", "TypeScript", "Tailwind CSS", "NextAuth.js"],
+      "features": ["Redis-based session management", "Upstash serverless Redis", "NextAuth.js authentication", "Server-side rendering", "API routes with caching", "Dev-container integration"],
+      "envVars": ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "NEXTAUTH_SECRET", "NEXTAUTH_URL"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nextjs-upstash-redis/blob/main/README.md",
+      "tags": ["fullstack", "redis", "caching", "auth", "serverless"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T10:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nextjs-indexeddb",
+      "name": "Next.js + IndexedDB",
+      "description": "Next.js app with client-side IndexedDB storage",
+      "repository": "https://github.com/mxn2020/template-nextjs-indexeddb",
+      "branch": "main",
+      "stack": ["Next.js", "IndexedDB", "TypeScript", "Tailwind CSS"],
+      "features": ["Server-side rendering", "Client-side storage", "Offline capabilities", "PWA support", "Hybrid architecture", "Dev-container integration"],
+      "envVars": ["NEXT_PUBLIC_APP_NAME", "NEXT_PUBLIC_APP_VERSION"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nextjs-indexeddb/blob/main/README.md",
+      "tags": ["fullstack", "offline", "pwa", "hybrid"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T12:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nuxt-supabase",
+      "name": "Nuxt + Supabase",
+      "description": "Full-stack Nuxt application with Supabase backend",
+      "repository": "https://github.com/mxn2020/template-nuxt-supabase",
+      "branch": "main",
+      "stack": ["Nuxt 3", "Supabase", "TypeScript", "Tailwind CSS", "Vue 3"],
+      "features": ["Server-side rendering", "Supabase authentication", "PostgreSQL database", "Real-time subscriptions", "API routes", "Dev-container integration"],
+      "envVars": ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nuxt-supabase/blob/main/README.md",
+      "tags": ["fullstack", "vue", "ssr", "database", "auth"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T15:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nuxt-mongodb",
+      "name": "Nuxt + MongoDB",
+      "description": "Nuxt 3 app with MongoDB database and Prisma ORM",
+      "repository": "https://github.com/mxn2020/template-nuxt-mongodb",
+      "branch": "main",
+      "stack": ["Nuxt 3", "MongoDB", "Prisma", "TypeScript", "Tailwind CSS"],
+      "features": ["Server-side rendering", "MongoDB Atlas integration", "Prisma ORM for type safety", "API routes", "Authentication ready", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "MONGODB_URI", "NUXT_PUBLIC_API_URL", "AUTH_SECRET"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nuxt-mongodb/blob/main/README.md",
+      "tags": ["fullstack", "vue", "ssr", "nosql", "orm"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T17:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nuxt-planetscale",
+      "name": "Nuxt + PlanetScale",
+      "description": "Nuxt 3 app with PlanetScale MySQL database",
+      "repository": "https://github.com/mxn2020/template-nuxt-planetscale",
+      "branch": "main",
+      "stack": ["Nuxt 3", "PlanetScale", "Drizzle ORM", "TypeScript", "Tailwind CSS"],
+      "features": ["Server-side rendering", "PlanetScale edge database", "Drizzle ORM integration", "Database branching", "API routes", "Dev-container integration"],
+      "envVars": ["DATABASE_URL", "PLANETSCALE_TOKEN", "NUXT_PUBLIC_API_URL"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nuxt-planetscale/blob/main/README.md",
+      "tags": ["fullstack", "vue", "ssr", "mysql", "edge"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T16:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nuxt-upstash-redis",
+      "name": "Nuxt + Upstash Redis",
+      "description": "Nuxt 3 app with Upstash Redis for caching and sessions",
+      "repository": "https://github.com/mxn2020/template-nuxt-upstash-redis",
+      "branch": "main",
+      "stack": ["Nuxt 3", "Upstash Redis", "TypeScript", "Tailwind CSS", "Vue 3"],
+      "features": ["Server-side rendering", "Upstash serverless Redis", "Session management", "Caching strategies", "API routes", "Dev-container integration"],
+      "envVars": ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "NUXT_SECRET_KEY"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nuxt-upstash-redis/blob/main/README.md",
+      "tags": ["fullstack", "vue", "ssr", "redis", "caching"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-16T18:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "nuxt-indexeddb",
+      "name": "Nuxt + IndexedDB",
+      "description": "Nuxt 3 app with client-side IndexedDB storage",
+      "repository": "https://github.com/mxn2020/template-nuxt-indexeddb",
+      "branch": "main",
+      "stack": ["Nuxt 3", "IndexedDB", "TypeScript", "Tailwind CSS", "Vue 3"],
+      "features": ["Server-side rendering", "Client-side storage", "Offline capabilities", "PWA support", "Hybrid architecture", "Dev-container integration"],
+      "envVars": ["NUXT_PUBLIC_APP_NAME", "NUXT_PUBLIC_APP_VERSION"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-nuxt-indexeddb/blob/main/README.md",
+      "tags": ["fullstack", "vue", "ssr", "offline", "pwa"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T13:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-supabase",
+      "name": "Vue 3 + Supabase",
+      "description": "Vue 3 SPA with Supabase backend and real-time features",
+      "repository": "https://github.com/mxn2020/template-vue-supabase",
+      "branch": "main",
+      "stack": ["Vue 3", "Supabase", "Vite", "TypeScript", "Tailwind CSS"],
+      "features": ["Vue 3 with Composition API", "Supabase authentication", "PostgreSQL database", "Real-time subscriptions", "Pinia state management", "Dev-container integration"],
+      "envVars": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vue-supabase/blob/main/README.md",
+      "tags": ["frontend", "vue", "database", "auth", "realtime"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T14:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-mongodb",
+      "name": "Vue 3 + MongoDB",
+      "description": "Vue 3 SPA with MongoDB backend via API",
+      "repository": "https://github.com/mxn2020/template-vue-mongodb",
+      "branch": "main",
+      "stack": ["Vue 3", "MongoDB", "Vite", "TypeScript", "Tailwind CSS"],
+      "features": ["Vue 3 with Composition API", "MongoDB integration via API", "Pinia state management", "Authentication system", "Type-safe API calls", "Dev-container integration"],
+      "envVars": ["VITE_API_URL", "VITE_APP_NAME", "MONGODB_URI"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vue-mongodb/blob/main/README.md",
+      "tags": ["frontend", "vue", "nosql", "api"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T15:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-planetscale",
+      "name": "Vue 3 + PlanetScale",
+      "description": "Vue 3 SPA with PlanetScale edge database",
+      "repository": "https://github.com/mxn2020/template-vue-planetscale",
+      "branch": "main",
+      "stack": ["Vue 3", "PlanetScale", "Drizzle ORM", "Vite", "TypeScript"],
+      "features": ["Vue 3 with Composition API", "PlanetScale edge database", "Drizzle ORM integration", "Type-safe queries", "Pinia state management", "Dev-container integration"],
+      "envVars": ["VITE_API_URL", "DATABASE_URL", "PLANETSCALE_TOKEN"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vue-planetscale/blob/main/README.md",
+      "tags": ["frontend", "vue", "mysql", "edge", "orm"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T16:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-upstash",
+      "name": "Vue 3 + Upstash Redis",
+      "description": "Vue 3 SPA with Upstash Redis for state and caching",
+      "repository": "https://github.com/mxn2020/template-vue-upstash",
+      "branch": "main",
+      "stack": ["Vue 3", "Upstash Redis", "Vite", "TypeScript", "Tailwind CSS"],
+      "features": ["Vue 3 with Composition API", "Upstash serverless Redis", "Client-side caching", "Session management", "Pinia state management", "Dev-container integration"],
+      "envVars": ["VITE_UPSTASH_REDIS_REST_URL", "VITE_UPSTASH_REDIS_REST_TOKEN", "VITE_API_URL"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vue-upstash/blob/main/README.md",
+      "tags": ["frontend", "vue", "redis", "caching", "serverless"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T17:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "vue-indexeddb",
+      "name": "Vue 3 + IndexedDB",
+      "description": "Vue 3 SPA with IndexedDB for offline storage",
+      "repository": "https://github.com/mxn2020/template-vue-indexeddb",
+      "branch": "main",
+      "stack": ["Vue 3", "IndexedDB", "Vite", "TypeScript", "Tailwind CSS"],
+      "features": ["Vue 3 with Composition API", "IndexedDB for client storage", "Offline capabilities", "PWA support", "Pinia state management", "Dev-container integration"],
+      "envVars": ["VITE_APP_NAME", "VITE_APP_VERSION"],
+      "testCommand": "pnpm test",
+      "buildCommand": "pnpm build",
+      "devCommand": "pnpm dev",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-vue-indexeddb/blob/main/README.md",
+      "tags": ["frontend", "vue", "offline", "pwa", "client-side"],
+      "difficulty": "beginner",
+      "lastUpdated": "2024-03-17T18:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "angular-supabase",
+      "name": "Angular + Supabase",
+      "description": "Angular app with Supabase backend and real-time features",
+      "repository": "https://github.com/mxn2020/template-angular-supabase",
+      "branch": "main",
+      "stack": ["Angular", "Supabase", "TypeScript", "Angular Material", "RxJS"],
+      "features": ["Angular with standalone components", "Supabase authentication", "PostgreSQL database", "Real-time subscriptions", "Angular Material UI", "Dev-container integration"],
+      "envVars": ["NG_APP_SUPABASE_URL", "NG_APP_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY"],
+      "testCommand": "ng test",
+      "buildCommand": "ng build",
+      "devCommand": "ng serve",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-angular-supabase/blob/main/README.md",
+      "tags": ["frontend", "angular", "database", "auth", "realtime"],
+      "difficulty": "advanced",
+      "lastUpdated": "2024-03-17T19:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "angular-mongodb",
+      "name": "Angular + MongoDB",
+      "description": "Angular app with MongoDB backend via API",
+      "repository": "https://github.com/mxn2020/template-angular-mongodb",
+      "branch": "main",
+      "stack": ["Angular", "MongoDB", "TypeScript", "Angular Material", "RxJS"],
+      "features": ["Angular with standalone components", "MongoDB integration via API", "Angular Material UI", "RxJS for reactive programming", "Authentication system", "Dev-container integration"],
+      "envVars": ["NG_APP_API_URL", "NG_APP_NAME", "MONGODB_URI"],
+      "testCommand": "ng test",
+      "buildCommand": "ng build",
+      "devCommand": "ng serve",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-angular-mongodb/blob/main/README.md",
+      "tags": ["frontend", "angular", "nosql", "api"],
+      "difficulty": "advanced",
+      "lastUpdated": "2024-03-17T20:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "angular-planetscale",
+      "name": "Angular + PlanetScale",
+      "description": "Angular app with PlanetScale edge database",
+      "repository": "https://github.com/mxn2020/template-angular-planetscale",
+      "branch": "main",
+      "stack": ["Angular", "PlanetScale", "TypeScript", "Angular Material", "RxJS"],
+      "features": ["Angular with standalone components", "PlanetScale edge database", "Type-safe API integration", "Angular Material UI", "RxJS for reactive programming", "Dev-container integration"],
+      "envVars": ["NG_APP_API_URL", "DATABASE_URL", "PLANETSCALE_TOKEN"],
+      "testCommand": "ng test",
+      "buildCommand": "ng build",
+      "devCommand": "ng serve",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-angular-planetscale/blob/main/README.md",
+      "tags": ["frontend", "angular", "mysql", "edge"],
+      "difficulty": "advanced",
+      "lastUpdated": "2024-03-17T21:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "angular-upstash",
+      "name": "Angular + Upstash Redis",
+      "description": "Angular app with Upstash Redis for state and caching",
+      "repository": "https://github.com/mxn2020/template-angular-upstash",
+      "branch": "main",
+      "stack": ["Angular", "Upstash Redis", "TypeScript", "Angular Material", "RxJS"],
+      "features": ["Angular with standalone components", "Upstash serverless Redis", "Client-side caching", "Angular Material UI", "RxJS for reactive programming", "Dev-container integration"],
+      "envVars": ["NG_APP_UPSTASH_REDIS_REST_URL", "NG_APP_UPSTASH_REDIS_REST_TOKEN", "NG_APP_API_URL"],
+      "testCommand": "ng test",
+      "buildCommand": "ng build",
+      "devCommand": "ng serve",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-angular-upstash/blob/main/README.md",
+      "tags": ["frontend", "angular", "redis", "caching", "serverless"],
+      "difficulty": "advanced",
+      "lastUpdated": "2024-03-17T22:00:00Z",
+      "maintainer": "geenius",
+      "license": "MIT"
+    },
+    {
+      "id": "angular-indexeddb",
+      "name": "Angular + IndexedDB",
+      "description": "Angular app with IndexedDB for offline storage",
+      "repository": "https://github.com/mxn2020/template-angular-indexeddb",
+      "branch": "main",
+      "stack": ["Angular", "IndexedDB", "TypeScript", "Angular Material", "RxJS"],
+      "features": ["Angular with standalone components", "IndexedDB for client storage", "Offline capabilities", "PWA support", "Angular Material UI", "Dev-container integration"],
+      "envVars": ["NG_APP_NAME", "NG_APP_VERSION"],
+      "testCommand": "ng test",
+      "buildCommand": "ng build",
+      "devCommand": "ng serve",
+      "deployCommand": "netlify deploy --prod",
+      "documentation": "https://github.com/mxn2020/template-angular-indexeddb/blob/main/README.md",
+      "tags": ["frontend", "angular", "offline", "pwa", "client-side"],
+      "difficulty": "intermediate",
+      "lastUpdated": "2024-03-17T23:00:00Z",
       "maintainer": "geenius",
       "license": "MIT"
     }
@@ -355,9 +507,8 @@
       "name": "Full-Stack Applications",
       "description": "Complete applications with frontend and backend",
       "templates": [
-        "nextjs-supabase",
-        "remix-sqlite-auth",
-        "svelte-drizzle-planetscale"
+        "nextjs-supabase", "nextjs-mongodb", "nextjs-planetscale", "nextjs-upstash-redis", "nextjs-indexeddb",
+        "nuxt-supabase", "nuxt-mongodb", "nuxt-planetscale", "nuxt-upstash-redis", "nuxt-indexeddb"
       ]
     },
     {
@@ -365,25 +516,9 @@
       "name": "Frontend Applications",
       "description": "Client-side applications and SPAs",
       "templates": [
-        "vite-react-mongo",
-        "react-indexeddb-jwt",
-        "vue-pinia-firebase"
-      ]
-    },
-    {
-      "id": "backend",
-      "name": "Backend APIs",
-      "description": "Server-side APIs and services",
-      "templates": [
-        "express-prisma-postgres"
-      ]
-    },
-    {
-      "id": "static",
-      "name": "Static Sites",
-      "description": "Static site generators and JAMstack",
-      "templates": [
-        "astro-content-collections"
+        "vite-react-mongo", "vite-react-supabase", "vite-react-planetscale", "vite-react-upstash", "vite-react-indexeddb",
+        "vue-supabase", "vue-mongodb", "vue-planetscale", "vue-upstash", "vue-indexeddb",
+        "angular-supabase", "angular-mongodb", "angular-planetscale", "angular-upstash", "angular-indexeddb"
       ]
     },
     {
@@ -391,9 +526,99 @@
       "name": "Popular Templates",
       "description": "Most commonly used templates",
       "templates": [
-        "nextjs-supabase",
-        "vite-react-mongo",
-        "react-indexeddb-jwt"
+        "nextjs-supabase", "vite-react-supabase", "nuxt-supabase", "vue-supabase"
+      ]
+    },
+    {
+      "id": "vite",
+      "name": "Vite Templates",
+      "description": "Fast development with Vite",
+      "templates": [
+        "vite-react-mongo", "vite-react-supabase", "vite-react-planetscale", "vite-react-upstash", "vite-react-indexeddb"
+      ]
+    },
+    {
+      "id": "nextjs",
+      "name": "Next.js Templates",
+      "description": "Server-side rendered React applications",
+      "templates": [
+        "nextjs-supabase", "nextjs-mongodb", "nextjs-planetscale", "nextjs-upstash-redis", "nextjs-indexeddb"
+      ]
+    },
+    {
+      "id": "nuxt",
+      "name": "Nuxt Templates",
+      "description": "Server-side rendered Vue applications",
+      "templates": [
+        "nuxt-supabase", "nuxt-mongodb", "nuxt-planetscale", "nuxt-upstash-redis", "nuxt-indexeddb"
+      ]
+    },
+    {
+      "id": "vue",
+      "name": "Vue Templates",
+      "description": "Vue.js single page applications",
+      "templates": [
+        "vue-supabase", "vue-mongodb", "vue-planetscale", "vue-upstash", "vue-indexeddb"
+      ]
+    },
+    {
+      "id": "angular",
+      "name": "Angular Templates",
+      "description": "Angular single page applications",
+      "templates": [
+        "angular-supabase", "angular-mongodb", "angular-planetscale", "angular-upstash", "angular-indexeddb"
+      ]
+    },
+    {
+      "id": "database",
+      "name": "Database Templates",
+      "description": "Templates with various database integrations",
+      "templates": [
+        "vite-react-mongo", "vite-react-supabase", "vite-react-planetscale", "vite-react-upstash",
+        "nextjs-supabase", "nextjs-mongodb", "nextjs-planetscale", "nextjs-upstash-redis",
+        "nuxt-supabase", "nuxt-mongodb", "nuxt-planetscale", "nuxt-upstash-redis",
+        "vue-supabase", "vue-mongodb", "vue-planetscale", "vue-upstash",
+        "angular-supabase", "angular-mongodb", "angular-planetscale", "angular-upstash"
+      ]
+    },
+    {
+      "id": "offline",
+      "name": "Offline-First Templates",
+      "description": "Templates with offline capabilities and IndexedDB",
+      "templates": [
+        "vite-react-indexeddb", "nextjs-indexeddb", "nuxt-indexeddb", "vue-indexeddb", "angular-indexeddb"
+      ]
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase Templates",
+      "description": "Templates using Supabase as backend",
+      "templates": [
+        "vite-react-supabase", "nextjs-supabase", "nuxt-supabase", "vue-supabase", "angular-supabase"
+      ]
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB Templates",
+      "description": "Templates using MongoDB as database",
+      "templates": [
+        "vite-react-mongo", "nextjs-mongodb", "nuxt-mongodb", "vue-mongodb", "angular-mongodb"
+      ]
+    },
+    {
+      "id": "planetscale",
+      "name": "PlanetScale Templates",
+      "description": "Templates using PlanetScale edge database",
+      "templates": [
+        "vite-react-planetscale", "nextjs-planetscale", "nuxt-planetscale", "vue-planetscale", "angular-planetscale"
+      ]
+    },
+    {
+      "id": "upstash",
+      "name": "Upstash Redis Templates",
+      "description": "Templates using Upstash serverless Redis",
+      "templates": [
+        "vite-react-upstash", "nextjs-upstash-redis", "nuxt-upstash-redis", "vue-upstash", "angular-upstash"
       ]
     }
   ],
@@ -445,9 +670,9 @@
     }
   ],
   "meta": {
-    "lastUpdated": "2024-03-15T12:00:00Z",
-    "version": "1.0.0",
-    "totalTemplates": 8,
+    "lastUpdated": "2024-03-17T23:00:00Z",
+    "version": "3.0.0",
+    "totalTemplates": 25,
     "registry": "https://registry.geenius.com"
   }
 }

@@ -86,7 +86,7 @@ ai-dev-workflow/
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/cli/index.ts",
+    "dev": "tsx cli/index.ts",
     "test": "vitest",
     "start": "node bin/dev-agent.js"
   },
@@ -225,51 +225,51 @@ Create `src/utils/helpers.ts`:
 ### STEP 5: Create CLI Command Structure
 
 **Read this file for context:**
-- `src/cli/index.ts` (the moved updated-cli-with-custom-agents.ts file)
+- `cli/index.ts` (the moved updated-cli-with-custom-agents.ts file)
 
-Create `src/cli/commands/init.ts`:
+Create `cli/commands/init.ts`:
 ```typescript
 // Extract init command logic from main CLI file
 // Handle template selection, project setup, GitHub forking
 // Use: TemplateRegistry, GitHubService, NetlifyService
 ```
 
-Create `src/cli/commands/develop.ts`:
+Create `cli/commands/develop.ts`:
 ```typescript
 // Extract develop command logic from main CLI file
 // Handle feature development, agent orchestration
 // Use: AgentService, AgentOrchestrator
 ```
 
-Create `src/cli/commands/status.ts`:
+Create `cli/commands/status.ts`:
 ```typescript
 // Extract status command logic from main CLI file
 // Show project status, agent performance, deployments
 // Use: All services for comprehensive status
 ```
 
-Create `src/cli/commands/compare-agents.ts`:
+Create `cli/commands/compare-agents.ts`:
 ```typescript
 // Extract compare-agents command logic from main CLI file
 // Run agent comparison across providers
 // Use: AgentService
 ```
 
-Create `src/cli/commands/memory.ts`:
+Create `cli/commands/memory.ts`:
 ```typescript
 // Extract memory command logic from main CLI file
 // Handle agent memory import/export/clear
 // Use: Agent memory management functions
 ```
 
-Create `src/cli/commands/switch-provider.ts`:
+Create `cli/commands/switch-provider.ts`:
 ```typescript
 // Extract switch-provider command logic from main CLI file
 // Handle switching between AI providers
 // Use: Configuration management
 ```
 
-Update `src/cli/index.ts`:
+Update `cli/index.ts`:
 ```typescript
 // Clean up the main CLI file to just register commands
 // Import and register all command modules
@@ -316,7 +316,7 @@ LOG_LEVEL=info
 - Update imports in `src/agent/` files
 - Update imports in `src/services/` files
 - Update imports in `src/templates/` files
-- Update imports in `src/cli/` files
+- Update imports in `cli/` files
 
 ### STEP 9: Create Build Configuration
 
@@ -436,7 +436,7 @@ When implementing each component, read these files for context:
 - `src/templates/template-registry.json`
 
 ### For CLI:
-- `src/cli/index.ts` (the main CLI file)
+- `cli/index.ts` (the main CLI file)
 
 ## 🎯 Success Criteria
 

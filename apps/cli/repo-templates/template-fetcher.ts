@@ -2,12 +2,25 @@
 import { Octokit } from 'octokit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import type { ProjectTemplate } from '../types/template';
+import { fileURLToPath } from 'url';
+import type { ProjectTemplate } from '../../../src/types/template';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Handle both CommonJS and ES modules
+let __dirname: string;
+try {
+  // Try ES module approach first
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
+    const __filename = fileURLToPath(import.meta.url);
+    __dirname = dirname(__filename);
+  } else {
+    // Fallback to CommonJS
+    __dirname = dirname(__filename);
+  }
+} catch (error) {
+  // Final fallback - use process.cwd() relative path
+  __dirname = process.cwd() + '/src/repo-templates';
+}
 
 export class TemplateFetcher {
   private octokit: Octokit;
@@ -17,7 +30,7 @@ constructor(githubToken?: string, registryUrl?: string) {
   this.octokit = new Octokit({ auth: githubToken });
   this.registryUrl = registryUrl || 
     process.env.TEMPLATE_REGISTRY_URL || 
-    'https://raw.githubusercontent.com/mxn2020/geenius/registry/main/template-registry.json';
+    'https://raw.githubusercontent.com/mxn2020/geenius/main/registry/main/template-registry.json';
 }
 
   async fetchTemplateRegistry(): Promise<any> {

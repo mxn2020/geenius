@@ -1,11 +1,11 @@
-// src/cli/commands/switch-provider.ts
+// cli/commands/switch-provider.ts
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config';
-import { logger } from '../../utils/logger';
-import { validateApiKey } from '../../utils/validation';
-import { AgentService } from '../../agent/agent-service';
+import { ConfigManager } from '../../../src/utils/config';
+import { logger } from '../../../src/utils/logger';
+import { validateApiKey } from '../../../src/utils/validation';
+import { AgentService } from '../agent/agent-service';
 
 export async function switchProviderCommand(): Promise<void> {
   const configManager = new ConfigManager();

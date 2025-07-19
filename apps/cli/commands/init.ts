@@ -1,18 +1,18 @@
-// src/cli/commands/init.ts
+// cli/commands/init.ts
 import 'dotenv/config';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
 import { randomBytes } from 'crypto'; // Add this import
-import { ConfigManager } from '../../utils/config';
-import { validateInput, InitCommandSchema } from '../../utils/validation';
-import { logger } from '../../utils/logger';
-import { TemplateRegistry } from '../../repo-templates/index';
-import { GitHubService } from '../../services/github';
-import { NetlifyService } from '../../services/netlify';
-import { MongoDBService } from '../../services/mongodb';
-import { AgentService } from '../../agent/agent-service';
-import type { InitOptions, ProjectConfig } from '../../types/config';
+import { ConfigManager } from '../../../src/utils/config';
+import { validateInput, InitCommandSchema } from '../../../src/utils/validation';
+import { logger } from '../../../src/utils/logger';
+import { TemplateRegistry } from '../repo-templates/index';
+import { GitHubService } from '../services/github';
+import { NetlifyService } from '../services/netlify';
+import { MongoDBService } from '../services/mongodb';
+import { AgentService } from '../agent/agent-service';
+import type { InitOptions, ProjectConfig } from '../../../src/types/config';
 
 export async function initCommand(): Promise<void> {
   console.log(chalk.blue.bold('🚀 AI Development Agent v3.0'));

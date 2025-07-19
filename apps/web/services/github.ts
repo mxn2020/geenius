@@ -1,0 +1,124 @@
+// web/services/github.ts - Web-friendly GitHub service using REST API
+export class GitHubService {
+  private token: string;
+
+  constructor() {
+    if (!process.env.GITHUB_TOKEN) {
+      throw new Error('GITHUB_TOKEN environment variable is required for GitHub integration.');
+    }
+    this.token = process.env.GITHUB_TOKEN;
+  }
+
+  async forkTemplate(templateRepoUrl: string, projectName: string, githubOrg: string): Promise<string> {
+    // Parse the template repository URL
+    const match = templateRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!match) {
+      throw new Error(`Invalid GitHub repository URL: ${templateRepoUrl}`);
+    }
+
+    const [, templateOwner, templateRepo] = match;
+    const cleanRepoName = templateRepo.replace(/\.git$/, '');
+
+    try {
+      // Fork the repository using GitHub REST API
+      const response = await fetch(`https://api.github.com/repos/${templateOwner}/${cleanRepoName}/forks`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          organization: githubOrg !== process.env.GITHUB_USERNAME ? githubOrg : undefined,
+          name: projectName,
+          default_branch_only: false
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to fork repository: ${error.message || response.statusText}`);
+      }
+
+      const forkData = await response.json();
+      return forkData.html_url;
+    } catch (error) {
+      throw new Error(`GitHub API error: ${error.message}`);
+    }
+  }
+
+  async createBranch(repoUrl: string, branchName: string, baseBranch: string = 'main'): Promise<void> {
+    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!match) {
+      throw new Error(`Invalid GitHub repository URL: ${repoUrl}`);
+    }
+
+    const [, owner, repo] = match;
+    const cleanRepoName = repo.replace(/\.git$/, '');
+
+    try {
+      // Get the SHA of the base branch
+      const baseResponse = await fetch(`https://api.github.com/repos/${owner}/${cleanRepoName}/git/refs/heads/${baseBranch}`, {
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!baseResponse.ok) {
+        throw new Error(`Failed to get base branch: ${baseResponse.statusText}`);
+      }
+
+      const baseData = await baseResponse.json();
+      const baseSha = baseData.object.sha;
+
+      // Create new branch
+      const createResponse = await fetch(`https://api.github.com/repos/${owner}/${cleanRepoName}/git/refs`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ref: `refs/heads/${branchName}`,
+          sha: baseSha
+        })
+      });
+
+      if (!createResponse.ok) {
+        const error = await createResponse.json();
+        throw new Error(`Failed to create branch: ${error.message || createResponse.statusText}`);
+      }
+    } catch (error) {
+      throw new Error(`GitHub API error: ${error.message}`);
+    }
+  }
+
+  async getRepositoryInfo(repoUrl: string): Promise<any> {
+    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!match) {
+      throw new Error(`Invalid GitHub repository URL: ${repoUrl}`);
+    }
+
+    const [, owner, repo] = match;
+    const cleanRepoName = repo.replace(/\.git$/, '');
+
+    try {
+      const response = await fetch(`https://api.github.com/repos/${owner}/${cleanRepoName}`, {
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get repository info: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(`GitHub API error: ${error.message}`);
+    }
+  }
+}

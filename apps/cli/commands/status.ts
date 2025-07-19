@@ -1,11 +1,11 @@
-// src/cli/commands/status.ts
+// cli/commands/status.ts
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../utils/config';
-import { logger } from '../../utils/logger';
-import { formatDuration } from '../../utils/helpers';
-import { AgentService } from '../../agent/agent-service';
-import { NetlifyService } from '../../services/netlify';
+import { ConfigManager } from '../../../src/utils/config';
+import { logger } from '../../../src/utils/logger';
+import { formatDuration } from '../../../src/utils/helpers';
+import { AgentService } from '../agent/agent-service';
+import { NetlifyService } from '../services/netlify';
 
 export async function statusCommand(): Promise<void> {
   const configManager = new ConfigManager();

@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Components
 
-**CLI System (`src/cli/`)**
+**CLI System (`cli/`)**
 - `index.ts` - Main CLI entry point using Commander.js
 - `commands/` - Individual command implementations (init, develop, status, compare-agents, memory, switch-provider)
 - Binary entry point: `bin/geenius.js`
@@ -144,6 +144,6 @@ The system follows a structured development workflow:
 
 - CLI: `npm run dev` (development) or `npm run start` (production)
 - Binary: `geenius` command after installation
-- Main entry: `src/cli/index.ts`
+- Main entry: `cli/index.ts`
 
 The codebase is designed as a comprehensive AI-powered development workflow tool that can initialize projects, develop features, manage code quality, and deploy applications using various AI providers and orchestration strategies.

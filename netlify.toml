@@ -1,9 +1,17 @@
 [build]
-  publish = "public"
-  functions = "api"
+  publish = "dist"
+  command = "pnpm build"
 
 [functions]
   directory = "api"
+  node_bundler = "esbuild"
+
+[dev]
+  command = "pnpm dev:web"
+  publish = "dist"
+  port = 8888
+  targetPort = 5173
+
 
 # API Routes - these redirects should now point to /.netlify/functions/
 [[redirects]]
@@ -64,7 +72,3 @@
   to = "/index.html"
   status = 200
 
-[dev]
-  functions = "api"
-  port = 8888
-  framework = "#static"

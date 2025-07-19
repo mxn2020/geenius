@@ -1,6 +1,6 @@
-// src/repo-templates/index.ts
+// web/services/template-registry.ts - Web-friendly template registry
 import { TemplateFetcher } from './template-fetcher';
-import type { ProjectTemplate } from '../types/template';
+import type { ProjectTemplate } from '../../../src/types/template';
 
 export class TemplateRegistry {
   private fetcher: TemplateFetcher;
@@ -38,7 +38,7 @@ export class TemplateRegistry {
 
   async getTemplatesByCategory(category: string): Promise<ProjectTemplate[]> {
     const registry = await this.fetcher.fetchTemplateRegistry();
-    const categoryData = registry.categories.find(c => c.id === category);
+    const categoryData = registry.categories?.find(c => c.id === category);
     
     if (!categoryData) return [];
 
@@ -60,4 +60,4 @@ export class TemplateRegistry {
 }
 
 export { TemplateFetcher };
-export * from '../types/template';
+export * from '../../../src/types/template';

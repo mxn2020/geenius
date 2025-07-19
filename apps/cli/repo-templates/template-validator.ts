@@ -1,7 +1,7 @@
 // src/templates/template-validator.ts
 import { z } from 'zod';
 import { TemplateFetcher } from './template-fetcher';
-import type { ProjectTemplate } from '../types/template';
+import type { ProjectTemplate } from '../../../src/types/template';
 
 const TemplateSchema = z.object({
   id: z.string().min(1),

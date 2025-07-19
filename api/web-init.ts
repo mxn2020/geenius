@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { initCommand } from '../../src/cli/commands/init';
+import { ProjectWorkflow } from '../apps/web/src/utils/ProjectWorkflow';
 
 export const handler: Handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
@@ -23,7 +23,7 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Set environment variables temporarily for this request
+    // Validate API key availability
     if (data.aiProvider === 'anthropic' && !process.env.ANTHROPIC_API_KEY) {
       return {
         statusCode: 400,
@@ -52,38 +52,31 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Capture console output
-    const logs: string[] = [];
-    const originalLog = console.log;
-    const originalError = console.error;
-    
-    console.log = (...args) => {
-      logs.push(args.join(' '));
-      originalLog(...args);
-    };
-    
-    console.error = (...args) => {
-      logs.push(`ERROR: ${args.join(' ')}`);
-      originalError(...args);
-    };
-
-    try {
-      // Mock the inquirer prompts by setting up the responses
-      const responses = {
-        aiProvider: data.aiProvider,
-        agentMode: data.agentMode,
-        orchestrationStrategy: data.orchestrationStrategy || 'hierarchical',
-        templateId: data.templateId,
-        projectName: data.projectName,
-        githubOrg: data.githubOrg,
-        model: data.model || '',
-        autoSetup: data.autoSetup !== false
+    // Validate GitHub token
+    if (!process.env.GITHUB_TOKEN) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'GITHUB_TOKEN not configured' })
       };
+    }
 
-      // This is tricky - the init command uses inquirer which won't work in serverless
-      // We need to refactor the init logic to accept parameters directly
-      // For now, return a mock success response
-      
+    // Prepare options for web workflow
+    const options = {
+      aiProvider: data.aiProvider,
+      agentMode: data.agentMode,
+      orchestrationStrategy: data.orchestrationStrategy || 'hierarchical',
+      templateId: data.templateId,
+      projectName: data.projectName,
+      githubOrg: data.githubOrg,
+      model: data.model || undefined,
+      autoSetup: data.autoSetup !== false
+    };
+
+    // Execute the initialization workflow
+    const workflow = new ProjectWorkflow();
+    const result = await workflow.initializeProject(options);
+
+    if (result.success) {
       return {
         statusCode: 200,
         headers: {
@@ -92,18 +85,26 @@ export const handler: Handler = async (event, context) => {
         },
         body: JSON.stringify({
           success: true,
-          message: 'Project initialization started',
-          logs: logs,
-          // Mock data for now
-          repoUrl: `https://github.com/${data.githubOrg}/${data.projectName}`,
-          netlifyUrl: `https://${data.projectName}-${Date.now().toString(36)}.netlify.app`,
-          mongodbDatabase: data.templateId.includes('mongo') ? `${data.projectName}_db` : null
+          message: 'Project initialized successfully',
+          repoUrl: result.repoUrl,
+          netlifyUrl: result.netlifyProject?.ssl_url,
+          mongodbDatabase: result.mongodbProject?.databaseName,
+          logs: result.logs
         })
       };
-    } finally {
-      // Restore console
-      console.log = originalLog;
-      console.error = originalError;
+    } else {
+      return {
+        statusCode: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+          success: false,
+          error: result.error,
+          logs: result.logs
+        })
+      };
     }
 
   } catch (error: any) {
@@ -116,7 +117,8 @@ export const handler: Handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: false,
-        error: error.message || 'Internal server error'
+        error: error.message || 'Internal server error',
+        logs: [`❌ Unexpected error: ${error.message}`]
       })
     };
   }
