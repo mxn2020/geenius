@@ -29,6 +29,15 @@ function App() {
     checkEnvironmentStatus()
     loadTemplates()
     loadMongodbProjects()
+    
+    // Check for session ID in URL parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlSessionId = urlParams.get('session')
+    if (urlSessionId) {
+      setSessionId(urlSessionId)
+      setActiveView('logs')
+      startLogPolling(urlSessionId)
+    }
   }, [])
 
   const checkEnvironmentStatus = async () => {
