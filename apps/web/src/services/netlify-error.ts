@@ -1,23 +1,14 @@
-// netlify/functions/shared/netlify-service.ts
-import { NetlifyAPI } from './netlifyAPI';
+// web/services/netlify.ts
+import { NetlifyAPI } from 'netlify';
 
 export class NetlifyService {
-  private client: NetlifyAPI | null = null;
+  private client: any;
 
   constructor() {
-    // Don't initialize client in constructor to avoid import issues
-    this.client = null;
-  }
-
-  private async getClient(): Promise<NetlifyAPI> {
-    if (!this.client) {
-      if (!process.env.NETLIFY_TOKEN) {
-        throw new Error('NETLIFY_TOKEN environment variable is required for Netlify integration.');
-      }
-      // Use our custom NetlifyAPI implementation instead of the problematic import
-      this.client = new NetlifyAPI(process.env.NETLIFY_TOKEN);
+    if (!process.env.NETLIFY_TOKEN) {
+      throw new Error('NETLIFY_TOKEN environment variable is required for Netlify integration.');
     }
-    return this.client;
+    this.client = new NetlifyAPI(process.env.NETLIFY_TOKEN);
   }
 
   async createProject(name: string, repoUrl: string, teamSlug?: string) {
@@ -38,15 +29,13 @@ export class NetlifyService {
 
     try {
       // Step 1: Get GitHub repository ID
-      console.log(`🔍 Getting GitHub repository ID via api shared...`);
+      console.log(`🔍 Getting GitHub repository ID via web services...`);
       const repoId = await this.getGitHubRepoId(owner, repo);
       console.log(`   Repository ID: ${repoId}`);
 
       // Step 2: Create deploy key
-      console.log(`🔌 Getting Netlify client...`);
-      const client = await this.getClient();
       console.log(`🔑 Creating Netlify deploy key...`);
-      const deployKey = await client.createDeployKey();
+      const deployKey = await this.client.createDeployKey();
       console.log(`   Deploy key created: ${deployKey.id}`);
 
       // Step 3: Add deploy key to GitHub repository
@@ -74,12 +63,12 @@ export class NetlifyService {
       // If teamSlug is provided, create site in team
       let site;
       if (teamSlug) {
-        site = await client.createSiteInTeam({
+        site = await this.client.createSiteInTeam({
           accountSlug: teamSlug,
           body: siteData
         });
       } else {
-        site = await client.createSite({
+        site = await this.client.createSite({
           body: siteData
         });
       }
@@ -123,8 +112,7 @@ export class NetlifyService {
         try {
           // Get repo info for fallback attempt
           const repoId = await this.getGitHubRepoId(owner, repo);
-          const fallbackClient = await this.getClient();
-          const deployKey = await fallbackClient.createDeployKey();
+          const deployKey = await this.client.createDeployKey();
           await this.addDeployKeyToGitHub(owner, repo, deployKey.public_key!, `Netlify Deploy Key - ${fallbackName}`);
 
           const fallbackSiteData = {
@@ -145,12 +133,12 @@ export class NetlifyService {
 
           let fallbackSite;
           if (teamSlug) {
-            fallbackSite = await fallbackClient.createSiteInTeam({
+            fallbackSite = await this.client.createSiteInTeam({
               accountSlug: teamSlug,
               body: fallbackSiteData
             });
           } else {
-            fallbackSite = await fallbackClient.createSite({
+            fallbackSite = await this.client.createSite({
               body: fallbackSiteData
             });
           }
@@ -257,9 +245,8 @@ export class NetlifyService {
     try {
       console.log(`🔧 Setting up environment variables for site ${siteId}`);
 
-      const client = await this.getClient();
       // Get the site to find the account ID and site details
-      const site = await client.getSite({ siteId });
+      const site = await this.client.getSite({ siteId });
       const accountId = site.account_id;
 
       if (!accountId) {
@@ -280,19 +267,17 @@ export class NetlifyService {
       // Merge with provided variables
       const allVariables = { ...variables, ...netlifyVars };
 
-      // Convert variables to the format expected by the API, filtering out empty values
-      const envVars = Object.entries(allVariables)
-        .filter(([key, value]) => value && value.trim() !== '')
-        .map(([key, value]) => ({
-          key,
-          values: [{
-            value: String(value),
-            context: 'all' as const
-          }]
-        }));
+      // Convert variables to the format expected by the API
+      const envVars = Object.entries(allVariables).map(([key, value]) => ({
+        key,
+        values: [{
+          value,
+          context: 'all' as const
+        }]
+      }));
 
       // Create environment variables
-      await client.createEnvVars({
+      await this.client.createEnvVars({
         accountId,
         siteId,
         body: envVars
@@ -318,9 +303,8 @@ export class NetlifyService {
     try {
       console.log(`🔧 Configuring branch deployments for site ${siteId}`);
 
-      const client = await this.getClient();
       // Get current site settings
-      const site = await client.getSite({ siteId });
+      const site = await this.client.getSite({ siteId });
 
       // Configure branch deploy settings
       const updateData: any = {
@@ -338,7 +322,7 @@ export class NetlifyService {
         }
       }
 
-      await client.updateSite({
+      await this.client.updateSite({
         siteId,
         body: updateData
       });
@@ -353,11 +337,10 @@ export class NetlifyService {
   async waitForInitialDeployment(siteId: string, timeout: number = 180000): Promise<any> {
     console.log(`⏳ Waiting for initial deployment to complete...`);
     const startTime = Date.now();
-    const client = await this.getClient();
 
     while (Date.now() - startTime < timeout) {
       try {
-        const deployments = await client.listSiteDeploys({ siteId });
+        const deployments = await this.client.listSiteDeploys({ siteId });
 
         if (deployments.length === 0) {
           console.log(`   No deployments found yet, waiting...`);
@@ -400,144 +383,5 @@ export class NetlifyService {
 
     console.log(`✅ Generated unique name: ${uniqueName}`);
     return uniqueName;
-  }
-
-  async waitForDeployment(siteId: string, deployId: string): Promise<{
-    success: boolean;
-    previewUrl?: string;
-    error?: string;
-  }> {
-    try {
-      // Simulate deployment waiting
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      return {
-        success: true,
-        previewUrl: `https://${deployId}--${siteId}.netlify.app`
-      };
-    } catch (error) {
-      const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-  }
-
-  async triggerBuild(siteId: string, branch: string): Promise<string> {
-    // Trigger Netlify build via API
-    const buildId = `build_${Date.now()}`;
-    console.log(`Triggering build for site ${siteId} on branch ${branch}`);
-    return buildId;
-  }
-
-  async waitForBranchDeployment(branchName: string, timeout: number = 300000): Promise<{
-    success: boolean;
-    url?: string;
-    error?: string;
-  }> {
-    console.log(`⏳ Waiting for branch deployment: ${branchName}`);
-    const startTime = Date.now();
-    const checkInterval = 10000; // Check every 10 seconds
-
-    try {
-      // Get the site ID from environment or find it
-      const siteId = await this.getCurrentSiteId();
-      if (!siteId) {
-        return {
-          success: false,
-          error: 'Could not determine site ID for deployment check'
-        };
-      }
-
-      while (Date.now() - startTime < timeout) {
-        try {
-          // Get deployments for the site
-          const client = await this.getClient();
-          const deployments = await client.listSiteDeploys({ siteId, branch: branchName });
-          
-          if (deployments.length === 0) {
-            console.log(`   No deployments found for branch ${branchName}, waiting...`);
-            await new Promise(resolve => setTimeout(resolve, checkInterval));
-            continue;
-          }
-
-          // Find the most recent deployment for this branch
-          const latestDeployment = deployments[0];
-          console.log(`   Deployment state: ${latestDeployment.state} for branch ${branchName}`);
-
-          if (latestDeployment.state === 'ready') {
-            const deployUrl = latestDeployment.deploy_ssl_url || latestDeployment.ssl_url;
-            console.log(`✅ Branch deployment ready: ${deployUrl}`);
-            return {
-              success: true,
-              url: deployUrl
-            };
-          }
-
-          if (latestDeployment.state === 'error') {
-            console.log(`❌ Branch deployment failed: ${latestDeployment.error_message}`);
-            return {
-              success: false,
-              error: latestDeployment.error_message || 'Deployment failed'
-            };
-          }
-
-          // Still building/processing, wait and check again
-          await new Promise(resolve => setTimeout(resolve, checkInterval));
-
-        } catch (deployError: any) {
-          console.log(`   Error checking deployment: ${deployError.message}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, checkInterval));
-        }
-      }
-
-      // Timeout reached
-      return {
-        success: false,
-        error: `Deployment timeout after ${timeout}ms - branch may still be deploying`
-      };
-
-    } catch (error: any) {
-      console.error('❌ Error waiting for branch deployment:', error.message);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  private async getCurrentSiteId(): Promise<string | null> {
-    try {
-      // Try to get site ID from environment variable
-      if (process.env.NETLIFY_SITE_ID) {
-        return process.env.NETLIFY_SITE_ID;
-      }
-
-      // If not available, try to find it from existing sites
-      // This is a fallback method - in production you should set NETLIFY_SITE_ID
-      const client = await this.getClient();
-      const sites = await client.listSites();
-      
-      // Look for the current project site (you may need to adjust this logic)
-      const currentSite = sites.find(site => 
-        site.name && (
-          site.name.includes('geenius')  // ||
-          //site.repo?.repo_path?.includes('geenius')
-        )
-      );
-
-      if (currentSite && currentSite.id) {
-        console.log(`Found site: ${currentSite.name} (${currentSite.id})`);
-        return currentSite.id;
-      }
-
-      console.warn('Could not determine site ID. Set NETLIFY_SITE_ID environment variable.');
-      return null;
-
-    } catch (error: any) {
-      console.error('Error getting site ID:', error.message);
-      return null;
-    }
   }
 }

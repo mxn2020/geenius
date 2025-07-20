@@ -29,7 +29,7 @@ export class NetlifyService {
 
     try {
       // Step 1: Get GitHub repository ID
-      console.log(`🔍 Getting GitHub repository ID...`);
+      console.log(`🔍 Getting GitHub repository ID via cli services...`);
       const repoId = await this.getGitHubRepoId(owner, repo);
       console.log(`   Repository ID: ${repoId}`);
 

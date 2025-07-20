@@ -1,0 +1,418 @@
+# AI Processing Workflow for Agentic AI System
+name: AI Change Processing
+
+on:
+  repository_dispatch:
+    types: [ai-process-changes]
+  workflow_dispatch:
+    inputs:
+      session_id:
+        description: 'Session ID for tracking'
+        required: true
+        type: string
+      repository_url:
+        description: 'Repository URL to process'
+        required: true
+        type: string
+      changes_json:
+        description: 'JSON encoded changes to process'
+        required: true
+        type: string
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
+  UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+  UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+
+jobs:
+  process-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout Geenius Repository
+        uses: actions/checkout@v4
+        with:
+          repository: mehdinabhani/geenius
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: geenius
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: geenius/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd geenius
+          npm ci
+
+      - name: Parse Input Parameters
+        id: parse-inputs
+        run: |
+          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            echo "session_id=${{ github.event.client_payload.session_id }}" >> $GITHUB_OUTPUT
+            echo "repository_url=${{ github.event.client_payload.repository_url }}" >> $GITHUB_OUTPUT
+            echo "changes_json=${{ github.event.client_payload.changes_json }}" >> $GITHUB_OUTPUT
+            echo "ai_provider=${{ github.event.client_payload.ai_provider }}" >> $GITHUB_OUTPUT
+          else
+            echo "session_id=${{ github.event.inputs.session_id }}" >> $GITHUB_OUTPUT
+            echo "repository_url=${{ github.event.inputs.repository_url }}" >> $GITHUB_OUTPUT
+            echo "changes_json=${{ github.event.inputs.changes_json }}" >> $GITHUB_OUTPUT
+            echo "ai_provider=anthropic" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate Session
+        run: |
+          cd geenius
+          node -e "
+          const session_id = '${{ steps.parse-inputs.outputs.session_id }}';
+          if (!session_id || session_id === '') {
+            console.error('Session ID is required');
+            process.exit(1);
+          }
+          console.log('Session ID:', session_id);
+          "
+
+      - name: Update Session Status
+        run: |
+          cd geenius
+          node -e "
+          const { EnhancedSessionManager } = require('./api/shared/enhanced-session-manager.js');
+          const sessionManager = new EnhancedSessionManager();
+          sessionManager.updateSessionStatus(
+            '${{ steps.parse-inputs.outputs.session_id }}', 
+            'ai_processing', 
+            25, 
+            'GitHub Actions processing started'
+          ).then(() => {
+            console.log('Session status updated');
+          }).catch(console.error);
+          "
+
+      - name: Process Changes with AI Agents
+        id: ai-processing
+        run: |
+          cd geenius
+          node -e "
+          const { EnhancedAgentOrchestrator } = require('./api/shared/enhanced-agent-orchestrator.js');
+          const { EnhancedSessionManager } = require('./api/shared/enhanced-session-manager.js');
+          const { AIFileProcessor } = require('./api/shared/ai-file-processor.js');
+          
+          async function processChanges() {
+            try {
+              const sessionManager = new EnhancedSessionManager();
+              const session = await sessionManager.getSession('${{ steps.parse-inputs.outputs.session_id }}');
+              
+              if (!session) {
+                throw new Error('Session not found');
+              }
+              
+              const changes = JSON.parse(\`${{ steps.parse-inputs.outputs.changes_json }}\`);
+              const aiProvider = '${{ steps.parse-inputs.outputs.ai_provider }}' || 'anthropic';
+              
+              // Initialize processors
+              const fileProcessor = new AIFileProcessor(aiProvider);
+              
+              // Group changes by file
+              const fileGroups = fileProcessor.groupChangesByFile(changes);
+              
+              // Process each file group
+              const results = [];
+              for (const group of fileGroups) {
+                await sessionManager.addLog(session.id, 'info', \`Processing \${group.filePath}\`);
+                
+                const result = await fileProcessor.processFileChanges(
+                  group.filePath,
+                  group.originalContent,
+                  group.changes
+                );
+                
+                results.push({
+                  filePath: group.filePath,
+                  success: result.success,
+                  content: result.updatedContent,
+                  message: result.commitMessage,
+                  error: result.error
+                });
+              }
+              
+              // Output results for next steps
+              console.log('PROCESSING_RESULTS=' + JSON.stringify(results));
+              
+              await sessionManager.updateSessionStatus(
+                session.id, 
+                'processing', 
+                60, 
+                'AI processing completed'
+              );
+              
+            } catch (error) {
+              console.error('AI processing failed:', error);
+              process.exit(1);
+            }
+          }
+          
+          processChanges();
+          "
+
+      - name: Checkout Target Repository
+        if: steps.ai-processing.outcome == 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.parse-inputs.outputs.repository_url }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: target-repo
+          ref: develop
+
+      - name: Create Feature Branch
+        if: steps.ai-processing.outcome == 'success'
+        id: create-branch
+        run: |
+          cd target-repo
+          
+          # Generate branch name
+          branch_name="feature/ai-update-$(date +%s)"
+          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
+          
+          # Create and switch to new branch
+          git checkout -b $branch_name
+          git push origin $branch_name
+          
+          echo "Created branch: $branch_name"
+
+      - name: Apply Changes to Target Repository
+        if: steps.ai-processing.outcome == 'success'
+        run: |
+          cd target-repo
+          
+          # Parse processing results and apply changes
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          
+          // This would contain the actual results from the previous step
+          const results = []; // Would be populated from step output
+          
+          for (const result of results) {
+            if (result.success && result.content) {
+              const fullPath = path.join(process.cwd(), result.filePath);
+              const dir = path.dirname(fullPath);
+              
+              // Ensure directory exists
+              fs.mkdirSync(dir, { recursive: true });
+              
+              // Write updated content
+              fs.writeFileSync(fullPath, result.content, 'utf8');
+              
+              console.log(\`Updated: \${result.filePath}\`);
+            }
+          }
+          "
+
+      - name: Commit Changes
+        if: steps.ai-processing.outcome == 'success'
+        run: |
+          cd target-repo
+          
+          git config user.name "AI Agent"
+          git config user.email "ai-agent@geenius.dev"
+          
+          git add .
+          git commit -m "feat: AI-generated improvements
+
+          Applied AI-generated changes from Geenius system.
+          Session: ${{ steps.parse-inputs.outputs.session_id }}
+          
+          🤖 Generated with [Claude Code](https://claude.ai/code)
+          
+          Co-Authored-By: Claude <noreply@anthropic.com>"
+          
+          git push origin ${{ steps.create-branch.outputs.branch_name }}
+
+      - name: Create Pull Request
+        if: steps.ai-processing.outcome == 'success'
+        id: create-pr
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const repoUrl = '${{ steps.parse-inputs.outputs.repository_url }}';
+            const [owner, repo] = repoUrl.replace('https://github.com/', '').replace('.git', '').split('/');
+            
+            const { data: pr } = await github.rest.pulls.create({
+              owner: owner,
+              repo: repo,
+              title: 'AI Enhancement: Automated improvements',
+              head: '${{ steps.create-branch.outputs.branch_name }}',
+              base: 'develop',
+              body: `## 🤖 AI-Generated Changes
+
+              This pull request contains AI-generated improvements based on user feedback.
+
+              **Session ID:** ${{ steps.parse-inputs.outputs.session_id }}
+              **Processing Started:** ${new Date().toISOString()}
+
+              ### Changes Applied
+              - AI-powered component updates
+              - User experience improvements
+              - Code quality enhancements
+
+              ### Testing
+              - [ ] Manual testing of changed components
+              - [ ] Verify existing functionality
+              - [ ] Check responsive design
+              - [ ] Validate accessibility
+
+              ---
+              🤖 Generated with [Claude Code](https://claude.ai/code)
+
+              Co-Authored-By: Claude <noreply@anthropic.com>`
+            });
+
+            core.setOutput('pr_number', pr.number);
+            core.setOutput('pr_url', pr.html_url);
+            
+            return pr.html_url;
+
+      - name: Update Session with PR Info
+        if: steps.create-pr.outcome == 'success'
+        run: |
+          cd geenius
+          node -e "
+          const { EnhancedSessionManager } = require('./api/shared/enhanced-session-manager.js');
+          const sessionManager = new EnhancedSessionManager();
+          
+          sessionManager.setPullRequestInfo(
+            '${{ steps.parse-inputs.outputs.session_id }}',
+            '${{ steps.create-pr.outputs.pr_url }}',
+            ${{ steps.create-pr.outputs.pr_number }}
+          ).then(() => {
+            sessionManager.updateSessionStatus(
+              '${{ steps.parse-inputs.outputs.session_id }}', 
+              'pr_creating', 
+              80, 
+              'Pull request created successfully'
+            );
+          }).catch(console.error);
+          "
+
+      - name: Wait for Deployment
+        if: steps.create-pr.outcome == 'success'
+        id: wait-deployment
+        run: |
+          cd geenius
+          
+          # Wait for Netlify deployment (simplified)
+          sleep 60
+          
+          # Check if deployment is ready
+          branch_name="${{ steps.create-branch.outputs.branch_name }}"
+          deployment_url="https://${branch_name}--your-site.netlify.app"
+          
+          echo "deployment_url=$deployment_url" >> $GITHUB_OUTPUT
+
+      - name: Run Deployment Tests
+        if: steps.wait-deployment.outcome == 'success'
+        run: |
+          cd geenius
+          node -e "
+          const { PreviewDeploymentTester } = require('./api/shared/preview-deployment-tester.js');
+          
+          async function runTests() {
+            try {
+              const tester = new PreviewDeploymentTester('${{ steps.parse-inputs.outputs.ai_provider }}');
+              const changes = JSON.parse(\`${{ steps.parse-inputs.outputs.changes_json }}\`);
+              
+              const scenarios = await tester.generateTestScenarios(
+                changes, 
+                [], 
+                '${{ steps.wait-deployment.outputs.deployment_url }}'
+              );
+              
+              const testSuite = await tester.executeTestSuite(
+                '${{ steps.wait-deployment.outputs.deployment_url }}',
+                scenarios
+              );
+              
+              console.log('Test Results:', JSON.stringify(testSuite.summary));
+              
+              const report = tester.generateTestReport(testSuite);
+              console.log('Test Report Generated');
+              
+            } catch (error) {
+              console.error('Testing failed:', error);
+            }
+          }
+          
+          runTests();
+          "
+
+      - name: Complete Session
+        if: always()
+        run: |
+          cd geenius
+          node -e "
+          const { EnhancedSessionManager } = require('./api/shared/enhanced-session-manager.js');
+          const sessionManager = new EnhancedSessionManager();
+          
+          const success = '${{ steps.create-pr.outcome }}' === 'success';
+          
+          if (success) {
+            sessionManager.setCompleted('${{ steps.parse-inputs.outputs.session_id }}');
+            sessionManager.setPreviewUrl(
+              '${{ steps.parse-inputs.outputs.session_id }}',
+              '${{ steps.wait-deployment.outputs.deployment_url }}'
+            );
+          } else {
+            sessionManager.setError(
+              '${{ steps.parse-inputs.outputs.session_id }}',
+              'GitHub Actions processing failed'
+            );
+          }
+          "
+
+      - name: Cleanup on Failure
+        if: failure()
+        run: |
+          cd target-repo || exit 0
+          
+          # Delete branch if it was created
+          if [ -n "${{ steps.create-branch.outputs.branch_name }}" ]; then
+            git push origin --delete ${{ steps.create-branch.outputs.branch_name }} || true
+          fi
+
+  notify-completion:
+    needs: process-changes
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Send Webhook Notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const success = '${{ needs.process-changes.result }}' === 'success';
+            
+            // Send notification back to Geenius system
+            const webhookUrl = process.env.GEENIUS_WEBHOOK_URL;
+            if (webhookUrl) {
+              await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  session_id: '${{ steps.parse-inputs.outputs.session_id }}',
+                  status: success ? 'completed' : 'failed',
+                  pr_url: '${{ steps.create-pr.outputs.pr_url }}',
+                  deployment_url: '${{ steps.wait-deployment.outputs.deployment_url }}'
+                })
+              });
+            }
+        env:
+          GEENIUS_WEBHOOK_URL: ${{ secrets.GEENIUS_WEBHOOK_URL }}
