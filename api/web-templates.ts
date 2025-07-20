@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { TemplateRegistry } from '../apps/web/services/template-registry';
+import { TemplateRegistry } from '../apps/web/src/services/template-registry';
 
 export const handler: Handler = async (event, context) => {
   if (event.httpMethod !== 'GET') {
