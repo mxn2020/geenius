@@ -1,14 +1,227 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <link href="./src/index.css" rel="stylesheet">
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geenius AI Development Agent</title>
+    <link rel="stylesheet" href="apps/web/style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <h1>🚀 Geenius AI Development Agent</h1>
+            <p class="subtitle">Advanced AI agents with orchestration capabilities!</p>
+        </header>
+
+        <main class="main">
+            <!-- Navigation -->
+            <nav class="nav" id="nav">
+                <button class="nav-btn active" data-view="init">Initialize Project</button>
+                <button class="nav-btn" data-view="status">Project Status</button>
+                <button class="nav-btn" data-view="develop">Development</button>
+                <button class="nav-btn" data-view="logs">Logs</button>
+            </nav>
+
+            <!-- Init View -->
+            <div class="view active" id="init-view">
+                <div class="card">
+                    <h2>Initialize New Project</h2>
+                    <form id="init-form">
+                        <div class="form-group">
+                            <label for="ai-provider">AI Provider:</label>
+                            <select id="ai-provider" name="aiProvider" required>
+                                <option value="anthropic">🤖 Claude (Anthropic) - Best for coding</option>
+                                <option value="openai">🧠 GPT-4 (OpenAI) - Most versatile</option>
+                                <option value="google">✨ Gemini (Google) - Creative problem solving</option>
+                                <option value="grok">⚡ Grok (X.AI) - Fast and witty</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="agent-mode">Agent Architecture:</label>
+                            <select id="agent-mode" name="agentMode" required>
+                                <option value="single">🎯 Single Agent - Fast and focused</option>
+                                <option value="orchestrated">👥 Multi-Agent Team - Specialized roles</option>
+                                <option value="hybrid">🔄 Hybrid - Best of both worlds</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="orchestration-group" style="display: none;">
+                            <label for="orchestration-strategy">Team Coordination Strategy:</label>
+                            <select id="orchestration-strategy" name="orchestrationStrategy">
+                                <option value="hierarchical">📋 Hierarchical - Lead manages team</option>
+                                <option value="collaborative">🤝 Collaborative - Agents work together</option>
+                                <option value="parallel">⚡ Parallel - Maximum speed</option>
+                                <option value="sequential">📐 Sequential - Step by step</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="template-id">Project Template:</label>
+                            <select id="template-id" name="templateId" required>
+                                <option value="">Loading templates...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="project-name">Project Name:</label>
+                            <input type="text" id="project-name" name="projectName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="github-org">GitHub Organization/Username:</label>
+                            <input type="text" id="github-org" name="githubOrg" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="model">Model (optional):</label>
+                            <input type="text" id="model" name="model" placeholder="Leave empty for default">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="auto-setup" name="autoSetup" checked>
+                                Auto-setup GitHub repo and Netlify project
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="init-btn">
+                            🚀 Initialize Project
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Status View -->
+            <div class="view" id="status-view">
+                <div class="card">
+                    <h2>Project Status</h2>
+                    <div id="status-content">
+                        <p>Loading project status...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Development View -->
+            <div class="view" id="develop-view">
+                <div class="card">
+                    <h2>Development Session</h2>
+                    <div id="develop-content">
+                        <div id="no-project-message" style="display: none;">
+                            <p>No project initialized. Please initialize a project first.</p>
+                            <button class="btn" onclick="document.querySelector('[data-view=init]').click()">
+                                Go to Initialize
+                            </button>
+                        </div>
+                        
+                        <form id="develop-form" style="display: none;">
+                            <div class="form-group">
+                                <label for="feature-name">Feature Branch Name:</label>
+                                <input type="text" id="feature-name" name="featureName" required placeholder="feature/ai-development">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="complexity">Task Complexity:</label>
+                                <select id="complexity" name="complexity" required>
+                                    <option value="simple">🟢 Simple - Bug fixes, small updates</option>
+                                    <option value="medium" selected>🟡 Medium - New features, refactoring</option>
+                                    <option value="complex">🔴 Complex - Architecture changes, integrations</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="priority">Task Priority:</label>
+                                <select id="priority" name="priority" required>
+                                    <option value="urgent">🔥 Urgent - Critical fixes</option>
+                                    <option value="high">🔴 High - Important features</option>
+                                    <option value="medium" selected>🟡 Medium - Regular development</option>
+                                    <option value="low">🟢 Low - Nice to have</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="preferred-mode">Agent Mode:</label>
+                                <select id="preferred-mode" name="preferredMode" required>
+                                    <option value="single">🎯 Single Agent - Fast execution</option>
+                                    <option value="orchestrated">👥 Multi-Agent Team - Comprehensive approach</option>
+                                    <option value="auto" selected>🤖 Auto-select - Let AI decide</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="task-description">Task Description:</label>
+                                <textarea id="task-description" name="taskDescription" rows="12" required placeholder="# Feature Requirements
+
+## Description
+Describe your feature here...
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Technical Notes
+- Implementation details
+- Performance considerations
+- Security requirements
+
+## Testing Requirements
+- Unit tests
+- Integration tests
+- E2E tests if applicable"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-primary" id="develop-btn">
+                                🚀 Start Development
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs View -->
+            <div class="view" id="logs-view">
+                <div class="card">
+                    <h2>Real-time Logs</h2>
+                    <div class="log-container">
+                        <div id="log-output" class="log-output"></div>
+                        <div class="log-actions">
+                            <button class="btn" id="copy-logs">📋 Copy Logs</button>
+                            <button class="btn" id="clear-logs">🗑️ Clear Logs</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Status -->
+            <div class="env-status" id="env-status">
+                <h3>Environment Setup Status:</h3>
+                <div class="status-grid" id="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">GitHub:</span>
+                        <span class="status-value" id="github-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Netlify:</span>
+                        <span class="status-value" id="netlify-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">MongoDB:</span>
+                        <span class="status-value" id="mongodb-status">Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h3 id="loading-title">Processing...</h3>
+                <p id="loading-message">Please wait while we set up your project.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="apps/web/main.js"></script>
+</body>
 </html>
