@@ -610,7 +610,14 @@ Describe your feature here...
               )}
 
               {/* Log Output */}
-              <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+              <div 
+                className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4 min-h-[400px] max-h-[600px] overflow-y-auto" 
+                ref={(el) => {
+                  if (el && (logs.length > 0 || sessionLogs.length > 0)) {
+                    el.scrollTop = el.scrollHeight
+                  }
+                }}
+              >
                 {logs.length === 0 && sessionLogs.length === 0 ? (
                   sessionId ? (
                     <p>⏳ Waiting for logs...</p>
