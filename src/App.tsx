@@ -42,7 +42,7 @@ function App() {
 
   const checkEnvironmentStatus = async () => {
     try {
-      const response = await fetch('/.netlify/functions/web-env-status')
+      const response = await fetch('/api/env-status')
       const data = await response.json()
       
       if (response.ok) {
@@ -78,7 +78,7 @@ function App() {
 
   const loadTemplates = async () => {
     try {
-      const response = await fetch('/.netlify/functions/web-templates')
+      const response = await fetch('/api/templates')
       const data = await response.json()
       if (response.ok) {
         // API returns templates array directly, not wrapped in { templates: [] }
@@ -91,7 +91,7 @@ function App() {
 
   const loadMongodbProjects = async () => {
     try {
-      const response = await fetch('/.netlify/functions/mongodb-projects')
+      const response = await fetch('/api/mongodb-projects')
       const data = await response.json()
       if (response.ok) {
         setMongodbData(data)
@@ -156,7 +156,7 @@ function App() {
         // Determine endpoint based on session ID prefix
         let endpoint
         if (sessionIdParam.startsWith('init_')) {
-          endpoint = `/.netlify/functions/web-init/${sessionIdParam}`
+          endpoint = `/api/init/${sessionIdParam}`
         } else {
           endpoint = `/api/process-changes-enhanced/${sessionIdParam}`
         }
@@ -230,7 +230,7 @@ function App() {
     const data = Object.fromEntries(formData)
     
     try {
-      const response = await fetch('/.netlify/functions/web-init', {
+      const response = await fetch('/api/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -275,7 +275,7 @@ function App() {
     const data = Object.fromEntries(formData)
     
     try {
-      const response = await fetch('/.netlify/functions/web-develop', {
+      const response = await fetch('/api/develop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -445,7 +445,8 @@ function App() {
                   />
                 </div>
 
-{mongodbData.available && (
+
+                {mongodbData.available && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">MongoDB Organization:</label>

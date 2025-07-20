@@ -8,7 +8,6 @@
 
 [dev]
   command = "pnpm dev:web"
-  publish = "dist"
   port = 8888
   targetPort = 5173
 
@@ -69,6 +68,21 @@
 [[redirects]]
   from = "/api/status"
   to = "/.netlify/functions/web-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/mongodb-projects"
+  to = "/.netlify/functions/mongodb-projects"
+  status = 200
+
+[[redirects]]
+  from = "/api/develop"
+  to = "/.netlify/functions/web-develop"
+  status = 200
+
+[[redirects]]
+  from = "/api/init/:sessionId"
+  to = "/.netlify/functions/web-init/:sessionId"
   status = 200
 
 # Logs page routes - redirect to the Vite app with session parameter

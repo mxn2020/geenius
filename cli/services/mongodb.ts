@@ -688,4 +688,14 @@ export class MongoDBService {
       throw new Error(`Failed to create MongoDB project: ${error.message}`);
     }
   }
+
+  async validateCredentials(): Promise<{ valid: boolean; error?: string }> {
+    try {
+      // Try to get organizations as a simple credentials validation
+      const organizations = await this.getOrganizations();
+      return { valid: true };
+    } catch (error: any) {
+      return { valid: false, error: error.message };
+    }
+  }
 }
