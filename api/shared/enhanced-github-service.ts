@@ -313,6 +313,32 @@ export class EnhancedGitHubService {
   }
 
   /**
+   * Get content of a single file from repository
+   */
+  async getFileContent(repoUrl: string, filePath: string, branch: string = 'develop'): Promise<string> {
+    const { owner, repo } = this.parseRepoUrl(repoUrl);
+
+    try {
+      const { data } = await this.octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+        ref: branch
+      });
+
+      if ('content' in data && data.content) {
+        return Buffer.from(data.content, data.encoding as BufferEncoding || 'base64').toString('utf-8');
+      } else {
+        throw new Error(`File ${filePath} is not a regular file or has no content`);
+      }
+    } catch (error) {
+      console.error(`Failed to retrieve file ${filePath}:`, error);
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
+      throw new Error(`Could not retrieve file ${filePath}: ${errorMessage}`);
+    }
+  }
+
+  /**
    * Analyze file dependencies by parsing imports
    */
   async analyzeFileDependencies(content: string, filePath: string): Promise<{

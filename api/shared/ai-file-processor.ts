@@ -1,6 +1,6 @@
 // AI File Processor for Agentic AI System
 import { CustomAIAgent } from './custom-ai-agent';
-import { EnhancedGitHubService, FileContent } from './enhanced-github-service';
+import { EnhancedGitHubService } from './enhanced-github-service';
 
 export interface ChangeRequest {
   id: string;
@@ -44,10 +44,31 @@ export class AIFileProcessor {
   private maxRetries: number = 3;
 
   constructor(aiProvider: 'anthropic' | 'openai' | 'google' | 'grok' = 'anthropic') {
+    // Create a minimal sandbox interface for the AI agent
+    const mockSandbox = {
+      readFile: async (path: string) => '',
+      writeFile: async (path: string, content: string) => { },
+      listFiles: async (path: string) => [],
+      gitClone: async (url: string, branch: string) => 'Cloned successfully',
+      gitCreateBranch: async (name: string) => 'Branch created',
+      gitCommit: async (message: string) => 'Committed',
+      runTests: async (path?: string) => 'Tests passed',
+      runCommand: async (command: string, options?: any) => 'Command executed',
+      createPullRequest: async (title: string, description: string) => ({ url: 'https://github.com/mock/pr' })
+    };
+
     this.aiAgent = new CustomAIAgent({
+      sessionId: 'file-processor',
+      sandbox: mockSandbox,
+      repositoryUrl: '',
       provider: aiProvider,
-      role: 'senior-developer',
-      expertise: ['react', 'typescript', 'ui-development', 'component-architecture']
+      model: 'default',
+      projectContext: {
+        componentRegistry: {},
+        dependencies: {},
+        framework: 'react',
+        structure: 'typescript'
+      }
     });
     this.githubService = new EnhancedGitHubService();
   }
@@ -85,7 +106,7 @@ Return a JSON response with:
     try {
       const response = await this.aiAgent.processRequest(prompt);
       const result = JSON.parse(response);
-      
+
       return {
         isValid: result.isValid && result.securityConcerns.length === 0,
         issues: result.issues || [],
@@ -109,9 +130,9 @@ Return a JSON response with:
 
     for (const change of changes) {
       // Extract file path from component context or metadata
-      let filePath = change.componentContext?.filePath || 
-                    change.metadata?.filePath ||
-                    change.pageContext?.filePath;
+      let filePath = change.componentContext?.filePath ||
+        change.metadata?.filePath ||
+        change.pageContext?.filePath;
 
       if (!filePath) {
         // Fallback: try to determine from component ID
@@ -243,13 +264,14 @@ If you cannot implement the changes safely, return:
         console.log(`Processing failed on attempt ${attempt}, retrying...`);
         return this.processFileChanges(filePath, fileContent, changes, attempt + 1);
       } else {
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
         return {
           success: false,
           updatedContent: '',
           explanation: '',
           testSuggestions: [],
           commitMessage: '',
-          error: `Failed to process changes after ${this.maxRetries} attempts: ${error.message}`
+          error: `Failed to process changes after ${this.maxRetries} attempts: ${errorMessage}`
         };
       }
     }
@@ -272,7 +294,7 @@ If you cannot implement the changes safely, return:
       if (!code.includes('import') && code.length > 100) {
         issues.push('Missing import statements for a substantial file');
       }
-      
+
       if (filePath.endsWith('.tsx') && !code.includes('export') && code.length > 50) {
         issues.push('Missing export statement for component file');
       }
@@ -315,7 +337,7 @@ Return JSON: {"isValid": boolean, "issues": ["list of issues"]}
 
         const aiResponse = await this.aiAgent.processRequest(validationPrompt);
         const aiResult = JSON.parse(aiResponse);
-        
+
         if (!aiResult.isValid) {
           issues.push(...(aiResult.issues || []));
         }
@@ -380,7 +402,7 @@ Return a JSON array of test suggestions:
     const priorities = changes.filter(c => c.priority === 'high').length;
 
     let message = `feat: update ${fileName}`;
-    
+
     if (categories.length === 1) {
       message += ` - ${categories[0]} improvements`;
     } else {
@@ -392,7 +414,7 @@ Return a JSON array of test suggestions:
     }
 
     message += `\n\n${explanation}`;
-    
+
     // Add change details
     message += '\n\nChanges implemented:';
     changes.forEach(change => {
@@ -423,7 +445,7 @@ Return a JSON array of test suggestions:
 
     // First, retrieve all file contents
     const filePaths = fileGroups.map(group => group.filePath);
-    const fileContents = await this.githubService.retrieveFiles(repoUrl, filePaths);
+    const fileContents = await this.retrieveFiles(repoUrl, filePaths);
 
     // Update file groups with retrieved content
     for (const group of fileGroups) {
@@ -460,9 +482,11 @@ Return a JSON array of test suggestions:
           });
         }
       } catch (error) {
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
+
         failedFiles.push({
           path: group.filePath,
-          error: error.message
+          error: errorMessage
         });
       }
     }
@@ -473,5 +497,27 @@ Return a JSON array of test suggestions:
       failedFiles,
       totalChanges
     };
+  }
+
+  /**
+   * Retrieve multiple files from GitHub repository
+   */
+  private async retrieveFiles(repoUrl: string, filePaths: string[]): Promise<Array<{ path: string; content: string }>> {
+    const results: Array<{ path: string; content: string }> = [];
+
+    for (const filePath of filePaths) {
+      try {
+        const content = await this.githubService.getFileContent(repoUrl, filePath);
+        results.push({ path: filePath, content });
+      } catch (error) {
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
+
+        console.error(`Failed to retrieve ${filePath}:`, errorMessage);
+        // Add empty content as fallback
+        results.push({ path: filePath, content: '' });
+      }
+    }
+
+    return results;
   }
 }

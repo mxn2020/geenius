@@ -25,5 +25,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "api/shared", "api/shared/enhanced-session-manager.ts", "api/shared/enhanced-github-service.ts", "api/shared/ai-file-processor.ts", "api/shared/netlify-service.ts"]
 }

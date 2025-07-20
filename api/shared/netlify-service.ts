@@ -399,9 +399,10 @@ export class NetlifyService {
         previewUrl: `https://${deployId}--${siteId}.netlify.app`
       };
     } catch (error) {
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error);
       return {
         success: false,
-        error: error.message
+        error: errorMessage
       };
     }
   }
@@ -411,5 +412,113 @@ export class NetlifyService {
     const buildId = `build_${Date.now()}`;
     console.log(`Triggering build for site ${siteId} on branch ${branch}`);
     return buildId;
+  }
+
+  async waitForBranchDeployment(branchName: string, timeout: number = 300000): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+  }> {
+    console.log(`⏳ Waiting for branch deployment: ${branchName}`);
+    const startTime = Date.now();
+    const checkInterval = 10000; // Check every 10 seconds
+
+    try {
+      // Get the site ID from environment or find it
+      const siteId = await this.getCurrentSiteId();
+      if (!siteId) {
+        return {
+          success: false,
+          error: 'Could not determine site ID for deployment check'
+        };
+      }
+
+      while (Date.now() - startTime < timeout) {
+        try {
+          // Get deployments for the site
+          const deployments = await this.client.listSiteDeploys({ siteId, branch: branchName });
+          
+          if (deployments.length === 0) {
+            console.log(`   No deployments found for branch ${branchName}, waiting...`);
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            continue;
+          }
+
+          // Find the most recent deployment for this branch
+          const latestDeployment = deployments[0];
+          console.log(`   Deployment state: ${latestDeployment.state} for branch ${branchName}`);
+
+          if (latestDeployment.state === 'ready') {
+            const deployUrl = latestDeployment.deploy_ssl_url || latestDeployment.ssl_url;
+            console.log(`✅ Branch deployment ready: ${deployUrl}`);
+            return {
+              success: true,
+              url: deployUrl
+            };
+          }
+
+          if (latestDeployment.state === 'error') {
+            console.log(`❌ Branch deployment failed: ${latestDeployment.error_message}`);
+            return {
+              success: false,
+              error: latestDeployment.error_message || 'Deployment failed'
+            };
+          }
+
+          // Still building/processing, wait and check again
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+        } catch (deployError: any) {
+          console.log(`   Error checking deployment: ${deployError.message}, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+      }
+
+      // Timeout reached
+      return {
+        success: false,
+        error: `Deployment timeout after ${timeout}ms - branch may still be deploying`
+      };
+
+    } catch (error: any) {
+      console.error('❌ Error waiting for branch deployment:', error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  private async getCurrentSiteId(): Promise<string | null> {
+    try {
+      // Try to get site ID from environment variable
+      if (process.env.NETLIFY_SITE_ID) {
+        return process.env.NETLIFY_SITE_ID;
+      }
+
+      // If not available, try to find it from existing sites
+      // This is a fallback method - in production you should set NETLIFY_SITE_ID
+      const sites = await this.client.listSites();
+      
+      // Look for the current project site (you may need to adjust this logic)
+      const currentSite = sites.find(site => 
+        site.name && (
+          site.name.includes('geenius')  // ||
+          //site.repo?.repo_path?.includes('geenius')
+        )
+      );
+
+      if (currentSite && currentSite.id) {
+        console.log(`Found site: ${currentSite.name} (${currentSite.id})`);
+        return currentSite.id;
+      }
+
+      console.warn('Could not determine site ID. Set NETLIFY_SITE_ID environment variable.');
+      return null;
+
+    } catch (error: any) {
+      console.error('Error getting site ID:', error.message);
+      return null;
+    }
   }
 }

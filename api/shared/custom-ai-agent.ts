@@ -1,6 +1,9 @@
 // netlify/functions/shared/custom-ai-agent.ts
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
+import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 
 interface AgentConfig {
   sessionId: string;
@@ -364,15 +367,15 @@ Session ID: ${sessionId}`;
     };
   }
 
-  private getModelString(): string {
+  private getModelString(): any {
     const modelMap = {
-      'anthropic': 'claude-3-5-sonnet-20241022',
-      'openai': 'gpt-4-turbo',
-      'google': 'gemini-pro',
-      'grok': 'grok-beta'
+      'anthropic': anthropic('claude-3-5-sonnet-20241022'),
+      'openai': openai('gpt-4-turbo'),
+      'google': google('gemini-pro'),
+      'grok': anthropic('claude-3-5-sonnet-20241022') // Fallback to Claude for Grok
     };
     
-    return modelMap[this.config.provider] || 'claude-3-5-sonnet-20241022';
+    return modelMap[this.config.provider] || anthropic('claude-3-5-sonnet-20241022');
   }
 
   async getStats(): Promise<any> {
@@ -408,6 +411,38 @@ Session ID: ${sessionId}`;
       codePatternsLength: this.memory.codePatterns.length,
       lastActivity: this.memory.conversation[this.memory.conversation.length - 1]?.timestamp
     };
+  }
+
+  /**
+   * Process a single request with the AI agent
+   */
+  async processRequest(prompt: string): Promise<string> {
+    try {
+      const result = await generateText({
+        model: this.getModelString(),
+        prompt: prompt,
+        temperature: 0.1,
+        maxTokens: 4000
+      });
+
+      // Store in memory
+      this.memory.conversation.push({
+        role: 'user',
+        content: prompt,
+        timestamp: Date.now()
+      });
+      
+      this.memory.conversation.push({
+        role: 'assistant',
+        content: result.text,
+        timestamp: Date.now()
+      });
+
+      return result.text;
+    } catch (error) {
+      console.error('AI processing error:', error);
+      throw new Error(`AI request failed: ${error.message}`);
+    }
   }
 }
 

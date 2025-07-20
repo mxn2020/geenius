@@ -377,6 +377,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     'Content-Type': 'application/json'
   };
 
+  console.log('Received event:', JSON.stringify(event, null, 2));
+
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
