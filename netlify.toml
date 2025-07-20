@@ -24,6 +24,17 @@
   to = "/.netlify/functions/process-changes/:sessionId"
   status = 200
 
+# Enhanced Agentic AI API Routes
+[[redirects]]
+  from = "/api/process-changes-enhanced"
+  to = "/.netlify/functions/process-changes-enhanced"
+  status = 200
+
+[[redirects]]
+  from = "/api/process-changes-enhanced/:sessionId"
+  to = "/.netlify/functions/process-changes-enhanced/:sessionId"
+  status = 200
+
 [[redirects]]
   from = "/api/session/:sessionId"
   to = "/.netlify/functions/get-session?sessionId=:sessionId"
