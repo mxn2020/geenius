@@ -192,7 +192,7 @@ export class EnhancedSessionManager {
       estimatedCompletionTime: Date.now() + (changes.length * 90000), // 1.5 min per change
       logs: [],
       aiProvider: config.aiProvider,
-      baseBranch: config.baseBranch || 'develop',
+      baseBranch: config.baseBranch || 'main',
       autoTest: config.autoTest !== false,
       commits: []
     };

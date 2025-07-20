@@ -580,7 +580,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         payload.changes,
         {
           aiProvider: payload.globalContext.aiProvider || 'anthropic',
-          baseBranch: 'develop',
+          baseBranch: payload.globalContext.branch || 'main',
           autoTest: true
         }
       );
