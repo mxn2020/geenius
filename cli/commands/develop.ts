@@ -8,7 +8,7 @@ import { logger } from '../../../src/utils/logger';
 import { generateTaskId } from '../../../src/utils/helpers';
 import { GitHubService } from '../services/github';
 import { AgentService } from '../agent/agent-service';
-import type { DevelopOptions } from '../../../src/types/config';
+import type { DevelopOptions } from '../../src/types/config';
 
 export async function developCommand(options: any = {}): Promise<void> {
   const configManager = new ConfigManager();

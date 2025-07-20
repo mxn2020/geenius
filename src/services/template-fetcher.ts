@@ -1,5 +1,5 @@
 // web/services/template-fetcher.ts - Web-friendly template fetcher using REST APIs
-import type { ProjectTemplate } from '../../../../src/types/template';
+import type { ProjectTemplate } from '../types/template';
 
 export class TemplateFetcher {
   private token?: string;

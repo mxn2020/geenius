@@ -4,7 +4,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import type { ProjectTemplate } from '../../../src/types/template';
+import type { ProjectTemplate } from '../../src/types/template';
 
 // Handle both CommonJS and ES modules
 let __dirname: string;

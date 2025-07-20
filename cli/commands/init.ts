@@ -12,7 +12,7 @@ import { GitHubService } from '../services/github';
 import { NetlifyService } from '../services/netlify';
 import { MongoDBService } from '../services/mongodb';
 import { AgentService } from '../agent/agent-service';
-import type { InitOptions, ProjectConfig } from '../../../src/types/config';
+import type { InitOptions, ProjectConfig } from '../../src/types/config';
 
 export async function initCommand(): Promise<void> {
   console.log(chalk.blue.bold('🚀 AI Development Agent v3.0'));

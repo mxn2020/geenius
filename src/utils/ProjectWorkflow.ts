@@ -1,5 +1,5 @@
 // Project workflow utilities for web app
-import { NetlifyService } from '../../../../api/shared/netlify-service';
+import { NetlifyService } from '../../api/shared/netlify-service';
 import { MongoDBService } from '../services/mongodb';
 import { GitHubService } from '../services/github';
 import { TemplateRegistry } from '../services/template-registry';

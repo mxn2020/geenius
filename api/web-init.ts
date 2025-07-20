@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { ProjectWorkflow } from '../apps/web/src/utils/ProjectWorkflow';
+import { ProjectWorkflow } from '../src/utils/ProjectWorkflow';
 import { EnhancedSessionManager } from './shared/enhanced-session-manager';
 
 // Initialize session manager
