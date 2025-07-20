@@ -7,16 +7,28 @@ import { randomBytes } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
+const netlifyService = new NetlifyService();
+const mongodbService = new MongoDBService();
+
 export class ProjectWorkflow {
   private logs: string[];
+  private logger?: (level: string, message: string) => void;
 
-  constructor() {
+  constructor(logger?: (level: string, message: string) => void) {
     this.logs = [];
+    this.logger = logger;
   }
 
   addLog(message: string): void {
     this.logs.push(message);
     console.log(message);
+    // Send to external logger if provided
+    if (this.logger) {
+      const level = message.includes('❌') ? 'error' : 
+                   message.includes('⚠️') ? 'warning' :
+                   message.includes('✅') ? 'success' : 'info';
+      this.logger(level, message);
+    }
   }
 
   async initializeProject(options: any): Promise<any> {
@@ -63,13 +75,10 @@ export class ProjectWorkflow {
       const github = new GitHubService();
       
       // Initialize Netlify service with error handling
-      let netlify = null;
-      try {
-        netlify = new NetlifyService();
+      if (!netlifyService) {
+        throw new Error('Netlify service is not available');
+      } else {
         this.addLog('✅ Netlify service initialized');
-      } catch (error) {
-        this.addLog(`⚠️ Netlify service initialization failed: ${error.message}`);
-        this.addLog('🔧 Netlify operations will be skipped');
       }
 
       // Fork template repository
@@ -82,9 +91,8 @@ export class ProjectWorkflow {
 
       this.addLog(`✅ Repository forked: ${repoUrl}`);
 
-      // Extract the final repository name from the URL
-      const repoMatch = repoUrl.match(/github\.com\/[^\/]+\/([^\/]+)/);
-      const finalRepoName = repoMatch ? repoMatch[1] : options.projectName;
+      // Use the user-provided project name as the final name
+      const finalRepoName = options.projectName;
 
       // Setup MongoDB database if template requires it
       let mongodbProject = null;
@@ -94,19 +102,49 @@ export class ProjectWorkflow {
         } else {
           try {
             this.addLog('🍃 Setting up MongoDB database...');
-            const mongodb = new MongoDBService();
             
-            // Get first available organization
-            const organizations = await mongodb.getOrganizations();
-            if (organizations.length === 0) {
-              throw new Error('No MongoDB organizations found');
+            // Use selected MongoDB organization and project if provided
+            let selectedOrg, selectedProjectId, projects = [];
+            
+            this.addLog(`🔍 MongoDB selection: orgId=${options.mongodbOrgId}, projectId=${options.mongodbProjectId}`);
+            
+            if (options.mongodbOrgId && options.mongodbProjectId) {
+              // Use user-selected organization and project
+              const organizations = await mongodbService.getOrganizations();
+              selectedOrg = organizations.find(org => org.id === options.mongodbOrgId);
+              
+              if (!selectedOrg) {
+                throw new Error(`Selected MongoDB organization not found: ${options.mongodbOrgId}`);
+              }
+              
+              if (options.mongodbProjectId === 'CREATE_NEW') {
+                // Create new project with the current project name
+                this.addLog(`📁 Using selected MongoDB organization: ${selectedOrg.name}`);
+                this.addLog(`🆕 Creating new MongoDB project: ${options.projectName}`);
+                selectedProjectId = null; // Will trigger new project creation
+              } else {
+                // Use existing project
+                selectedProjectId = options.mongodbProjectId;
+                this.addLog(`📁 Using selected MongoDB organization: ${selectedOrg.name}`);
+                this.addLog(`📦 Using selected MongoDB project: ${options.mongodbProjectId}`);
+              }
+              
+              // Get projects for retry logic
+              projects = await mongodbService.getProjects(selectedOrg.id);
+            } else {
+              // Get first available organization (fallback)
+              const organizations = await mongodbService.getOrganizations();
+              if (organizations.length === 0) {
+                throw new Error('No MongoDB organizations found');
+              }
+
+              selectedOrg = organizations[0];
+              this.addLog(`📁 Using MongoDB organization: ${selectedOrg.name} - ${selectedOrg.created}`);
+
+              // Get projects for organization
+              projects = await mongodbService.getProjects(selectedOrg.id);
+              selectedProjectId = projects.length > 0 ? projects[0].id : null;
             }
-
-            const selectedOrg = organizations[0];
-            this.addLog(`📁 Using MongoDB organization: ${selectedOrg.name}`);
-
-            // Get projects for organization
-            const projects = await mongodb.getProjects(selectedOrg.id);
             
             // Try to create cluster, handling free cluster limit errors
             let retryCount = 0;
@@ -114,10 +152,10 @@ export class ProjectWorkflow {
             
             while (retryCount < maxRetries) {
               try {
-                mongodbProject = await mongodb.createProjectWithSelection(
-                  finalRepoName,
+                mongodbProject = await mongodbService.createProjectWithSelection(
+                  options.projectName,
                   selectedOrg.id,
-                  projects.length > 0 ? projects[0].id : null
+                  selectedProjectId
                 );
                 break;
               } catch (error) {
@@ -157,12 +195,12 @@ export class ProjectWorkflow {
       if (options.autoSetup) {
         if (!process.env.NETLIFY_TOKEN) {
           this.addLog('⚠️ NETLIFY_TOKEN not found - skipping deployment setup');
-        } else if (!netlify) {
+        } else if (!netlifyService) {
           this.addLog('⚠️ Netlify service not available - skipping deployment setup');
         } else {
           try {
             this.addLog('🚀 Setting up Netlify project...');
-            netlifyProject = await netlify.createProject(finalRepoName, repoUrl);
+            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl);
 
             // Prepare environment variables
             const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
@@ -196,7 +234,7 @@ export class ProjectWorkflow {
 
             // Set default app configuration
             if (template.envVars.includes('VITE_APP_NAME')) {
-              templateEnvVars['VITE_APP_NAME'] = finalRepoName;
+              templateEnvVars['VITE_APP_NAME'] = options.projectName;
             }
 
             if (template.envVars.includes('VITE_APP_VERSION')) {
@@ -204,7 +242,7 @@ export class ProjectWorkflow {
             }
 
             if (template.envVars.includes('VITE_APP_DESCRIPTION')) {
-              templateEnvVars['VITE_APP_DESCRIPTION'] = `${template.description} - ${finalRepoName}`;
+              templateEnvVars['VITE_APP_DESCRIPTION'] = `${template.description} - ${options.projectName}`;
             }
 
             // Set API URLs based on Netlify project
@@ -227,14 +265,14 @@ export class ProjectWorkflow {
             }
 
             // Set environment variables
-            await netlify.setupEnvironmentVariables(netlifyProject.id, {
+            await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
               ...this.getEnvVarsForProvider(options.aiProvider, this.getExistingApiKey(options.aiProvider), options.model),
               ...this.getGitHubEnvVars(options.githubOrg, repoUrl),
               ...templateEnvVars
             });
 
             // Configure branch deployments
-            await netlify.configureBranchDeployments(netlifyProject.id, {
+            await netlifyService.configureBranchDeployments(netlifyProject.id, {
               main: { production: true },
               develop: { preview: true },
               'feature/*': { preview: true }
@@ -245,7 +283,7 @@ export class ProjectWorkflow {
             // Wait for initial deployment
             try {
               this.addLog('🚀 Waiting for Netlify deployment...');
-              const deployment = await netlify.waitForInitialDeployment(netlifyProject.id, 180000);
+              const deployment = await netlifyService.waitForInitialDeployment(netlifyProject.id, 180000);
               
               if (deployment.state === 'ready') {
                 this.addLog('✅ Netlify deployment completed successfully!');
@@ -266,7 +304,7 @@ export class ProjectWorkflow {
       // Save project configuration
       await this.saveProjectConfig({
         template: template.id,
-        name: finalRepoName,
+        name: options.projectName,
         repoUrl,
         aiProvider: options.aiProvider,
         agentMode: options.agentMode,

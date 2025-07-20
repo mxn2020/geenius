@@ -1,4 +1,4 @@
-// src/services/mongodb.ts
+// apps/cli/services/mongodb.ts
 import DigestClient from 'digest-fetch';
 
 export interface MongoDBProject {
@@ -475,6 +475,99 @@ export class MongoDBService {
     }
   }
 
+  /**
+   * Check if a project has reached the free cluster limit (max 2 M0 clusters)
+   */
+  async checkProjectFreeClusterLimit(projectId: string): Promise<{
+    canCreateFreeCluster: boolean;
+    freeClustersCount: number;
+    maxFreeClusters: number;
+    clusters: any[];
+  }> {
+    try {
+      const clusters = await this.getClusters(projectId);
+      
+      // Count M0 (free tier) clusters
+      const freeClusters = clusters.filter(cluster => 
+        cluster.providerSettings?.instanceSizeName === 'M0'
+      );
+      
+      const maxFreeClusters = 1; // Only allow projects with 0 M0 clusters (disable if has 1)
+      const canCreateFreeCluster = freeClusters.length < maxFreeClusters;
+      
+      return {
+        canCreateFreeCluster,
+        freeClustersCount: freeClusters.length,
+        maxFreeClusters,
+        clusters: freeClusters
+      };
+    } catch (error: any) {
+      console.error('❌ Error checking cluster limits:', error.message);
+      // If we can't check, assume we can't create (safer)
+      return {
+        canCreateFreeCluster: false,
+        freeClustersCount: 1,
+        maxFreeClusters: 1,
+        clusters: []
+      };
+    }
+  }
+
+  /**
+   * List projects with cluster information and eligibility
+   */
+  async listProjectsWithClusterInfo(orgId?: string): Promise<Array<{
+    id: string;
+    name: string;
+    canCreateFreeCluster: boolean;
+    freeClustersCount: number;
+    totalClusters: number;
+    clusters: any[];
+  }>> {
+    try {
+      let projects;
+      if (orgId) {
+        projects = await this.getProjects(orgId);
+      } else {
+        projects = await this.listProjects();
+      }
+
+      // Get cluster info for each project
+      const projectsWithClusterInfo = await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const clusterInfo = await this.checkProjectFreeClusterLimit(project.id);
+            const allClusters = await this.getClusters(project.id);
+            
+            return {
+              id: project.id,
+              name: project.name,
+              canCreateFreeCluster: clusterInfo.canCreateFreeCluster,
+              freeClustersCount: clusterInfo.freeClustersCount,
+              totalClusters: allClusters.length,
+              clusters: allClusters
+            };
+          } catch (error) {
+            // If we can't get cluster info, mark as ineligible
+            return {
+              id: project.id,
+              name: project.name,
+              canCreateFreeCluster: false,
+              freeClustersCount: 1,
+              totalClusters: 0,
+              clusters: []
+            };
+          }
+        })
+      );
+
+      return projectsWithClusterInfo;
+    } catch (error: any) {
+      console.error('❌ Error listing projects with cluster info:', error.message);
+      throw new Error(`Failed to list projects with cluster info: ${error.message}`);
+    }
+  }
+
   async updateCluster(projectId: string, clusterName: string, updates: any): Promise<any> {
     try {
       const response = await this.client.fetch(`${this.apiUrl}/groups/${projectId}/clusters/${clusterName}`, {
@@ -593,54 +686,6 @@ export class MongoDBService {
     } catch (error: any) {
       console.error('❌ Error creating MongoDB project:', error.message);
       throw new Error(`Failed to create MongoDB project: ${error.message}`);
-    }
-  }
-
-
-  async waitForClusterReady(projectId: string, clusterName: string, maxWait: number = 600000): Promise<void> {
-    console.log(`   ⏳ Waiting for cluster ${clusterName} to be ready...`);
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < maxWait) {
-      const cluster = await this.getCluster(projectId, clusterName);
-
-      if (cluster.stateName === 'IDLE') {
-        return;
-      }
-
-      console.log(`   ⏳ Cluster state: ${cluster.stateName}, waiting...`);
-      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
-    }
-
-    throw new Error('Cluster creation timeout - cluster took longer than expected to be ready');
-  }
-
-  async whitelistIP(projectId: string, ipAddress: string, comment: string): Promise<any> {
-    const ipConfig = [{
-      ipAddress,
-      comment
-    }];
-
-    try {
-      const response = await this.client.fetch(`${this.apiUrl}/groups/${projectId}/accessList`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/vnd.atlas.2025-03-12+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(ipConfig)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Whitelist IP error:', errorText);
-        throw new Error(`Failed to whitelist IP: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      return await response.json();
-    } catch (error: any) {
-      console.error('❌ Whitelist IP error:', error.message);
-      throw new Error(`Failed to whitelist IP: ${error.message}`);
     }
   }
 }

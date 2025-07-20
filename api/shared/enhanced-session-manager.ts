@@ -111,6 +111,55 @@ export class EnhancedSessionManager {
   }
 
   /**
+   * Create new initialization session for web-init
+   */
+  async createInitializationSession(
+    sessionId: string,
+    initData: {
+      aiProvider: string;
+      agentMode: string;
+      templateId: string;
+      projectName: string;
+      githubOrg: string;
+      orchestrationStrategy?: string;
+      model?: string;
+      autoSetup?: boolean;
+    }
+  ): Promise<void> {
+    const session = {
+      id: sessionId,
+      submissionId: sessionId,
+      projectId: initData.projectName,
+      repositoryUrl: '',
+      status: 'received' as const,
+      progress: 0,
+      currentStep: 'Initializing project...',
+      changes: [],
+      fileGroups: [],
+      totalFiles: 0,
+      processedFiles: 0,
+      failedFiles: 0,
+      startTime: Date.now(),
+      logs: [],
+      aiProvider: initData.aiProvider,
+      baseBranch: 'main',
+      autoTest: true,
+      commits: [],
+      repoUrl: '',
+      netlifyUrl: '',
+      mongodbDatabase: '',
+      error: undefined
+    };
+
+    await this.setSession(sessionId, session);
+    await this.addLog(sessionId, 'info', 'Project initialization started', {
+      projectName: initData.projectName,
+      aiProvider: initData.aiProvider,
+      templateId: initData.templateId
+    });
+  }
+
+  /**
    * Create new processing session
    */
   async createSession(
@@ -181,7 +230,13 @@ export class EnhancedSessionManager {
       const sessionData = await this.redis.get(key);
       
       if (sessionData) {
-        return JSON.parse(sessionData as string);
+        // Upstash Redis automatically parses JSON, so check if it's already an object
+        if (typeof sessionData === 'string') {
+          return JSON.parse(sessionData);
+        } else {
+          // Data is already parsed by Upstash Redis
+          return sessionData as EnhancedProcessingSession;
+        }
       }
       
       // Check fallback storage

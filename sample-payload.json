@@ -1,0 +1,155 @@
+{
+  "submissionId": "1753017125698_6qyz41r2b",
+  "timestamp": 1753017125698,
+  "changes": [
+    {
+      "id": "1753017125698_h0i5o797q",
+      "componentId": "hero-start-building",
+      "feedback": "Change the button text from \"Start Building\" to \"Get Started\" and make it more prominent",
+      "timestamp": 1753017125698,
+      "category": "enhancement",
+      "priority": "medium",
+      "status": "pending",
+      "componentContext": {
+        "name": "Hero Start Building Button",
+        "description": "Primary call-to-action button in the hero section",
+        "filePath": "src/pages/Landing.tsx",
+        "repositoryPath": "https://github.com/mehdinabhani/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+        "usageFilePath": "src/pages/Landing.tsx",
+        "usageRepositoryPath": "https://github.com/mehdinabhani/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+        "usageLineNumber": 45,
+        "usageColumnNumber": 12,
+        "parentComponents": [
+          "Landing",
+          "HeroSection"
+        ],
+        "childComponents": [],
+        "semanticTags": [
+          "button",
+          "cta",
+          "primary",
+          "hero"
+        ],
+        "currentProps": {
+          "children": "Start Building",
+          "className": "px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        },
+        "domPath": "html > body > div#root > main > section.hero > div > button",
+        "boundingRect": {
+          "x": 100,
+          "y": 200,
+          "width": 150,
+          "height": 48,
+          "top": 200,
+          "left": 100,
+          "bottom": 248,
+          "right": 250
+        }
+      },
+      "pageContext": {
+        "url": "http://localhost:5176/",
+        "title": "Geenius Template - Vite React MongoDB",
+        "pathname": "/",
+        "searchParams": {},
+        "timestamp": 1753017125698
+      },
+      "userContext": {
+        "sessionId": "1753017125698_46e7hswve",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        }
+      },
+      "metadata": {
+        "elementPath": "button[children=\"Start Building\"]",
+        "aiSuggestions": [
+          "Consider using \"Get Started\" as it's more engaging",
+          "Add hover animations for better UX"
+        ]
+      }
+    },
+    {
+      "id": "1753017125698_3ik5al2lj",
+      "componentId": "nav-logo",
+      "feedback": "Update the logo to be more modern and add a subtle animation",
+      "timestamp": 1753017125698,
+      "category": "styling",
+      "priority": "low",
+      "status": "pending",
+      "componentContext": {
+        "name": "Navigation Logo",
+        "description": "Brand logo in the navigation header",
+        "filePath": "src/components/Navigation.tsx",
+        "repositoryPath": "https://github.com/mehdinabhani/geenius-template-vite-react-mongo/blob/main/src/components/Navigation.tsx",
+        "usageFilePath": "src/components/Navigation.tsx",
+        "usageRepositoryPath": "https://github.com/mehdinabhani/geenius-template-vite-react-mongo/blob/main/src/components/Navigation.tsx",
+        "usageLineNumber": 20,
+        "usageColumnNumber": 8,
+        "parentComponents": [
+          "Navigation",
+          "Header"
+        ],
+        "childComponents": [],
+        "semanticTags": [
+          "logo",
+          "brand",
+          "navigation",
+          "header"
+        ],
+        "currentProps": {
+          "src": "/logo.svg",
+          "alt": "Geenius Logo",
+          "className": "h-8 w-auto"
+        },
+        "domPath": "html > body > div#root > header > nav > img"
+      },
+      "pageContext": {
+        "url": "http://localhost:5176/",
+        "title": "Geenius Template - Vite React MongoDB",
+        "pathname": "/",
+        "searchParams": {},
+        "timestamp": 1753017125698
+      },
+      "userContext": {
+        "sessionId": "1753017125698_9f2mw036p",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        }
+      }
+    }
+  ],
+  "globalContext": {
+    "environment": "development",
+    "projectId": "localhost",
+    "version": "1.0.0",
+    "repositoryUrl": "https://github.com/mehdinabhani/geenius-template-vite-react-mongo",
+    "aiProvider": "anthropic",
+    "userInfo": {
+      "sessionId": "1753017125698_5ahxk0v83",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      }
+    }
+  },
+  "summary": {
+    "totalChanges": 2,
+    "categoryCounts": {
+      "enhancement": 1,
+      "styling": 1
+    },
+    "priorityCounts": {
+      "medium": 1,
+      "low": 1
+    },
+    "affectedComponents": [
+      "hero-start-building",
+      "nav-logo"
+    ],
+    "estimatedComplexity": "low"
+  }
+}

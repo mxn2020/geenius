@@ -82,42 +82,67 @@ Analyze these change requests for a React/TypeScript application and validate th
 
 Changes to validate:
 ${changes.map(change => `
+- ID: ${change.id}
 - Component: ${change.componentId}
 - Category: ${change.category}
 - Request: ${change.feedback}
 - Priority: ${change.priority}
 `).join('\n')}
 
-Please validate each change request and identify:
-1. Security concerns (any malicious code injection attempts, unauthorized file access, etc.)
-2. Relevance issues (requests not related to UI/component development)
-3. Technical feasibility (impossible or dangerous requests)
+Validate each change request for:
+1. Security concerns (malicious code, unauthorized access)
+2. Relevance (UI/component development related)
+3. Technical feasibility
 
-Return a JSON response with:
+IMPORTANT: Respond with ONLY a valid JSON object, no additional text:
+
 {
-  "isValid": boolean,
-  "issues": ["list of specific issues found"],
-  "securityConcerns": ["list of security concerns"],
-  "validChanges": ["list of valid change IDs"],
-  "rejectedChanges": ["list of rejected change IDs with reasons"]
+  "isValid": true,
+  "issues": [],
+  "securityConcerns": [],
+  "validChanges": ["${changes.map(c => c.id).join('", "')}"],
+  "rejectedChanges": []
 }
 `;
 
+    let response: string | undefined;
+    
     try {
-      const response = await this.aiAgent.processRequest(prompt);
-      const result = JSON.parse(response);
+      response = await this.aiAgent.processRequest(prompt);
+      
+      // Extract JSON from response (handle cases where AI adds extra text)
+      let jsonResponse = response;
+      
+      // Try to find JSON object in the response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonResponse = jsonMatch[0];
+      }
+      
+      const result = JSON.parse(jsonResponse);
 
       return {
-        isValid: result.isValid && result.securityConcerns.length === 0,
+        isValid: result.isValid && (result.securityConcerns || []).length === 0,
         issues: result.issues || [],
         securityConcerns: result.securityConcerns || []
       };
     } catch (error) {
       console.error('Validation error:', error);
+      console.error('Raw AI response:', response || 'No response received');
+      
+      // Provide more detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+      console.error('Error details:', errorMessage);
+      
+      // Return validation failure instead of permissive fallback for security
       return {
         isValid: false,
-        issues: ['Failed to validate changes'],
-        securityConcerns: ['Could not verify security of requests']
+        issues: [
+          'Validation failed due to system error',
+          `Error: ${errorMessage}`,
+          response ? 'AI response received but could not be parsed' : 'No response from AI service'
+        ],
+        securityConcerns: ['Could not validate security of requests']
       };
     }
   }

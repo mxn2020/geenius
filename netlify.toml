@@ -20,6 +20,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/process-changes-legacy"
+  to = "/.netlify/functions/process-changes-legacy"
+  status = 200
+
+[[redirects]]
   from = "/api/process-changes/:sessionId"
   to = "/.netlify/functions/process-changes/:sessionId"
   status = 200

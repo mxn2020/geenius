@@ -1,31 +1,119 @@
 // Enhanced Agentic AI Process Changes API
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { EnhancedSessionManager, EnhancedProcessingSession } from './shared/enhanced-session-manager';
+import { EnhancedSessionManager } from './shared/enhanced-session-manager';
 import { EnhancedGitHubService, FileChange } from './shared/enhanced-github-service';
 import { AIFileProcessor, ChangeRequest } from './shared/ai-file-processor';
 import { NetlifyService } from './shared/netlify-service';
 
-// Types
+// Enhanced Types (matching template app structure)
+export enum ChangeCategory {
+  BUG_FIX = 'bug_fix',
+  ENHANCEMENT = 'enhancement',
+  STYLING = 'styling',
+  CONTENT = 'content',
+  BEHAVIOR = 'behavior',
+  PERFORMANCE = 'performance',
+  ACCESSIBILITY = 'accessibility',
+  GENERAL = 'general'
+}
+
+export enum ChangePriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent'
+}
+
+export enum ChangeStatus {
+  PENDING = 'pending',
+  SUBMITTED = 'submitted',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected'
+}
+
+interface ComponentContext {
+  name: string;
+  description: string;
+  filePath: string;
+  repositoryPath?: string;
+  usageFilePath?: string;
+  usageRepositoryPath?: string;
+  usageLineNumber?: number;
+  usageColumnNumber?: number;
+  parentComponents: string[];
+  childComponents: string[];
+  semanticTags: string[];
+  currentProps?: Record<string, any>;
+  domPath?: string;
+  boundingRect?: DOMRect;
+}
+
+interface PageContext {
+  url: string;
+  title: string;
+  pathname: string;
+  searchParams?: Record<string, string>;
+  timestamp: number;
+}
+
+interface UserContext {
+  sessionId: string;
+  userAgent: string;
+  viewport: {
+    width: number;
+    height: number;
+  };
+  userId?: string;
+  email?: string;
+}
+
+interface ChangeMetadata {
+  screenshot?: string;
+  elementPath?: string;
+  relatedChanges?: string[];
+  aiSuggestions?: string[];
+}
+
+interface EnhancedChangeRequest {
+  id: string;
+  componentId: string;
+  feedback: string;
+  timestamp: number;
+  category: ChangeCategory;
+  priority: ChangePriority;
+  status: ChangeStatus;
+  componentContext: ComponentContext;
+  pageContext: PageContext;
+  userContext?: UserContext;
+  metadata?: ChangeMetadata;
+}
+
+interface GlobalContext {
+  projectId?: string;
+  environment: 'development' | 'staging' | 'production';
+  version?: string;
+  repositoryUrl?: string;
+  branch?: string;
+  commitHash?: string;
+  aiProvider?: 'anthropic' | 'openai' | 'google' | 'grok';
+  userInfo?: UserContext;
+}
+
+interface SubmissionSummary {
+  totalChanges: number;
+  categoryCounts: Record<string, number>;
+  priorityCounts: Record<string, number>;
+  affectedComponents: string[];
+  estimatedComplexity: 'low' | 'medium' | 'high';
+}
+
 interface SubmissionPayload {
   submissionId: string;
   timestamp: number;
-  changes: ChangeRequest[];
-  globalContext: {
-    projectId: string;
-    environment: string;
-    version: string;
-    repositoryUrl: string;
-    userInfo: any;
-    aiProvider?: 'anthropic' | 'openai' | 'google' | 'grok';
-    aiModel?: string;
-  };
-  summary: {
-    totalChanges: number;
-    categoryCounts: Record<string, number>;
-    priorityCounts: Record<string, number>;
-    affectedComponents: string[];
-    estimatedComplexity: string;
-  };
+  changes: EnhancedChangeRequest[];
+  globalContext: GlobalContext;
+  summary: SubmissionSummary;
 }
 
 interface SubmissionResponse {
@@ -59,8 +147,18 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     const aiProcessor = new AIFileProcessor(payload.globalContext.aiProvider);
     const validationResult = await aiProcessor.validateChangeRequests(payload.changes);
     
+    console.log('Validation result:', JSON.stringify(validationResult, null, 2));
+    
     if (!validationResult.isValid) {
-      throw new Error(`Validation failed: ${validationResult.issues.join(', ')}`);
+      const issuesText = validationResult.issues && validationResult.issues.length > 0 
+        ? validationResult.issues.join(', ')
+        : 'No specific issues provided';
+      const securityText = validationResult.securityConcerns && validationResult.securityConcerns.length > 0
+        ? ` Security concerns: ${validationResult.securityConcerns.join(', ')}`
+        : '';
+      
+      await sessionManager.addLog(sessionId, 'error', `Validation failed: ${issuesText}${securityText}`);
+      throw new Error(`Validation failed: ${issuesText}${securityText}`);
     }
     
     await sessionManager.addLog(sessionId, 'success', 'All change requests validated successfully');
@@ -273,7 +371,30 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
   } catch (error) {
     console.error('Processing error:', error);
     
-    // Check if this is a retry situation
+    // Check if this is a configuration error that should not be retried
+    const isConfigurationError = error.message.includes('Base branch') && 
+                                 error.message.includes('does not exist');
+    const isRepositoryError = error.message.includes('Not Found') && 
+                             error.message.includes('repository');
+    
+    if (isConfigurationError || isRepositoryError) {
+      // Configuration errors should fail immediately without retry
+      await sessionManager.setError(sessionId, 
+        `Configuration error: ${error.message}`
+      );
+      await sessionManager.addLog(sessionId, 'error', 
+        'Processing stopped due to configuration error', 
+        { 
+          error: error.message,
+          resolution: isConfigurationError ? 
+            'Please ensure the base branch exists in the repository' :
+            'Please verify the repository URL and access permissions'
+        }
+      );
+      return;
+    }
+    
+    // Check if this is a retry situation for transient errors
     const session = await sessionManager.getSession(sessionId);
     const currentAttempt = (session?.retryInfo?.attempt || 0) + 1;
     const maxRetries = 3;
@@ -304,7 +425,7 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
  * Generate comprehensive pull request body
  */
 function generatePullRequestBody(
-  changes: ChangeRequest[],
+  changes: EnhancedChangeRequest[],
   fileChanges: FileChange[],
   commits: any[]
 ): string {
@@ -376,8 +497,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
     'Content-Type': 'application/json'
   };
-
-  console.log('Received event:', JSON.stringify(event, null, 2));
 
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {

@@ -240,16 +240,33 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
             if (!sessionId) return;
             
             try {
-                const response = await fetch(apiBase + '/api/process-changes/' + sessionId);
+                // Try web-init session first, then fall back to process-changes
+                let response;
+                if (sessionId.startsWith('init_')) {
+                    response = await fetch(apiBase + '/.netlify/functions/web-init/' + sessionId);
+                } else {
+                    response = await fetch(apiBase + '/api/process-changes/' + sessionId);
+                }
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                 }
+                
+                // Check if response is JSON before parsing
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    if (text.includes('TimeoutError') || text.includes('timed out')) {
+                        throw new Error('Function timed out - please try again');
+                    }
+                    throw new Error('Invalid response format: ' + text.substring(0, 100));
+                }
+                
                 const data = await response.json();
                 updateUI(data);
             } catch (error) {
                 console.error('Error fetching logs:', error);
                 document.getElementById('error-container').innerHTML = 
-                    '<div class="error-message">Failed to load logs: ' + error.message + '</div>';
+                    '<div class="error-message">❌ Network error: ' + error.message + '</div>';
             }
         }
 
@@ -272,17 +289,23 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
             const previewLink = document.getElementById('preview-link');
             const prLink = document.getElementById('pr-link');
             
-            if (data.previewUrl || data.prUrl) {
+            // Handle both web-init and process-changes data structures
+            const previewUrl = data.previewUrl || data.netlifyUrl;
+            const prUrl = data.prUrl || data.repoUrl;
+            
+            if (previewUrl || prUrl) {
                 actions.style.display = 'block';
-                if (data.previewUrl) {
-                    previewLink.href = data.previewUrl;
+                if (previewUrl) {
+                    previewLink.href = previewUrl;
                     previewLink.style.display = 'inline-block';
+                    previewLink.textContent = data.netlifyUrl ? '🌐 View Site' : '🚀 View Preview';
                 } else {
                     previewLink.style.display = 'none';
                 }
-                if (data.prUrl) {
-                    prLink.href = data.prUrl;
+                if (prUrl) {
+                    prLink.href = prUrl;
                     prLink.style.display = 'inline-block';
+                    prLink.textContent = data.repoUrl ? '📁 View Repo' : '📋 View PR';
                 } else {
                     prLink.style.display = 'none';
                 }

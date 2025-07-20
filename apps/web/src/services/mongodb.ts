@@ -333,18 +333,22 @@ export class MongoDBService {
 
     let connectionString = cluster.connectionStrings.standardSrv;
 
+    // URL encode username and password to handle special characters
+    const encodedUsername = encodeURIComponent(username);
+    const encodedPassword = encodeURIComponent(password);
+
     // Replace placeholders if they exist
     connectionString = connectionString
-      .replace('<username>', username)
-      .replace('<password>', password);
+      .replace('<username>', encodedUsername)
+      .replace('<password>', encodedPassword);
 
     // If the connection string doesn't have username:password format, add it
     if (!connectionString.includes('@')) {
       // Format: mongodb+srv://cluster.mongodb.net -> mongodb+srv://username:password@cluster.mongodb.net
-      connectionString = connectionString.replace('mongodb+srv://', `mongodb+srv://${username}:${password}@`);
-    } else if (!connectionString.includes(`${username}:${password}`)) {
+      connectionString = connectionString.replace('mongodb+srv://', `mongodb+srv://${encodedUsername}:${encodedPassword}@`);
+    } else if (!connectionString.includes(`${encodedUsername}:${encodedPassword}`)) {
       // If it has @ but not our credentials, replace the credentials part
-      connectionString = connectionString.replace(/mongodb\+srv:\/\/[^@]*@/, `mongodb+srv://${username}:${password}@`);
+      connectionString = connectionString.replace(/mongodb\+srv:\/\/[^@]*@/, `mongodb+srv://${encodedUsername}:${encodedPassword}@`);
     }
 
     // Add database name if provided

@@ -1,14 +1,22 @@
-// web/services/netlify.ts - Using same approach as CLI
-import { NetlifyAPI } from 'netlify';
-
+// web/services/netlify.ts
 export class NetlifyService {
-  private client: NetlifyAPI;
+  private client: any;
 
   constructor() {
-    if (!process.env.NETLIFY_TOKEN) {
-      throw new Error('NETLIFY_TOKEN environment variable is required for Netlify integration.');
+    // Don't initialize client in constructor to avoid import issues
+    this.client = null;
+  }
+
+  private async getClient() {
+    if (!this.client) {
+      if (!process.env.NETLIFY_TOKEN) {
+        throw new Error('NETLIFY_TOKEN environment variable is required for Netlify integration.');
+      }
+      // Dynamically import only when needed
+      const { NetlifyAPI } = await import('netlify');
+      this.client = new NetlifyAPI(process.env.NETLIFY_TOKEN);
     }
-    this.client = new NetlifyAPI(process.env.NETLIFY_TOKEN);
+    return this.client;
   }
 
   async createProject(name: string, repoUrl: string, teamSlug?: string) {
@@ -29,13 +37,14 @@ export class NetlifyService {
 
     try {
       // Step 1: Get GitHub repository ID
-      console.log(`🔍 Getting GitHub repository ID...`);
+      console.log(`🔍 Getting GitHub repository ID via web services...`);
       const repoId = await this.getGitHubRepoId(owner, repo);
       console.log(`   Repository ID: ${repoId}`);
 
       // Step 2: Create deploy key
       console.log(`🔑 Creating Netlify deploy key...`);
-      const deployKey = await this.client.createDeployKey();
+      const client = await this.getClient();
+      const deployKey = await client.createDeployKey();
       console.log(`   Deploy key created: ${deployKey.id}`);
 
       // Step 3: Add deploy key to GitHub repository
@@ -63,12 +72,14 @@ export class NetlifyService {
       // If teamSlug is provided, create site in team
       let site;
       if (teamSlug) {
-        site = await this.client.createSiteInTeam({
+      const client = await this.getClient();
+        site = await client.createSiteInTeam({
           accountSlug: teamSlug,
           body: siteData
         });
       } else {
-        site = await this.client.createSite({
+      const client = await this.getClient();
+        site = await client.createSite({
           body: siteData
         });
       }
@@ -112,7 +123,8 @@ export class NetlifyService {
         try {
           // Get repo info for fallback attempt
           const repoId = await this.getGitHubRepoId(owner, repo);
-          const deployKey = await this.client.createDeployKey();
+      const client = await this.getClient();
+          const deployKey = await client.createDeployKey();
           await this.addDeployKeyToGitHub(owner, repo, deployKey.public_key!, `Netlify Deploy Key - ${fallbackName}`);
 
           const fallbackSiteData = {
@@ -133,12 +145,14 @@ export class NetlifyService {
 
           let fallbackSite;
           if (teamSlug) {
-            fallbackSite = await this.client.createSiteInTeam({
+      const client = await this.getClient();
+            fallbackSite = await client.createSiteInTeam({
               accountSlug: teamSlug,
               body: fallbackSiteData
             });
           } else {
-            fallbackSite = await this.client.createSite({
+      const client = await this.getClient();
+            fallbackSite = await client.createSite({
               body: fallbackSiteData
             });
           }
@@ -246,7 +260,8 @@ export class NetlifyService {
       console.log(`🔧 Setting up environment variables for site ${siteId}`);
 
       // Get the site to find the account ID and site details
-      const site = await this.client.getSite({ siteId });
+      const client = await this.getClient();
+      const site = await client.getSite({ siteId });
       const accountId = site.account_id;
 
       if (!accountId) {
@@ -277,7 +292,7 @@ export class NetlifyService {
       }));
 
       // Create environment variables
-      await this.client.createEnvVars({
+      await client.createEnvVars({
         accountId,
         siteId,
         body: envVars
@@ -304,7 +319,8 @@ export class NetlifyService {
       console.log(`🔧 Configuring branch deployments for site ${siteId}`);
 
       // Get current site settings
-      const site = await this.client.getSite({ siteId });
+      const client = await this.getClient();
+      const site = await client.getSite({ siteId });
 
       // Configure branch deploy settings
       const updateData: any = {
@@ -322,7 +338,7 @@ export class NetlifyService {
         }
       }
 
-      await this.client.updateSite({
+      await client.updateSite({
         siteId,
         body: updateData
       });
@@ -340,7 +356,8 @@ export class NetlifyService {
 
     while (Date.now() - startTime < timeout) {
       try {
-        const deployments = await this.client.listSiteDeploys({ siteId });
+      const client = await this.getClient();
+        const deployments = await client.listSiteDeploys({ siteId });
 
         if (deployments.length === 0) {
           console.log(`   No deployments found yet, waiting...`);

@@ -113,6 +113,12 @@ export class EnhancedGitHubService {
   async createFeatureBranch(repoUrl: string, branchName: string, baseBranch: string = 'develop'): Promise<BranchInfo> {
     const { owner, repo } = this.parseRepoUrl(repoUrl);
 
+    // First validate that the base branch exists
+    const baseBranchExists = await this.branchExists(repoUrl, baseBranch);
+    if (!baseBranchExists) {
+      throw new Error(`Base branch '${baseBranch}' does not exist in repository ${owner}/${repo}. Please check the repository configuration or create the branch first.`);
+    }
+
     // Get base branch SHA
     const { data: baseBranchData } = await this.octokit.rest.repos.getBranch({
       owner,
