@@ -71,15 +71,15 @@
   to = "/.netlify/functions/web-status"
   status = 200
 
-# Logs page routes
+# Logs page routes - redirect to the Vite app with session parameter
 [[redirects]]
   from = "/logs/:sessionId"
-  to = "/logs.html?session=:sessionId"
+  to = "/?session=:sessionId"
   status = 200
 
 [[redirects]]
   from = "/logs"
-  to = "/logs.html"
+  to = "/"
   status = 200
 
 # Default redirect for SPA-like behavior

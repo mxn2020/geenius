@@ -153,7 +153,15 @@ function App() {
     
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`/.netlify/functions/web-init/${sessionIdParam}`)
+        // Determine endpoint based on session ID prefix
+        let endpoint
+        if (sessionIdParam.startsWith('init_')) {
+          endpoint = `/.netlify/functions/web-init/${sessionIdParam}`
+        } else {
+          endpoint = `/api/process-changes-enhanced/${sessionIdParam}`
+        }
+        
+        const response = await fetch(endpoint)
         if (response.ok) {
           const data = await response.json()
           
@@ -163,6 +171,8 @@ function App() {
           
           if (data.repoUrl) setRepoUrl(data.repoUrl)
           if (data.netlifyUrl) setNetlifyUrl(data.netlifyUrl)
+          if (data.prUrl) setRepoUrl(data.prUrl) // For process-changes-enhanced sessions
+          if (data.previewUrl) setNetlifyUrl(data.previewUrl) // For process-changes-enhanced sessions
           
           // Check if completed or failed
           if (data.status === 'completed' || data.status === 'failed') {
@@ -171,15 +181,28 @@ function App() {
             setDeploymentStatus(data.status)
             
             if (data.status === 'completed') {
-              addLog('🎉 Project initialization completed!')
-              if (data.repoUrl) addLog(`📁 Repository: ${data.repoUrl}`)
-              if (data.netlifyUrl) addLog(`🌐 Netlify URL: ${data.netlifyUrl}`)
-              if (data.mongodbDatabase) addLog(`🍃 MongoDB Database: ${data.mongodbDatabase}`)
+              if (sessionIdParam.startsWith('init_')) {
+                addLog('🎉 Project initialization completed!')
+                if (data.repoUrl) addLog(`📁 Repository: ${data.repoUrl}`)
+                if (data.netlifyUrl) addLog(`🌐 Netlify URL: ${data.netlifyUrl}`)
+                if (data.mongodbDatabase) addLog(`🍃 MongoDB Database: ${data.mongodbDatabase}`)
+              } else {
+                addLog('🎉 Change processing completed!')
+                if (data.prUrl) addLog(`🔀 Pull Request: ${data.prUrl}`)
+                if (data.previewUrl) addLog(`🌐 Preview URL: ${data.previewUrl}`)
+              }
             }
           }
+        } else if (response.status === 404) {
+          // Session not found or doesn't exist yet
+          setSessionStatus('session_not_found')
+          addLog(`❌ Session ${sessionIdParam} not found`)
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
       } catch (error) {
         console.error('Error polling logs:', error)
+        addLog(`❌ Error polling logs: ${error.message}`)
       }
     }, 2000)
     
@@ -586,15 +609,21 @@ Describe your feature here...
               {sessionId && (
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Session ID: <code className="bg-gray-200 px-2 py-1 rounded">{sessionId}</code></span>
+                    <div>
+                      <span className="text-sm text-gray-600">
+                        {sessionId.startsWith('init_') ? 'Project Initialization' : 'Change Processing'} Session
+                      </span>
+                      <br />
+                      <code className="bg-gray-200 px-2 py-1 rounded text-xs">{sessionId}</code>
+                    </div>
                     {sessionStatus && (
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         sessionStatus === 'completed' ? 'bg-green-100 text-green-800' :
                         sessionStatus === 'failed' ? 'bg-red-100 text-red-800' :
-                        sessionStatus === 'running' ? 'bg-blue-100 text-blue-800' :
+                        ['running', 'processing', 'validating', 'analyzing', 'committing', 'creating_branch', 'testing', 'pr_creating', 'deploying'].includes(sessionStatus) ? 'bg-blue-100 text-blue-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {sessionStatus.toUpperCase()}
+                        {sessionStatus.toUpperCase().replace('_', ' ')}
                       </span>
                     )}
                   </div>
