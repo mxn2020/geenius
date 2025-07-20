@@ -8,9 +8,9 @@
     "geenius": "./bin/geenius.js"
   },
   "scripts": {
-    "build": "tsc && npm run build:web",
+    "build": "tsc --noEmit && vite build",
     "build:web": "vite build",
-    "dev": "tsx apps/cli/index.ts",
+    "dev": "tsx cli/index.ts",
     "dev:web": "vite dev",
     "server": "tsx src/server.ts",
     "test": "vitest",

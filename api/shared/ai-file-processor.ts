@@ -226,27 +226,63 @@ Please:
 4. Keep the existing import structure and dependencies
 5. Preserve component structure and naming conventions
 
-Provide your response in this JSON format:
+Provide your response in this exact format:
+
+---METADATA---
 {
   "success": true,
-  "updatedContent": "complete updated file content here",
   "explanation": "detailed explanation of what was changed",
   "testSuggestions": ["list of tests that should be created for these changes"],
   "commitMessage": "Clear, descriptive commit message for these changes",
   "changesImplemented": ["list of change IDs that were successfully implemented"]
 }
+---CODE---
+[complete updated file content here]
+---END---
 
-If you cannot implement the changes safely, return:
+If you cannot implement the changes safely, use this format:
+---METADATA---
 {
   "success": false,
   "error": "detailed explanation of why changes cannot be implemented",
   "suggestedAlternatives": ["alternative approaches"]
 }
+---END---
 `;
 
+    let response: string = '';
+    
     try {
-      const response = await this.aiAgent.processRequest(prompt);
-      const result = JSON.parse(response);
+      response = await this.aiAgent.processRequest(prompt);
+      
+      // Try to parse the new format with separate metadata and code sections
+      const metadataMatch = response.match(/---METADATA---([\s\S]*?)---(?:CODE|END)---/);
+      const codeMatch = response.match(/---CODE---([\s\S]*?)---END---/);
+      
+      let result;
+      
+      if (metadataMatch) {
+        // New format
+        result = JSON.parse(metadataMatch[1].trim());
+        
+        // Add the code content if it exists
+        if (codeMatch && result.success) {
+          result.updatedContent = codeMatch[1].trim();
+        } else if (result.success) {
+          result.updatedContent = '';
+        }
+      } else {
+        // Fallback to old format - try to extract JSON from response
+        let jsonResponse = response.trim();
+        
+        // Try to find JSON object in the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonResponse = jsonMatch[0];
+        }
+        
+        result = JSON.parse(jsonResponse);
+      }
 
       if (result.success) {
         // Validate the generated code
@@ -285,6 +321,9 @@ If you cannot implement the changes safely, return:
         };
       }
     } catch (error) {
+      console.error(`Processing attempt ${attempt} failed:`, error);
+      console.error('Raw AI response:', response || 'No response received');
+      
       if (attempt < this.maxRetries) {
         console.log(`Processing failed on attempt ${attempt}, retrying...`);
         return this.processFileChanges(filePath, fileContent, changes, attempt + 1);
@@ -296,7 +335,7 @@ If you cannot implement the changes safely, return:
           explanation: '',
           testSuggestions: [],
           commitMessage: '',
-          error: `Failed to process changes after ${this.maxRetries} attempts: ${errorMessage}`
+          error: `Failed to process changes after ${this.maxRetries} attempts: ${errorMessage}. Check logs for AI response details.`
         };
       }
     }

@@ -1,4 +1,4 @@
-// apps/cli/services/mongodb.ts
+// cli/services/mongodb.ts
 import DigestClient from 'digest-fetch';
 
 export interface MongoDBProject {
