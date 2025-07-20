@@ -2,10 +2,10 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../../src/utils/config';
-import { validateInput, DevelopCommandSchema } from '../../../src/utils/validation';
-import { logger } from '../../../src/utils/logger';
-import { generateTaskId } from '../../../src/utils/helpers';
+import { ConfigManager } from '../../src/utils/config';
+import { validateInput, DevelopCommandSchema } from '../../src/utils/validation';
+import { logger } from '../../src/utils/logger';
+import { generateTaskId } from '../../src/utils/helpers';
 import { GitHubService } from '../services/github';
 import { AgentService } from '../agent/agent-service';
 import type { DevelopOptions } from '../../src/types/config';

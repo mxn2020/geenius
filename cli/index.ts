@@ -9,7 +9,7 @@ import { compareAgentsCommand } from './commands/compare-agents';
 import { memoryCommand } from './commands/memory';
 import { switchProviderCommand } from './commands/switch-provider';
 import { manageCommand } from './commands/manage';
-import { logger } from '../../src/utils/logger';
+import { logger } from '../src/utils/logger';
 
 const program = new Command();
 

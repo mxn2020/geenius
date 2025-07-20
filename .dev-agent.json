@@ -1,11 +1,12 @@
 {
   "template": "vite-react-mongo",
-  "name": "test-x270",
-  "repoUrl": "https://github.com/mxn2020/geenius-template-vite-react-mongo",
+  "name": "test-x800",
+  "repoUrl": "https://github.com/mxn2020/test-x800",
   "aiProvider": "anthropic",
   "agentMode": "single",
-  "orchestrationStrategy": "hierarchical",
-  "netlifyProject": "9c914c5c-7de6-474d-948e-5371257a9748",
-  "createdAt": "2025-07-20T18:58:09.683Z",
-  "updatedAt": "2025-07-20T18:58:09.683Z"
+  "model": "claude-sonnet-4-20250514",
+  "netlifyProject": "65e91a67-6da5-4f7d-a2da-a778e10c8efb",
+  "systemPrompt": "You are a React developer using Vite, MongoDB, and BetterAuth. Focus on modern React patterns, hooks, efficient database operations, and secure authentication with BetterAuth. Emphasize performance, type safety, and following React best practices.",
+  "createdAt": "2025-07-20T19:39:54.795Z",
+  "updatedAt": "2025-07-20T19:39:54.796Z"
 }

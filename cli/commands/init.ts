@@ -4,9 +4,9 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
 import { randomBytes } from 'crypto'; // Add this import
-import { ConfigManager } from '../../../src/utils/config';
-import { validateInput, InitCommandSchema } from '../../../src/utils/validation';
-import { logger } from '../../../src/utils/logger';
+import { ConfigManager } from '../../src/utils/config';
+import { validateInput, InitCommandSchema } from '../../src/utils/validation';
+import { logger } from '../../src/utils/logger';
 import { TemplateRegistry } from '../repo-templates/index';
 import { GitHubService } from '../services/github';
 import { NetlifyService } from '../services/netlify';

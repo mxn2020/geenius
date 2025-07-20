@@ -2,9 +2,9 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../../src/utils/config';
-import { logger } from '../../../src/utils/logger';
-import { validateApiKey } from '../../../src/utils/validation';
+import { ConfigManager } from '../../src/utils/config';
+import { logger } from '../../src/utils/logger';
+import { validateApiKey } from '../../src/utils/validation';
 import { AgentService } from '../agent/agent-service';
 
 export async function switchProviderCommand(): Promise<void> {

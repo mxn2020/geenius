@@ -2,9 +2,9 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
-import { ConfigManager } from '../../../src/utils/config';
-import { logger } from '../../../src/utils/logger';
-import { formatDuration } from '../../../src/utils/helpers';
+import { ConfigManager } from '../../src/utils/config';
+import { logger } from '../../src/utils/logger';
+import { formatDuration } from '../../src/utils/helpers';
 import { AgentService } from '../agent/agent-service';
 
 export async function compareAgentsCommand(options: any = {}): Promise<void> {
