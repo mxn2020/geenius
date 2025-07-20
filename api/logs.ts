@@ -240,12 +240,12 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
             if (!sessionId) return;
             
             try {
-                // Try web-init session first, then fall back to process-changes
+                // Try web-init session first, then fall back to process-changes-enhanced
                 let response;
                 if (sessionId.startsWith('init_')) {
                     response = await fetch(apiBase + '/.netlify/functions/web-init/' + sessionId);
                 } else {
-                    response = await fetch(apiBase + '/api/process-changes/' + sessionId);
+                    response = await fetch(apiBase + '/api/process-changes-enhanced/' + sessionId);
                 }
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ': ' + response.statusText);

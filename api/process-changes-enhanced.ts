@@ -142,12 +142,20 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     }
 
     // Phase 1: Validation
+    console.log(`Starting validation for session: ${sessionId}`);
+    
+    // Check if session exists before proceeding
+    const sessionBeforeValidation = await sessionManager.getSession(sessionId);
+    console.log('Session exists before validation:', !!sessionBeforeValidation);
+    
     await sessionManager.updateSessionStatus(sessionId, 'validating', 5, 'Validating change requests...');
+    await sessionManager.addLog(sessionId, 'info', 'Starting validation phase');
     
     const aiProcessor = new AIFileProcessor(payload.globalContext.aiProvider);
     const validationResult = await aiProcessor.validateChangeRequests(payload.changes);
     
     console.log('Validation result:', JSON.stringify(validationResult, null, 2));
+    await sessionManager.addLog(sessionId, 'info', `Validation completed with result: ${JSON.stringify(validationResult)}`);
     
     if (!validationResult.isValid) {
       const issuesText = validationResult.issues && validationResult.issues.length > 0 
@@ -157,8 +165,10 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
         ? ` Security concerns: ${validationResult.securityConcerns.join(', ')}`
         : '';
       
-      await sessionManager.addLog(sessionId, 'error', `Validation failed: ${issuesText}${securityText}`);
-      throw new Error(`Validation failed: ${issuesText}${securityText}`);
+      const errorMessage = `Validation failed: ${issuesText}${securityText}`;
+      console.error('Validation failed:', errorMessage);
+      await sessionManager.addLog(sessionId, 'error', errorMessage);
+      throw new Error(errorMessage);
     }
     
     await sessionManager.addLog(sessionId, 'success', 'All change requests validated successfully');
