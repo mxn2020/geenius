@@ -283,14 +283,6 @@ function parseAIResponse(response: string): {
   }
 }
 
-/**
- * Generate branch name for project initialization
- */
-function generateInitBranchName(projectId: string, businessDomain: string): string {
-  const timestamp = Date.now().toString().slice(-6);
-  const domain = businessDomain.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return `init/${domain}-project-${projectId}-${timestamp}`;
-}
 
 /**
  * Process standard deployment without AI customization
@@ -518,56 +510,6 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
   }
 }
 
-/**
- * Generate PR body for project initialization
- */
-function generateProjectPRBody(
-  request: ProjectInitRequest,
-  metadata: any,
-  commits: any[]
-): string {
-  return `## 🚀 AI-Generated Project Initialization
-
-This pull request contains a complete project initialization based on user requirements.
-
-### Project Details
-- **Business Domain**: ${request.businessDomain}
-- **Requirements**: ${request.userRequirements}
-- **Generated Files**: ${metadata.generatedFiles?.length || 0}
-
-### Features Implemented
-${(metadata.businessFocus || []).map((feature: string) => `- ${feature}`).join('\n')}
-
-### Database Models
-${(metadata.databaseModels || []).map((model: string) => `- ${model}`).join('\n')}
-
-### Files Modified
-${(metadata.generatedFiles || []).map((file: string) => `- \`${file}\``).join('\n')}
-
-### Additional Features
-${(metadata.additionalFeatures || []).map((feature: string) => `- ${feature}`).join('\n')}
-
-### Implementation Notes
-${metadata.explanation || 'Complete project generated based on template patterns'}
-
-### Commits
-${commits.map(commit => `- \`${commit.sha.substring(0, 7)}\`: ${commit.message.split('\n')[0]}`).join('\n')}
-
-### Testing Checklist
-- [ ] Landing page displays correctly with business-appropriate content
-- [ ] Dashboard navigation includes relevant sections
-- [ ] Database models compile and migrate successfully
-- [ ] All components use dev-container system properly
-- [ ] TypeScript compilation passes
-- [ ] Preview deployment works
-
----
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-`;
-}
 
 /**
  * Main handler function
