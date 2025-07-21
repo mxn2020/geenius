@@ -98,8 +98,8 @@ export class GitHubService {
     const cleanRepoName = templateRepo.replace(/\.git$/, '');
 
     try {
-      // Fork the repository using GitHub REST API
-      const response = await fetch(`https://api.github.com/repos/${templateOwner}/${cleanRepoName}/forks`, {
+      // Create repository from GitHub template using REST API
+      const response = await fetch(`https://api.github.com/repos/${templateOwner}/${cleanRepoName}/generate`, {
         method: 'POST',
         headers: {
           'Authorization': `token ${this.token}`,
@@ -107,19 +107,21 @@ export class GitHubService {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          organization: githubOrg !== process.env.GITHUB_USERNAME ? githubOrg : undefined,
+          owner: githubOrg,
           name: projectName,
-          default_branch_only: false
+          description: `Project based on ${templateOwner}/${cleanRepoName}`,
+          private: false,
+          include_all_branches: false
         })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(`Failed to fork repository: ${error.message || response.statusText}`);
+        throw new Error(`Failed to create repository from template: ${error.message || response.statusText}`);
       }
 
-      const forkData = await response.json();
-      return forkData.html_url;
+      const repoData = await response.json();
+      return repoData.html_url;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
       throw new Error(`GitHub API error: ${errorMessage}`);

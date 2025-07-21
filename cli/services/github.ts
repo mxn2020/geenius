@@ -20,17 +20,10 @@ export class GitHubService {
     console.log(`📁 Target project name: ${projectName}`);
     console.log(`🏢 Target organization/user: ${org}`);
     
-    // Check if the user is the template owner (should clone instead of fork)
-    const templateOwnerAccount = process.env.GITHUB_TEMPLATE_OWNER || 'mxn2020';
-    const isTemplateOwner = org === templateOwnerAccount;
-    
-    if (isTemplateOwner) {
-      console.log(`🔄 You are the template owner (${templateOwnerAccount}). Creating from template instead of forking...`);
-      return await this.createFromTemplate(templateOwner, templateName, projectName, org);
-    } else {
-      console.log(`🍴 You are not the template owner. Forking repository...`);
-      return await this.forkRepository(templateOwner, templateName, projectName, org);
-    }
+    // Always create from template for GitHub template repositories
+    // This ensures users get independent repositories, not forks linked to the original
+    console.log(`📋 Creating new repository from GitHub template...`);
+    return await this.createFromTemplate(templateOwner, templateName, projectName, org);
   }
 
   private async createFromTemplate(templateOwner: string, templateName: string, projectName: string, org: string): Promise<string> {

@@ -168,9 +168,10 @@ export class EnhancedSessionManager {
       aiProvider: string;
       baseBranch?: string;
       autoTest?: boolean;
+      sessionType?: string;
     }
   ): Promise<EnhancedProcessingSession> {
-    const sessionId = this.generateSessionId();
+    const sessionId = this.generateSessionId(config.sessionType || 'CHANGE_REQUEST', projectId);
     
     const session: EnhancedProcessingSession = {
       id: sessionId,
@@ -310,7 +311,7 @@ export class EnhancedSessionManager {
     // Also store logs separately for querying with unique key using RedisKeys
     try {
       const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substr(2, 5);
+      const randomId = Math.random().toString(36).substring(2, 7);
       const logKey = RedisKeys.sessionLog(sessionId, timestamp, randomId);
       await this.redis.setex(logKey, this.SESSION_TTL, JSON.stringify(log));
     } catch (error) {
@@ -564,7 +565,7 @@ export class EnhancedSessionManager {
       processedFiles: session.processedFiles,
       failedFiles: session.failedFiles,
       commits: session.commits.length,
-      logs: session.logs.slice(-10), // Last 10 logs
+      logs: session.logs, // All logs
       retryInfo: session.retryInfo
     };
   }

@@ -131,17 +131,13 @@ const sessionManager = new EnhancedSessionManager();
 const githubService = new EnhancedGitHubService();
 const netlifyService = new NetlifyService();
 
-// Import Redis storage for compatible logging
-import { storage } from './shared/redis-storage';
 
 /**
- * Helper function to log to both enhanced and compatible systems
+ * Helper function to log to enhanced session manager
  */
 async function logDevelopment(sessionId: string, level: 'info' | 'success' | 'warning' | 'error', message: string, metadata?: Record<string, any>): Promise<void> {
   // Log to enhanced session manager
   await sessionManager.addLog(sessionId, level, message, metadata);
-  // Also log to compatible Redis storage as development logs
-  await storage.addLog(sessionId, level, message, 'development', metadata);
 }
 
 /**
@@ -193,12 +189,22 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     await logDevelopment(sessionId, 'info', 'Starting validation phase');
     
     const aiProcessor = new AIFileProcessor(payload.globalContext.aiProvider);
+    
+    // Log validation attempt details
+    await logDevelopment(sessionId, 'info', `Starting validation with ${payload.changes.length} change requests`, {
+      aiProvider: payload.globalContext.aiProvider,
+      changeIds: payload.changes.map(c => c.id),
+      categories: [...new Set(payload.changes.map(c => c.category))]
+    });
+    
     const validationResult = await aiProcessor.validateChangeRequests(payload.changes);
     
     console.log('Validation result:', JSON.stringify(validationResult, null, 2));
     await logDevelopment(sessionId, 'info', `Validation completed - ${validationResult.isValid ? 'PASSED' : 'FAILED'}`, {
       issues: validationResult.issues?.length || 0,
-      securityConcerns: validationResult.securityConcerns?.length || 0
+      securityConcerns: validationResult.securityConcerns?.length || 0,
+      issuesList: validationResult.issues,
+      securityList: validationResult.securityConcerns
     });
     
     if (!validationResult.isValid) {
@@ -211,7 +217,11 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       
       const errorMessage = `Validation failed: ${issuesText}${securityText}`;
       console.error('Validation failed:', errorMessage);
-      await logDevelopment(sessionId, 'error', errorMessage);
+      await logDevelopment(sessionId, 'error', `❌ ${errorMessage}`, {
+        issues: validationResult.issues,
+        securityConcerns: validationResult.securityConcerns,
+        changeRequests: payload.changes.map(c => ({ id: c.id, feedback: c.feedback, category: c.category }))
+      });
       throw new Error(errorMessage);
     }
     
@@ -231,39 +241,48 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       });
     }
 
-    // Phase 3: Generate Feature Branch Name
+    // Phase 3: Generate Feature Branch Name (only if not already set)
     await sessionManager.updateSessionStatus(sessionId, 'processing', 20, 'Creating feature branch...');
     
-    // Generate branch name using change descriptions
-    const branchName = generateBranchName(payload.changes);
-    const featureName = branchName.replace('feature/', '');
-    await logDevelopment(sessionId, 'info', `Generated branch name: ${branchName}`);
+    // Check if branch name already exists in session (for retries)
+    let branchName = session.branchName;
+    let featureName = session.featureName;
     
-    // Check if branch already exists
-    const branchExists = await githubService.branchExists(payload.globalContext.repositoryUrl, branchName);
-    if (branchExists) {
-      const timestamp = Date.now();
-      const uniqueBranchName = `${branchName}-${timestamp}`;
-      await sessionManager.setBranchInfo(sessionId, uniqueBranchName, featureName);
-    } else {
+    if (!branchName) {
+      // Generate branch name using change descriptions (first attempt only)
+      branchName = generateBranchName(payload.changes);
+      featureName = branchName.replace('feature/', '');
+      await logDevelopment(sessionId, 'info', `Generated branch name: ${branchName}`);
+      
+      // Check if branch already exists
+      const branchExists = await githubService.branchExists(payload.globalContext.repositoryUrl, branchName);
+      if (branchExists) {
+        const timestamp = Date.now();
+        branchName = `${branchName}-${timestamp}`;
+        await logDevelopment(sessionId, 'info', `Branch exists, using unique name: ${branchName}`);
+      }
+      
+      // Store branch info in session
       await sessionManager.setBranchInfo(sessionId, branchName, featureName);
+    } else {
+      await logDevelopment(sessionId, 'info', `Using existing branch name from session: ${branchName}`);
     }
 
     // Create the feature branch
     try {
       const branchInfo = await githubService.createFeatureBranch(
         payload.globalContext.repositoryUrl,
-        session.branchName!,
+        branchName,
         session.baseBranch
       );
       
-      await logDevelopment(sessionId, 'success', `Created feature branch: ${session.branchName}`, {
+      await logDevelopment(sessionId, 'success', `Created feature branch: ${branchName}`, {
         repository: payload.globalContext.repositoryUrl,
         baseBranch: session.baseBranch
       });
     } catch (branchError) {
       await logDevelopment(sessionId, 'error', `Failed to create branch: ${branchError.message}`, {
-        branchName: session.branchName,
+        branchName: branchName,
         error: branchError.message
       });
       throw branchError;
@@ -344,7 +363,7 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
 
     const commits = await githubService.commitChanges(
       payload.globalContext.repositoryUrl,
-      session.branchName!,
+      branchName,
       fileChanges
     );
 
@@ -359,8 +378,8 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     }
 
     await logDevelopment(sessionId, 'success', 
-      `📝 Committed ${commits.length} changes to ${session.branchName}`,
-      { commitCount: commits.length, branchName: session.branchName }
+      `📝 Committed ${commits.length} changes to ${branchName}`,
+      { commitCount: commits.length, branchName: branchName }
     );
 
     // Phase 6: Create Pull Request
@@ -371,7 +390,7 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
 
     const prInfo = await githubService.createPullRequest(
       payload.globalContext.repositoryUrl,
-      session.branchName!,
+      branchName,
       prTitle,
       prBody,
       session.baseBranch
@@ -385,7 +404,7 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     try {
       // Wait for Netlify deployment (with timeout)
       const deploymentResult = await netlifyService.waitForBranchDeployment(
-        session.branchName!,
+        branchName,
         300000 // 5 minute timeout
       );
 
@@ -443,7 +462,7 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
         totalFiles: fileGroups.length,
         totalChanges: payload.changes.length,
         processingTimeMs: totalProcessingTime,
-        branchName: session.branchName,
+        branchName: branchName,
         prUrl: session.prUrl,
         previewUrl: session.previewUrl
       }
@@ -652,7 +671,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         {
           aiProvider: payload.globalContext.aiProvider || 'anthropic',
           baseBranch: payload.globalContext.branch || 'main',
-          autoTest: true
+          autoTest: true,
+          sessionType: 'CHANGE_REQUEST'
         }
       );
 

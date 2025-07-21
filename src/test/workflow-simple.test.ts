@@ -378,7 +378,7 @@ This PR will create an automatic Netlify deployment for preview and testing.
     it('should select correct model based on provider', () => {
       const getModel = (provider: string): string => {
         const modelMap = {
-          'anthropic': 'claude-3-5-sonnet-20241022',
+          'anthropic': 'claude-sonnet-4-20250514',
           'openai': 'gpt-4-turbo',
           'google': 'gemini-pro',
           'grok': 'grok-beta'
@@ -386,7 +386,7 @@ This PR will create an automatic Netlify deployment for preview and testing.
         return modelMap[provider] || 'gpt-4-turbo';
       };
 
-      expect(getModel('anthropic')).toBe('claude-3-5-sonnet-20241022');
+      expect(getModel('anthropic')).toBe('claude-sonnet-4-20250514');
       expect(getModel('openai')).toBe('gpt-4-turbo');
       expect(getModel('google')).toBe('gemini-pro');
       expect(getModel('grok')).toBe('grok-beta');

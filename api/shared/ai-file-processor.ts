@@ -74,9 +74,11 @@ export class AIFileProcessor {
   }
 
   /**
-   * Validate change requests for security and relevance
+   * Validate change requests for security and relevance with retry logic
    */
-  async validateChangeRequests(changes: ChangeRequest[]): Promise<ValidationResult> {
+  async validateChangeRequests(changes: ChangeRequest[], attempt: number = 1): Promise<ValidationResult> {
+    const maxAttempts = 3;
+    
     const prompt = `
 Analyze these change requests for a React/TypeScript application and validate them:
 
@@ -119,7 +121,19 @@ IMPORTANT: Respond with ONLY a valid JSON object, no additional text:
         jsonResponse = jsonMatch[0];
       }
       
+      // Clean up common JSON issues
+      jsonResponse = jsonResponse
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^\s*[\r\n]+/gm, '')
+        .trim();
+      
       const result = JSON.parse(jsonResponse);
+
+      // Validate that result has required fields
+      if (typeof result.isValid !== 'boolean') {
+        throw new Error('Invalid response format: missing isValid field');
+      }
 
       return {
         isValid: result.isValid && (result.securityConcerns || []).length === 0,
@@ -127,14 +141,27 @@ IMPORTANT: Respond with ONLY a valid JSON object, no additional text:
         securityConcerns: result.securityConcerns || []
       };
     } catch (error) {
-      console.error('Validation error:', error);
+      console.error(`Validation attempt ${attempt}/${maxAttempts} failed:`, error);
       console.error('Raw AI response:', response || 'No response received');
       
-      // Provide more detailed error information
       const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
       console.error('Error details:', errorMessage);
       
-      // Return validation failure instead of permissive fallback for security
+      // Retry logic - only retry for parsing errors or network issues
+      if (attempt < maxAttempts && (
+        errorMessage.includes('JSON') || 
+        errorMessage.includes('parse') || 
+        errorMessage.includes('network') ||
+        errorMessage.includes('timeout') ||
+        !response
+      )) {
+        console.log(`Retrying validation (attempt ${attempt + 1}/${maxAttempts})...`);
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff, max 5s
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.validateChangeRequests(changes, attempt + 1);
+      }
+      
+      // Return validation failure for security
       return {
         isValid: false,
         issues: [

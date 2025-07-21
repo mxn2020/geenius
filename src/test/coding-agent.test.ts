@@ -9,7 +9,7 @@ vi.mock('ai', () => ({
 
 // Mock AI providers
 vi.mock('@ai-sdk/anthropic', () => ({
-  anthropic: vi.fn(() => 'claude-3-5-sonnet-20241022')
+  anthropic: vi.fn(() => 'claude-sonnet-4-20250514')
 }));
 
 vi.mock('@ai-sdk/openai', () => ({
@@ -272,13 +272,13 @@ class CodingAgent {
     
     switch (this.provider) {
       case 'anthropic':
-        return anthropic('claude-3-5-sonnet-20241022');
+        return anthropic('claude-sonnet-4-20250514');
       case 'openai':
         return openai('gpt-4-turbo');
       case 'google':
         return google('gemini-pro');
       default:
-        return anthropic('claude-3-5-sonnet-20241022');
+        return anthropic('claude-sonnet-4-20250514');
     }
   }
 }

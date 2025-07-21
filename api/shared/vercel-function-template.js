@@ -47,11 +47,11 @@ class VercelSandboxAgent {
 
   getDefaultModel(provider) {
     const defaults = {
-      anthropic: 'claude-3-5-sonnet-20241022',
+      anthropic: 'claude-sonnet-4-20250514',
       openai: 'gpt-4o',
       google: 'gemini-1.5-pro'
     };
-    return defaults[provider] || 'claude-3-5-sonnet-20241022';
+    return defaults[provider] || 'claude-sonnet-4-20250514';
   }
 
   async initialize() {

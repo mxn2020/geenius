@@ -288,13 +288,13 @@ Co-authored-by: Geenius AI <ai@geenius.dev>`;
 
   private getModelString(): string {
     const modelMap = {
-      'anthropic': 'claude-3-5-sonnet-20241022',
+      'anthropic': 'claude-sonnet-4-20250514',
       'openai': 'gpt-4-turbo',
       'google': 'gemini-pro',
       'grok': 'grok-beta'
     };
     
-    return modelMap[this.config.provider] || 'claude-3-5-sonnet-20241022';
+    return modelMap[this.config.provider] || 'claude-sonnet-4-20250514';
   }
 
   private parseRepoUrl(repoUrl: string): { owner: string; repo: string } {

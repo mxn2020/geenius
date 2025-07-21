@@ -575,13 +575,13 @@ class CodingAgent {
   private getModel(): any {
     switch (this.provider) {
       case 'anthropic':
-        return anthropic('claude-3-5-sonnet-20241022');
+        return anthropic('claude-sonnet-4-20250514');
       case 'openai':
         return openai('gpt-4-turbo');
       case 'google':
         return google('gemini-pro');
       default:
-        return anthropic('claude-3-5-sonnet-20241022');
+        return anthropic('claude-sonnet-4-20250514');
     }
   }
 }

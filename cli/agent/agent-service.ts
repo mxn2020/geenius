@@ -466,7 +466,7 @@ Co-authored-by: Geenius AI <ai@geenius.dev>`;
   private getDefaultModel(provider: string): string {
     const modelMap = {
       'openai': 'gpt-4-turbo',
-      'anthropic': 'claude-3-5-sonnet-20241022',
+      'anthropic': 'claude-sonnet-4-20250514',
       'google': 'gemini-pro',
       'grok': 'grok-beta'
     };

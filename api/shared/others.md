@@ -138,7 +138,7 @@ const response = await fetch('https://your-netlify-app.netlify.app/api/process-c
       version: '1.0.0',
       repositoryUrl: 'https://github.com/username/my-template-repo',
       aiProvider: 'anthropic', // or 'openai', 'google', 'grok'
-      aiModel: 'claude-3-5-sonnet-20241022',
+      aiModel: 'claude-sonnet-4-20250514',
       userInfo: { userId: 'user-123' }
     },
     summary: {

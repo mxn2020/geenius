@@ -369,13 +369,13 @@ Session ID: ${sessionId}`;
 
   private getModelString(): any {
     const modelMap = {
-      'anthropic': anthropic('claude-3-5-sonnet-20241022'),
+      'anthropic': anthropic('claude-sonnet-4-20250514'),
       'openai': openai('gpt-4-turbo'),
       'google': google('gemini-pro'),
-      'grok': anthropic('claude-3-5-sonnet-20241022') // Fallback to Claude for Grok
+      'grok': anthropic('claude-sonnet-4-20250514') // Fallback to Claude for Grok
     };
     
-    return modelMap[this.config.provider] || anthropic('claude-3-5-sonnet-20241022');
+    return modelMap[this.config.provider] || anthropic('claude-sonnet-4-20250514');
   }
 
   async getStats(): Promise<any> {

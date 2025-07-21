@@ -213,7 +213,7 @@ export const myTemplate: AIEnabledTemplate = {
   githubRepo: "my-org/my-template",
   aiProvider: "anthropic",
   aiConfig: {
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4-20250514",
     tools: ["file-editor", "terminal"],
     systemPrompt: "You are an expert in my custom stack..."
   }
