@@ -43,6 +43,7 @@ export type ProjectStatusType = {
   githubOrg?: string;
   repositoryUrl?: string;
   netlifyUrl?: string;
+  netlifyProject?: string;
   mongodbOrgId?: string;
   mongodbProjectId?: string;
   mongodbDatabase?: string;
