@@ -1,15 +1,14 @@
 {
   "template": "vite-react-mongo",
-  "name": "test-x805",
-  "repoUrl": "https://github.com/mxn2020/geenius-template-vite-react-mongo",
+  "name": "test-x820",
+  "repoUrl": "https://github.com/mxn2020/test-x820",
   "aiProvider": "anthropic",
   "agentMode": "single",
   "orchestrationStrategy": "hierarchical",
-  "netlifyProject": "9d6c9752-6dba-40d0-b6e6-71b5af8a9036",
-  "createdAt": "2025-07-21T12:20:17.986Z",
-  "updatedAt": "2025-07-21T12:20:17.986Z",
-  "repositoryUrl": "https://github.com/mxn2020/geenius-template-vite-react-mongo",
-  "netlifyUrl": "https://test-x805-mdd2p7ew.netlify.app",
-  "mongodbDatabase": "test_x805",
-  "projectId": "proj_2507_bgdmn91t"
+  "netlifyProject": "df7cbf2f-bbb1-4744-8187-b656ee30f39c",
+  "createdAt": "2025-07-21T22:00:21.068Z",
+  "updatedAt": "2025-07-21T22:00:21.068Z",
+  "repositoryUrl": "https://github.com/mxn2020/test-x820",
+  "netlifyUrl": "https://test-x820-mddnffcr.netlify.app",
+  "projectId": "proj_2507_mumdsgr3"
 }

@@ -233,7 +233,11 @@ export const useAppState = () => {
             setDeploymentStatus(data.status);
 
             const hasCompletionLogs = logs.some(log => log.includes('🎉') && log.includes('completed'));
-            if (data.status === 'completed' && !hasCompletionLogs && !sessionIdParam.startsWith('ge_')) {
+            const isProjectInit = sessionIdParam.startsWith('init_');
+            const isWebInit = sessionIdParam.startsWith('ge_');
+            
+            // Only add completion logs for change processing sessions (not init sessions)
+            if (data.status === 'completed' && !hasCompletionLogs && !isWebInit && !isProjectInit) {
               addLog('🎉 Change processing completed!');
               if (data.prUrl) addLog(`🔀 Pull Request: ${data.prUrl}`);
               if (data.previewUrl) addLog(`🌐 Preview URL: ${data.previewUrl}`);

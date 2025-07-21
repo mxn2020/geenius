@@ -81,7 +81,7 @@ export class MongoDBService {
         databaseName,
         username,
         password,
-        region: cluster.providerSettings?.regionName || 'US_EAST_1',
+        region: cluster.providerSettings?.regionName || 'US_WEST_1',
         tier: cluster.providerSettings?.instanceSizeName || 'M0'
       };
     } catch (error: any) {
@@ -155,7 +155,7 @@ export class MongoDBService {
     }
   }
 
-  private async createCluster(projectId: string, clusterName: string): Promise<any> {
+  private async createCluster(projectId: string, clusterName: string, region: string = 'US_WEST_1'): Promise<any> {
     const clusterConfig = {
       name: clusterName,
       clusterType: 'REPLICASET',
@@ -163,7 +163,7 @@ export class MongoDBService {
         regionConfigs: [{
           providerName: 'TENANT',
           backingProviderName: 'AWS',
-          regionName: 'US_EAST_1',
+          regionName: region,
           priority: 7,
           electableSpecs: {
             instanceSize: 'M0',
@@ -680,7 +680,7 @@ export class MongoDBService {
         databaseName,
         username,
         password,
-        region: cluster.providerSettings?.regionName || 'US_EAST_1',
+        region: cluster.providerSettings?.regionName || 'US_WEST_1',
         tier: cluster.providerSettings?.instanceSizeName || 'M0'
       };
     } catch (error: any) {

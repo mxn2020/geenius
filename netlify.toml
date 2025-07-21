@@ -90,6 +90,16 @@
   to = "/.netlify/functions/web-init/:sessionId"
   status = 200
 
+[[redirects]]
+  from = "/api/initialize-project"
+  to = "/.netlify/functions/initialize-project"
+  status = 200
+
+[[redirects]]
+  from = "/api/initialize-project/:sessionId"
+  to = "/.netlify/functions/initialize-project/:sessionId"
+  status = 200
+
 # Logs page routes - redirect to the Vite app with session parameter
 [[redirects]]
   from = "/logs/:sessionId"

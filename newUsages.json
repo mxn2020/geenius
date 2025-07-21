@@ -1,0 +1,601 @@
+[
+  {
+    "id": "about-button",
+    "definitionId": "dev-button",
+    "name": "About Button",
+    "description": "Button component used in Landing for about functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "about",
+      "button"
+    ]
+  },
+  {
+    "id": "brand-name",
+    "definitionId": "dev-div",
+    "name": "Brand Name",
+    "description": "Div component used in Landing for brand functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "brand",
+      "name"
+    ]
+  },
+  {
+    "id": "contact-button",
+    "definitionId": "dev-button",
+    "name": "Contact Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-schedule-button",
+    "definitionId": "dev-button",
+    "name": "Contact Schedule Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "schedule",
+      "button"
+    ]
+  },
+  {
+    "id": "doctor-name",
+    "definitionId": "dev-div",
+    "name": "Doctor Name",
+    "description": "Div component used in Landing for doctor functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "doctor",
+      "name"
+    ]
+  },
+  {
+    "id": "expertise-highlight",
+    "definitionId": "dev-div",
+    "name": "Expertise Highlight",
+    "description": "Div component used in Landing for expertise functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "expertise",
+      "highlight"
+    ]
+  },
+  {
+    "id": "getProjectCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetProjectCardId(index)",
+    "description": "Div component used in Landing for getProjectCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getProjectCardId(index)"
+    ]
+  },
+  {
+    "id": "getServiceCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetServiceCardId(index)",
+    "description": "Div component used in Landing for getServiceCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getServiceCardId(index)"
+    ]
+  },
+  {
+    "id": "getSpecialtyBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetSpecialtyBadgeId(index)",
+    "description": "Div component used in Landing for getSpecialtyBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getSpecialtyBadgeId(index)"
+    ]
+  },
+  {
+    "id": "getSpecialtyIconId(index)",
+    "definitionId": "dev-div",
+    "name": "GetSpecialtyIconId(index)",
+    "description": "Div component used in Landing for getSpecialtyIconId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getSpecialtyIconId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${specialty.color"
+    }
+  },
+  {
+    "id": "getStatCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetStatCardId(index)",
+    "description": "Div component used in Landing for getStatCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getStatCardId(index)"
+    ]
+  },
+  {
+    "id": "getTestimonialCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestimonialCardId(index)",
+    "description": "Div component used in Landing for getTestimonialCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestimonialCardId(index)"
+    ]
+  },
+  {
+    "id": "hero-consultation-button",
+    "definitionId": "dev-button",
+    "name": "Hero Consultation Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "consultation",
+      "button"
+    ]
+  },
+  {
+    "id": "hero-content",
+    "definitionId": "dev-div",
+    "name": "Hero Content",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "content"
+    ]
+  },
+  {
+    "id": "hero-content-wrapper",
+    "definitionId": "dev-div",
+    "name": "Hero Content Wrapper",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "content",
+      "wrapper"
+    ]
+  },
+  {
+    "id": "hero-cta-buttons",
+    "definitionId": "dev-div",
+    "name": "Hero Cta Buttons",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "cta",
+      "buttons"
+    ]
+  },
+  {
+    "id": "hero-description",
+    "definitionId": "dev-div",
+    "name": "Hero Description",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "description"
+    ]
+  },
+  {
+    "id": "hero-learn-more",
+    "definitionId": "dev-div",
+    "name": "Hero Learn More",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "learn",
+      "more"
+    ]
+  },
+  {
+    "id": "hero-portal-access",
+    "definitionId": "dev-div",
+    "name": "Hero Portal Access",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "portal",
+      "access"
+    ]
+  },
+  {
+    "id": "hero-schedule-appointment",
+    "definitionId": "dev-div",
+    "name": "Hero Schedule Appointment",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "schedule",
+      "appointment"
+    ]
+  },
+  {
+    "id": "hero-start-project",
+    "definitionId": "dev-div",
+    "name": "Hero Start Project",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "project"
+    ]
+  },
+  {
+    "id": "hero-title",
+    "definitionId": "dev-heading",
+    "name": "Hero Title",
+    "description": "Heading component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "title"
+    ]
+  },
+  {
+    "id": "logo-section",
+    "definitionId": "dev-section",
+    "name": "Logo Section",
+    "description": "Section component used in Landing for logo functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "logo",
+      "section"
+    ]
+  },
+  {
+    "id": "main-footer",
+    "definitionId": "dev-footer",
+    "name": "Main Footer",
+    "description": "Footer component used in Landing for main functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "main",
+      "footer"
+    ]
+  },
+  {
+    "id": "main-header",
+    "definitionId": "dev-header",
+    "name": "Main Header",
+    "description": "Header component used in Landing for main functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "main",
+      "header"
+    ]
+  },
+  {
+    "id": "main-nav",
+    "definitionId": "dev-nav",
+    "name": "Main Nav",
+    "description": "Nav component used in Landing for main functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "main",
+      "nav"
+    ]
+  },
+  {
+    "id": "main-wrapper",
+    "definitionId": "dev-div",
+    "name": "Main Wrapper",
+    "description": "Div component used in Landing for main functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "main",
+      "wrapper"
+    ]
+  },
+  {
+    "id": "nav-actions",
+    "definitionId": "dev-div",
+    "name": "Nav Actions",
+    "description": "Div component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "actions"
+    ]
+  },
+  {
+    "id": "nav-dashboard-button",
+    "definitionId": "dev-button",
+    "name": "Nav Dashboard Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "dashboard",
+      "button"
+    ]
+  },
+  {
+    "id": "nav-register-button",
+    "definitionId": "dev-button",
+    "name": "Nav Register Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "register",
+      "button"
+    ]
+  },
+  {
+    "id": "practice-subtitle",
+    "definitionId": "dev-div",
+    "name": "Practice Subtitle",
+    "description": "Div component used in Landing for practice functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "practice",
+      "subtitle"
+    ]
+  },
+  {
+    "id": "projects-button",
+    "definitionId": "dev-button",
+    "name": "Projects Button",
+    "description": "Button component used in Landing for projects functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "projects",
+      "button"
+    ]
+  },
+  {
+    "id": "services-button",
+    "definitionId": "dev-button",
+    "name": "Services Button",
+    "description": "Button component used in Landing for services functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "services",
+      "button"
+    ]
+  },
+  {
+    "id": "skyline-highlight",
+    "definitionId": "dev-div",
+    "name": "Skyline Highlight",
+    "description": "Div component used in Landing for skyline functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "skyline",
+      "highlight"
+    ]
+  },
+  {
+    "id": "stats-content",
+    "definitionId": "dev-div",
+    "name": "Stats Content",
+    "description": "Div component used in Landing for stats functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "stats",
+      "content"
+    ]
+  },
+  {
+    "id": "stats-grid",
+    "definitionId": "dev-div",
+    "name": "Stats Grid",
+    "description": "Div component used in Landing for stats functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "stats",
+      "grid"
+    ]
+  },
+  {
+    "id": "trust-patient-testimonials",
+    "definitionId": "dev-div",
+    "name": "Trust Patient Testimonials",
+    "description": "Div component used in Landing for trust functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "trust",
+      "patient",
+      "testimonials"
+    ]
+  },
+  {
+    "id": "trust-schedule-consultation",
+    "definitionId": "dev-div",
+    "name": "Trust Schedule Consultation",
+    "description": "Div component used in Landing for trust functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "trust",
+      "schedule",
+      "consultation"
+    ]
+  },
+  {
+    "id": "user-section",
+    "definitionId": "dev-section",
+    "name": "User Section",
+    "description": "Section component used in Landing for user functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "user",
+      "section"
+    ]
+  },
+  {
+    "id": "welcome-message",
+    "definitionId": "dev-div",
+    "name": "Welcome Message",
+    "description": "Div component used in Landing for welcome functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "welcome",
+      "message"
+    ]
+  },
+  {
+    "id": "auth-buttons",
+    "definitionId": "dev-div",
+    "name": "Auth Buttons",
+    "description": "Div component used in Landing for auth functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "interactive",
+    "semanticTags": [
+      "landing-page",
+      "auth",
+      "buttons"
+    ]
+  },
+  {
+    "id": "nav-login-button",
+    "definitionId": "dev-button",
+    "name": "Nav Login Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "interactive",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "login",
+      "button"
+    ]
+  }
+]

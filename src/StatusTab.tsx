@@ -211,19 +211,31 @@ const StatusTab: React.FC<StatusTabProps> = ({
                       </div>
                       
                       {projectStatus.netlifyProject && (
-                        <div className="space-y-1">
-                          <label className="text-sm font-semibold text-gray-600">Netlify Project ID</label>
-                          <div className="flex items-center gap-3">
-                            <p className="font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded flex-1 break-all">
-                              {projectStatus.netlifyProject}
-                            </p>
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <label className="text-sm font-semibold text-gray-600">Netlify Project ID</label>
+                            <div className="flex items-center gap-3">
+                              <p className="font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded flex-1 break-all">
+                                {projectStatus.netlifyProject}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <a
-                              href={`https://app.netlify.com/sites/${new URL(projectStatus.netlifyUrl).hostname.split('.')[0]}/overview`}
+                              href={`https://app.netlify.com/sites/${projectStatus.netlifyProject}/overview`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded hover:bg-purple-200 transition-colors"
+                              className="inline-flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded hover:bg-purple-200 transition-colors"
                             >
-                              Dashboard
+                              📊 Dashboard
+                            </a>
+                            <a
+                              href={`https://app.netlify.com/sites/${projectStatus.netlifyProject}/settings/deploys`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded hover:bg-purple-200 transition-colors"
+                            >
+                              ⚙️ Deploy Config
                             </a>
                           </div>
                         </div>

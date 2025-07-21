@@ -78,7 +78,7 @@ export const handler: Handler = async (event, context) => {
   try {
     const data = JSON.parse(event.body || '{}');
     
-    // Validate required fields
+    // Validate required fields (projectRequirements is optional)
     if (!data.aiProvider || !data.agentMode || !data.templateId || !data.projectName || !data.githubOrg) {
       return {
         statusCode: 400,
@@ -88,6 +88,40 @@ export const handler: Handler = async (event, context) => {
           required: ['aiProvider', 'agentMode', 'templateId', 'projectName', 'githubOrg']
         })
       };
+    }
+
+    // Check if we should use AI customization or standard deployment
+    const hasProjectRequirements = data.projectRequirements && data.projectRequirements.trim().length > 0;
+    console.log(`[WEB-INIT] Project requirements provided: ${hasProjectRequirements}`);
+    
+    if (hasProjectRequirements) {
+      console.log(`[WEB-INIT] Delegating to AI-driven project initialization...`);
+      
+      // Transform data to initialize-project format and delegate
+      const initRequest = {
+        userRequirements: data.projectRequirements,
+        businessDomain: 'general', // Could be inferred from project requirements
+        projectId: `ai-${Date.now()}`,
+        projectName: data.projectName,
+        templateId: data.templateId,
+        githubOrg: data.githubOrg,
+        aiProvider: data.aiProvider,
+        agentMode: data.agentMode,
+        orchestrationStrategy: data.orchestrationStrategy,
+        model: data.model,
+        autoSetup: data.autoSetup,
+        mongodbOrgId: data.mongodbOrgId,
+        mongodbProjectId: data.mongodbProjectId
+      };
+      
+      // Import and use the initialize-project handler
+      const { handler: initHandler } = await import('./initialize-project');
+      const initEvent = {
+        ...event,
+        body: JSON.stringify(initRequest)
+      };
+      
+      return await initHandler(initEvent, context);
     }
 
     // Validate API key availability
@@ -130,6 +164,26 @@ export const handler: Handler = async (event, context) => {
         headers,
         body: JSON.stringify({ error: 'GITHUB_TOKEN not configured' })
       };
+    }
+
+    // Apply default values for simple mode (when project requirements are empty)
+    if (!hasProjectRequirements) {
+      console.log(`[WEB-INIT] Applying default values for standard deployment`);
+      
+      // Set default MongoDB values if not provided
+      if (!data.mongodbOrgId) {
+        console.log(`[WEB-INIT] Setting default MongoDB org to first available`);
+        data.mongodbOrgId = 'first_available';
+      }
+      
+      if (!data.mongodbProjectId) {
+        console.log(`[WEB-INIT] Setting MongoDB project name to match project name`);
+        data.mongodbProjectId = data.projectName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      }
+      
+      // Set other defaults for simple mode
+      data.model = data.model || ''; // Empty model uses provider default
+      console.log(`[WEB-INIT] Standard deployment configured with defaults`);
     }
 
     // Create session for async processing

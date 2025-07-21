@@ -226,23 +226,6 @@ export class EnhancedGitHubService {
     };
   }
 
-  /**
-   * Merge pull request
-   */
-  async mergePullRequest(
-    repoUrl: string,
-    prNumber: number,
-    mergeMethod: 'merge' | 'squash' | 'rebase' = 'squash'
-  ): Promise<void> {
-    const { owner, repo } = this.parseRepoUrl(repoUrl);
-
-    await this.octokit.rest.pulls.merge({
-      owner,
-      repo,
-      pull_number: prNumber,
-      merge_method: mergeMethod
-    });
-  }
 
   /**
    * Delete feature branch after merge

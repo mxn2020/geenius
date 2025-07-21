@@ -12,16 +12,30 @@ const CORE_TEMPLATE_FILES = [
   'src/App.tsx',
   'src/pages/Landing.tsx',
   'src/components/auth/Dashboard.tsx',
-  'prisma/schema.prisma'
+  'prisma/schema.prisma',
+  'tailwind.config.js'
 ];
 
 interface ProjectInitRequest {
-  userRequirements: string;        // "doctor website with client and appointment management"
-  businessDomain: string;          // "medical", "legal", "restaurant", etc.
-  projectId: string;               // Unique identifier for the project
-  repositoryUrl: string;           // Target template repository
+  // Support both new and legacy parameter formats
+  userRequirements?: string;        // "doctor website with client and appointment management"
+  projectRequirements?: string;     // Legacy parameter name (same as userRequirements)
+  businessDomain?: string;          // "medical", "legal", "restaurant", etc.
+  projectId?: string;               // Unique identifier for the project
+  repositoryUrl?: string;           // Target template repository
   aiProvider?: 'anthropic' | 'openai' | 'google' | 'grok';
   baseBranch?: string;             // Usually 'main' or 'develop'
+  
+  // Web UI compatibility parameters
+  projectName?: string;             // Project name from web UI
+  templateId?: string;              // Template ID from web UI
+  githubOrg?: string;               // GitHub organization from web UI
+  agentMode?: string;               // Agent mode from web UI
+  orchestrationStrategy?: string;   // Orchestration strategy from web UI
+  model?: string;                   // AI model from web UI
+  autoSetup?: boolean;              // Auto setup flag from web UI
+  mongodbOrgId?: string;            // MongoDB org ID from web UI
+  mongodbProjectId?: string;        // MongoDB project ID from web UI
 }
 
 interface ProjectInitResponse {
@@ -76,6 +90,9 @@ async function retrieveTemplateFiles(repoUrl: string, baseBranch: string): Promi
           break;
         case 'prisma/schema.prisma':
           purpose = 'Database schema defining data models and relationships';
+          break;
+        case 'tailwind.config.js':
+          purpose = 'Tailwind CSS configuration for styling, colors, and design system';
           break;
         default:
           purpose = `Template file for ${filePath}`;
@@ -142,13 +159,18 @@ Create a complete new project that fulfills the user requirements while followin
 - **Dashboard**: Update the dashboard with navigation items specific to the business requirements  
 - **Database Schema**: Add appropriate models for the business data (clients, appointments, etc.)
 - **App Structure**: Update routing and authentication flow as needed
+- **Tailwind Config**: Customize colors, fonts, and design tokens to match the business domain theme
 
 ### Business Domain Guidelines:
-- **Medical/Healthcare**: Focus on appointments, patient management, HIPAA considerations
-- **Legal**: Focus on client management, case tracking, document management
-- **Restaurant**: Focus on reservations, menu management, ordering
-- **Retail**: Focus on products, inventory, customer management
-- **Service**: Focus on bookings, service management, client tracking
+- **Medical/Healthcare**: Focus on appointments, patient management, HIPAA considerations. Colors: blues, greens (trust, health)
+- **Legal**: Focus on client management, case tracking, document management. Colors: navy, gold (professionalism, authority)
+- **Restaurant**: Focus on reservations, menu management, ordering. Colors: warm reds, oranges (appetite, warmth)
+- **Retail**: Focus on products, inventory, customer management. Colors: brand-appropriate, vibrant (engagement, sales)
+- **Service**: Focus on bookings, service management, client tracking. Colors: blues, teals (reliability, service)
+- **Finance**: Focus on accounts, transactions, reporting. Colors: greens, blues (money, trust)
+- **Education**: Focus on courses, students, assignments. Colors: blues, purples (learning, growth)
+- **Technology**: Focus on products, features, documentation. Colors: modern grays, blues (innovation, tech)
+- **Other**: Adapt colors and styling to match the specific business needs described
 
 ## Response Format
 Provide your complete response in this exact format:
@@ -271,6 +293,51 @@ function generateInitBranchName(projectId: string, businessDomain: string): stri
 }
 
 /**
+ * Process standard deployment without AI customization
+ */
+async function processStandardDeployment(sessionId: string, request: ProjectInitRequest): Promise<void> {
+  // Phase 1: Prepare for Standard Deployment
+  await sessionManager.updateSessionStatus(sessionId, 'preparing', 20, 'Preparing standard deployment...');
+  
+  const session = await sessionManager.getSession(sessionId);
+  if (!session) throw new Error('Session not found');
+  
+  await logInitialization(sessionId, 'info', '📋 Using standard template without AI customization');
+
+  // Phase 2: Wait for Deployment (template is already ready)
+  await sessionManager.updateSessionStatus(sessionId, 'deploying', 80, 'Deploying standard template...');
+  
+  try {
+    const deploymentResult = await netlifyService.waitForBranchDeployment(session.baseBranch, 300000);
+    if (deploymentResult.success && deploymentResult.url) {
+      await sessionManager.setPreviewUrl(sessionId, deploymentResult.url);
+      await logInitialization(sessionId, 'success', '🌐 Standard deployment ready!', {
+        deploymentUrl: deploymentResult.url
+      });
+      await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Standard deployment ready');
+    }
+  } catch (deployError) {
+    await logInitialization(sessionId, 'warning', 
+      `⚠️ Deployment check failed: ${deployError.message}`
+    );
+  }
+
+  // Phase 3: Complete
+  await sessionManager.updateSessionStatus(sessionId, 'completed', 100, 'Standard deployment completed!');
+  await sessionManager.setCompleted(sessionId);
+  
+  await logInitialization(sessionId, 'success', 
+    `🎉 Standard deployment completed successfully!`,
+    { 
+      businessDomain: request.businessDomain,
+      repositoryUrl: request.repositoryUrl,
+      deploymentUrl: session.previewUrl,
+      deploymentType: 'standard'
+    }
+  );
+}
+
+/**
  * Main project initialization processing function
  */
 async function processProjectInitialization(sessionId: string, request: ProjectInitRequest): Promise<void> {
@@ -280,12 +347,20 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       throw new Error('Session not found');
     }
 
-    // Phase 1: Template Analysis
+    // Check if we should use AI customization or standard deployment
+    const hasProjectRequirements = request.userRequirements && request.userRequirements.trim().length > 0;
+    
+    if (!hasProjectRequirements) {
+      await logInitialization(sessionId, 'info', '📋 No project requirements provided - proceeding with standard deployment process');
+      return await processStandardDeployment(sessionId, request);
+    }
+
+    // Phase 1: Template Analysis (AI customization path)
     await sessionManager.updateSessionStatus(sessionId, 'analyzing', 10, 'Analyzing template structure...');
-    await logInitialization(sessionId, 'info', '🔍 Retrieving template files for analysis');
+    await logInitialization(sessionId, 'info', '🔍 Retrieving template files for AI customization');
     
     const templateFiles = await retrieveTemplateFiles(request.repositoryUrl, request.baseBranch || 'main');
-    await logInitialization(sessionId, 'success', `📁 Retrieved ${templateFiles.length} template files`, {
+    await logInitialization(sessionId, 'success', `📁 Retrieved ${templateFiles.length} template files for customization`, {
       files: templateFiles.map(f => ({ path: f.path, size: f.content.length }))
     });
 
@@ -343,27 +418,9 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       }
     );
 
-    // Phase 4: Create Feature Branch
-    await sessionManager.updateSessionStatus(sessionId, 'creating_branch', 60, 'Creating project branch...');
-    
-    const branchName = generateInitBranchName(request.projectId, request.businessDomain);
-    await logInitialization(sessionId, 'info', `🌿 Creating branch: ${branchName}`);
-    
-    try {
-      const branchInfo = await githubService.createFeatureBranch(
-        request.repositoryUrl,
-        branchName,
-        session.baseBranch
-      );
-      await sessionManager.setBranchInfo(sessionId, branchName, `project-init-${request.businessDomain}`);
-      await logInitialization(sessionId, 'success', `🌿 Created branch: ${branchName}`);
-    } catch (branchError) {
-      if (branchError.message.includes('Reference already exists')) {
-        await logInitialization(sessionId, 'info', `Branch already exists, continuing: ${branchName}`);
-      } else {
-        throw branchError;
-      }
-    }
+    // Phase 4: Prepare for Direct Main Branch Commits  
+    await sessionManager.updateSessionStatus(sessionId, 'preparing_commits', 60, 'Preparing to update main branch...');
+    await logInitialization(sessionId, 'info', '📝 Preparing to commit directly to main branch');
 
     // Phase 5: Process Files with DevId Registration
     await sessionManager.updateSessionStatus(sessionId, 'processing', 70, 'Processing and registering components...');
@@ -399,12 +456,12 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       );
     }
 
-    // Phase 6: Commit Generated Files
-    await sessionManager.updateSessionStatus(sessionId, 'committing', 80, 'Committing generated project...');
+    // Phase 6: Commit Generated Files to Main Branch
+    await sessionManager.updateSessionStatus(sessionId, 'committing', 80, 'Committing project files to main branch...');
     
     const commits = await githubService.commitChanges(
       request.repositoryUrl,
-      branchName,
+      session.baseBranch, // Commit directly to main branch
       fileChanges
     );
     
@@ -418,40 +475,21 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
     }
     
     await logInitialization(sessionId, 'success', 
-      `📝 Committed ${commits.length} files to ${branchName}`,
-      { commitCount: commits.length }
+      `📝 Committed ${commits.length} files directly to ${session.baseBranch} branch`,
+      { commitCount: commits.length, branch: session.baseBranch }
     );
 
-    // Phase 7: Create Pull Request
-    await sessionManager.updateSessionStatus(sessionId, 'pr_creating', 90, 'Creating pull request...');
-    
-    const prTitle = `🚀 Initialize ${request.businessDomain} project: ${request.projectId}`;
-    const prBody = generateProjectPRBody(request, parseResult.metadata, commits);
-    
-    const prInfo = await githubService.createPullRequest(
-      request.repositoryUrl,
-      branchName,
-      prTitle,
-      prBody,
-      session.baseBranch
-    );
-    
-    await sessionManager.setPullRequestInfo(sessionId, prInfo.htmlUrl, prInfo.number);
-    await logInitialization(sessionId, 'success', `🔀 Pull Request created: #${prInfo.number}`, {
-      prUrl: prInfo.htmlUrl
-    });
-
-    // Phase 8: Wait for Deployment
-    await sessionManager.updateSessionStatus(sessionId, 'deploying', 95, 'Waiting for preview deployment...');
+    // Phase 7: Wait for Deployment (Skip PR Creation)
+    await sessionManager.updateSessionStatus(sessionId, 'deploying', 90, 'Waiting for deployment...');
     
     try {
-      const deploymentResult = await netlifyService.waitForBranchDeployment(branchName, 300000);
+      const deploymentResult = await netlifyService.waitForBranchDeployment(session.baseBranch, 300000);
       if (deploymentResult.success && deploymentResult.url) {
         await sessionManager.setPreviewUrl(sessionId, deploymentResult.url);
-        await logInitialization(sessionId, 'success', '🌐 Preview deployment ready!', {
-          previewUrl: deploymentResult.url
+        await logInitialization(sessionId, 'success', '🌐 Project deployment ready!', {
+          deploymentUrl: deploymentResult.url
         });
-        await sessionManager.updateSessionStatus(sessionId, 'preview_ready', 98, 'Project preview ready for review');
+        await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Project successfully deployed');
       }
     } catch (deployError) {
       await logInitialization(sessionId, 'warning', 
@@ -468,9 +506,8 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       { 
         businessDomain: request.businessDomain,
         generatedFiles: parseResult.files.length,
-        branchName: branchName,
-        prUrl: session.prUrl,
-        previewUrl: session.previewUrl
+        repositoryUrl: request.repositoryUrl,
+        deploymentUrl: session.previewUrl
       }
     );
 
@@ -590,33 +627,77 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
       const request: ProjectInitRequest = JSON.parse(event.body);
 
-      // Validate request
-      if (!request.userRequirements || !request.businessDomain || !request.repositoryUrl) {
+      // Transform web UI parameters to initialize-project format
+      const normalizedRequest = {
+        userRequirements: request.userRequirements || request.projectRequirements || '',
+        businessDomain: request.businessDomain || 'general',
+        projectId: request.projectId || request.projectName || `project-${Date.now()}`,
+        repositoryUrl: request.repositoryUrl || '', // Will be resolved from template
+        aiProvider: request.aiProvider || 'anthropic',
+        baseBranch: request.baseBranch || 'main',
+        
+        // Pass through web UI parameters for processing
+        projectName: request.projectName,
+        templateId: request.templateId,
+        githubOrg: request.githubOrg,
+        agentMode: request.agentMode,
+        orchestrationStrategy: request.orchestrationStrategy,
+        model: request.model,
+        autoSetup: request.autoSetup,
+        mongodbOrgId: request.mongodbOrgId,
+        mongodbProjectId: request.mongodbProjectId
+      };
+
+      // Validate essential fields for web UI compatibility
+      if (!normalizedRequest.projectName || !normalizedRequest.templateId || !normalizedRequest.githubOrg) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({ 
-            error: 'Missing required fields: userRequirements, businessDomain, repositoryUrl' 
+            error: 'Missing required fields: projectName, templateId, githubOrg' 
           })
         };
       }
 
+      // Resolve repository URL from template if not provided
+      if (!normalizedRequest.repositoryUrl && normalizedRequest.templateId) {
+        // Load template registry to get repository URL
+        try {
+          const { TemplateRegistry } = await import('../src/services/template-registry');
+          const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN);
+          const templates = await templateRegistry.getAllTemplates();
+          const template = templates.find(t => t.id === normalizedRequest.templateId);
+          
+          if (template) {
+            normalizedRequest.repositoryUrl = template.repository;
+          } else {
+            throw new Error(`Template not found: ${normalizedRequest.templateId}`);
+          }
+        } catch (error) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: `Template error: ${error.message}` })
+          };
+        }
+      }
+
       // Create initialization session
       const session = await sessionManager.createSession(
-        request.projectId || `init-${Date.now()}`,
-        request.projectId,
-        request.repositoryUrl,
+        normalizedRequest.projectId || `init-${Date.now()}`,
+        normalizedRequest.projectId,
+        normalizedRequest.repositoryUrl,
         [], // No specific change requests for initialization
         {
-          aiProvider: request.aiProvider || 'anthropic',
-          baseBranch: request.baseBranch || 'main',
+          aiProvider: normalizedRequest.aiProvider || 'anthropic',
+          baseBranch: normalizedRequest.baseBranch || 'main',
           autoTest: false,
           sessionType: 'INIT'
         }
       );
 
       // Start processing asynchronously
-      processProjectInitialization(session.id, request).catch(error => {
+      processProjectInitialization(session.id, normalizedRequest).catch(error => {
         console.error('[PROJECT-INIT] Processing error:', error);
       });
 

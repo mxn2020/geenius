@@ -385,6 +385,19 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="projectRequirements">Project Requirements (Optional)</Label>
+            <Textarea
+              name="projectRequirements"
+              placeholder="Describe your project requirements for AI customization. For example: 'Create a doctor website with client management, appointment scheduling, and visitors should be able to request appointments online. Include patient records and appointment calendar.' Leave empty for standard template deployment."
+              rows={6}
+              className="min-h-[150px]"
+            />
+            <p className="text-xs text-gray-500">
+              Optional: Provide detailed requirements for AI to customize the template. Leave empty to deploy the standard template without customization.
+            </p>
+          </div>
+
           {(agentMode === 'orchestrated' || agentMode === 'hybrid') && (
             <div className="space-y-2">
               <Label htmlFor="orchestrationStrategy">Team Coordination Strategy</Label>

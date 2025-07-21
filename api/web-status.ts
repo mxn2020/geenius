@@ -37,11 +37,13 @@ export const handler: Handler = async (event, context) => {
       if (fileError.code !== 'ENOENT') {
         throw fileError;
       }
-      // Config file doesn't exist - try to find any active project in Redis
+      // Config file doesn't exist - try to find the most recent active project in Redis
       const allProjects = await storage.getAllProjects();
       const activeProjects = allProjects.filter(p => p.status === 'active');
       if (activeProjects.length > 0) {
-        projectData = activeProjects[0]; // Use the first active project
+        // Sort by updatedAt timestamp (most recent first)
+        activeProjects.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        projectData = activeProjects[0]; // Use the most recently updated active project
       }
     }
     
@@ -64,6 +66,7 @@ export const handler: Handler = async (event, context) => {
           // Redis-only deployment data
           repositoryUrl: projectData?.repositoryUrl,
           netlifyUrl: projectData?.netlifyUrl,
+          netlifyProject: configData?.netlifyProject || projectData?.netlifyProject,
           mongodbOrgId: projectData?.mongodbOrgId || configData?.mongodbOrgId,
           mongodbProjectId: projectData?.mongodbProjectId || configData?.mongodbProjectId,
           mongodbDatabase: projectData?.mongodbDatabase,
