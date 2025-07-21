@@ -460,7 +460,7 @@ export class MongoDBService {
       const databaseName = cleanName.replace(/-/g, '_');
 
       let project;
-      if (targetProjectId) {
+      if (targetProjectId && targetOrgId) {
         // Use existing project
         const existingProjects = await this.getProjects(targetOrgId);
         project = existingProjects.find(p => p.id === targetProjectId);
@@ -468,10 +468,12 @@ export class MongoDBService {
           throw new Error(`Project with ID ${targetProjectId} not found`);
         }
         console.log(`   📁 Using existing project: ${project.name} (${project.id})`);
-      } else {
+      } else if (targetOrgId) {
         // Create new project
         project = await this.createAtlasProject(projectName, targetOrgId);
         console.log(`   ✅ Project created: ${project.name} (${project.id})`);
+      } else {
+        throw new Error('No organization or project selected. Please select an organization or project to continue.');
       }
 
       // Create cluster

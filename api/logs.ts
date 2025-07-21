@@ -242,7 +242,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
             try {
                 // Try web-init session first, then fall back to process-changes-enhanced
                 let response;
-                if (sessionId.startsWith('init_')) {
+                if (sessionId.startsWith('ge_')) {
                     response = await fetch(apiBase + '/.netlify/functions/web-init/' + sessionId);
                 } else {
                     response = await fetch(apiBase + '/api/process-changes-enhanced/' + sessionId);
@@ -316,8 +316,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
             // Update logs
             const logsContent = document.getElementById('logs-content');
             if (data.logs && data.logs.length > 0) {
-                logsContent.innerHTML = data.logs.map(log => {
-                    const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                // Sort logs by timestamp to ensure chronological order (oldest first)
+                const sortedLogs = [...data.logs].sort((a, b) => a.timestamp - b.timestamp);
+                
+                logsContent.innerHTML = sortedLogs.map(log => {
+                    const timestamp = new Date(log.timestamp).toLocaleString();
                     return '<div class="log-entry ' + log.level + '">' +
                         '<span class="log-timestamp">' + timestamp + '</span>' +
                         '<span class="log-level ' + log.level + '">' + log.level.toUpperCase() + '</span>' +
@@ -325,7 +328,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
                         '</div>';
                 }).join('');
                 
-                // Auto-scroll to bottom
+                // Auto-scroll to bottom to show latest logs
                 logsContent.scrollTop = logsContent.scrollHeight;
             } else {
                 logsContent.innerHTML = '<div class="loading">No logs yet...</div>';

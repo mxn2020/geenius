@@ -255,9 +255,10 @@ export class TemplateFetcher {
         score
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
       return {
         valid: false,
-        issues: [`Validation error: ${error.message}`],
+        issues: [`Validation error: ${errorMessage}`],
         score: 0
       };
     }

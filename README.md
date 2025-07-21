@@ -1,6 +1,21 @@
 # Geenius
 
-> Advanced AI-powered development workflow with custom agents, multi-provider support, and orchestration capabilities.
+> Multi-provider AI development workflow tool that automates project initialization, feature development, testing, and deployment using various AI providers (Claude, GPT-4, Gemini, Grok).
+
+## 🎯 **Core Concept**
+AI-powered development platform that handles the entire development lifecycle from idea to deployment - essentially "AI-powered DevOps" with sophisticated multi-agent orchestration.
+
+## 🏗️ **Architecture**
+- **Dual Interface**: CLI tool (`geenius` command) + Web dashboard (React/Vite)
+- **Multi-Agent System**: Specialized AI roles (architect, developer, tester, reviewer, documenter)
+- **Template System**: 8 pre-configured tech stacks (Next.js, React, Vue, SvelteKit, etc.)
+- **Orchestration**: 4 strategies (hierarchical, collaborative, parallel, sequential)
+
+## 🛠️ **Tech Stack**
+- **Backend**: Netlify Functions, Redis (Upstash), MongoDB Atlas
+- **Frontend**: React, Vite, Tailwind, TypeScript
+- **CLI**: Commander.js, TypeScript
+- **Integrations**: GitHub API, Netlify API, StackBlitz sandbox
 
 ## 🚀 Features
 
@@ -31,6 +46,12 @@
 - **Astro + Content Collections** - Static site generation
 - **Express + Prisma + PostgreSQL** - Traditional backend API
 - **Remix + SQLite + Auth** - Full-stack with file-based database
+
+### Key Features
+- **Project Init**: `geenius init` - Fork templates, setup GitHub/Netlify, configure environment
+- **AI Development**: `geenius develop` - AI writes code, runs tests, creates PRs, deploys previews  
+- **Provider Comparison**: Benchmark different AI models on tasks
+- **Memory System**: Persistent learning across sessions
 
 ## 🛠️ Installation
 

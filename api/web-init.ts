@@ -40,6 +40,9 @@ export const handler: Handler = async (event, context) => {
         };
       }
 
+      // Get all logs including separately stored ones
+      const allLogs = await sessionManager.getAllSessionLogs(sessionId);
+
       return {
         statusCode: 200,
         headers,
@@ -48,7 +51,7 @@ export const handler: Handler = async (event, context) => {
           status: session.status,
           progress: session.progress,
           currentStep: session.currentStep,
-          logs: session.logs,
+          logs: allLogs,
           repoUrl: session.repoUrl,
           netlifyUrl: session.netlifyUrl,
           mongodbDatabase: session.mongodbDatabase,
@@ -130,7 +133,7 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Create session for async processing
-    const sessionId = `init_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `ge_${Math.random().toString(36).substr(2, 9)}`;
     
     // Initialize session
     await sessionManager.createInitializationSession(sessionId, data);
@@ -202,6 +205,20 @@ async function processInitializationAsync(sessionId: string, data: any) {
         session.netlifyUrl = result.netlifyProject?.ssl_url;
         session.mongodbDatabase = result.mongodbProject?.databaseName;
         await sessionManager.setSession(sessionId, session);
+        
+        // Log URLs explicitly
+        if (result.repoUrl) {
+          await sessionManager.addLog(sessionId, 'success', `📁 GitHub Repository: ${result.repoUrl}`);
+        }
+        if (result.netlifyProject?.ssl_url) {
+          await sessionManager.addLog(sessionId, 'success', `🌐 Netlify URL: ${result.netlifyProject.ssl_url}`);
+        }
+        if (result.mongodbProject?.databaseName) {
+          await sessionManager.addLog(sessionId, 'success', `🍃 MongoDB Database: ${result.mongodbProject.databaseName}`);
+        }
+        if (result.mongodbProject?.connectionString) {
+          await sessionManager.addLog(sessionId, 'success', `🔗 MongoDB Connection: ${result.mongodbProject.connectionString}`);
+        }
       }
     } else {
       await sessionManager.setError(sessionId, result.error || 'Project initialization failed');

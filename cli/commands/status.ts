@@ -6,40 +6,79 @@ import { logger } from '../../src/utils/logger';
 import { formatDuration } from '../../src/utils/helpers';
 import { AgentService } from '../agent/agent-service';
 import { NetlifyService } from '../services/netlify';
+import { storage } from '../../api/shared/redis-storage';
+import RedisKeys from '../../api/shared/redis-keys';
 
 export async function statusCommand(): Promise<void> {
   const configManager = new ConfigManager();
-  const config = await configManager.loadConfig();
+  const spinner = ora('Loading project status...').start();
   
-  if (!config) {
-    console.log(chalk.red('No project found. Run "dev-agent init" first.'));
+  let config = await configManager.loadConfig();
+  let redisProject = null;
+  
+  // Try to get more complete project data from Redis
+  try {
+    if (config?.projectId) {
+      redisProject = await storage.getProject(config.projectId);
+    } else if (config?.name) {
+      redisProject = await storage.getProjectByName(config.name);
+    } else {
+      // Try to find any active project
+      const allProjects = await storage.getAllProjects();
+      const activeProjects = allProjects.filter(p => p.status === 'active');
+      if (activeProjects.length > 0) {
+        redisProject = activeProjects[0];
+      }
+    }
+  } catch (error) {
+    // Redis not available, continue with local config only
+    spinner.text = 'Redis not available, showing local config only...';
+  }
+  
+  // Use Redis data if available, fallback to local config
+  const projectData = redisProject || config;
+  
+  if (!projectData) {
+    spinner.fail('No project found. Run "dev-agent init" first or initialize via web interface.');
     return;
   }
 
-  const spinner = ora('Gathering status information...').start();
+  spinner.text = 'Gathering status information...';
   
   try {
     // Initialize agent service
-    const agentService = new AgentService(config.repoUrl, {
-      type: config.agentMode,
-      provider: config.aiProvider,
-      orchestrationStrategy: config.orchestrationStrategy
+    const agentService = new AgentService(projectData.repositoryUrl || projectData.repoUrl, {
+      type: projectData.agentMode,
+      provider: projectData.aiProvider,
+      orchestrationStrategy: projectData.orchestrationStrategy
     });
 
-    await agentService.initializeProject(config.repoUrl);
+    await agentService.initializeProject(projectData.repositoryUrl || projectData.repoUrl);
     const analytics = await agentService.getAgentAnalytics();
 
     spinner.succeed('Status check complete');
     
     // Project information
     console.log(chalk.blue.bold('\n📊 Project Status'));
-    console.log(chalk.gray('Name:'), config.name);
-    console.log(chalk.gray('Template:'), config.template);
-    console.log(chalk.gray('AI Provider:'), config.aiProvider.toUpperCase());
-    console.log(chalk.gray('Agent Mode:'), config.agentMode);
-    console.log(chalk.gray('Repository:'), config.repoUrl);
-    console.log(chalk.gray('Created:'), new Date(config.createdAt).toLocaleDateString());
-    console.log(chalk.gray('Updated:'), new Date(config.updatedAt).toLocaleDateString());
+    console.log(chalk.gray('Name:'), projectData.name);
+    console.log(chalk.gray('Template:'), projectData.template);
+    console.log(chalk.gray('AI Provider:'), projectData.aiProvider.toUpperCase());
+    console.log(chalk.gray('Agent Mode:'), projectData.agentMode);
+    console.log(chalk.gray('Repository:'), projectData.repositoryUrl || projectData.repoUrl);
+    
+    if (redisProject) {
+      console.log(chalk.blue('✨ Enhanced info from Redis:'));
+      if (projectData.netlifyUrl) {
+        console.log(chalk.gray('Live Site:'), chalk.blue(projectData.netlifyUrl));
+      }
+      if (projectData.mongodbDatabase) {
+        console.log(chalk.gray('MongoDB Database:'), chalk.green(projectData.mongodbDatabase));
+      }
+      console.log(chalk.gray('Status:'), projectData.status ? chalk.green(projectData.status) : 'Unknown');
+    }
+    
+    console.log(chalk.gray('Created:'), new Date(projectData.createdAt).toLocaleDateString());
+    console.log(chalk.gray('Updated:'), new Date(projectData.updatedAt).toLocaleDateString());
     
     if (config.agentMode === 'orchestrated' || config.agentMode === 'hybrid') {
       console.log(chalk.gray('Strategy:'), config.orchestrationStrategy);

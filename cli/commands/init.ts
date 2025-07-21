@@ -12,6 +12,8 @@ import { GitHubService } from '../services/github';
 import { NetlifyService } from '../services/netlify';
 import { MongoDBService } from '../services/mongodb';
 import { AgentService } from '../agent/agent-service';
+import { storage } from '../../api/shared/redis-storage';
+import RedisKeys from '../../api/shared/redis-keys';
 import type { InitOptions, ProjectConfig } from '../../src/types/config';
 
 export async function initCommand(): Promise<void> {
@@ -538,6 +540,38 @@ export async function initCommand(): Promise<void> {
     };
 
     await configManager.saveConfig(projectConfig);
+
+    // Also save to Redis for cross-process compatibility
+    try {
+      const projectId = RedisKeys.generateProjectId();
+      const redisProjectData = {
+        id: projectId,
+        name: projectConfig.name,
+        template: projectConfig.template,
+        aiProvider: projectConfig.aiProvider,
+        agentMode: projectConfig.agentMode,
+        orchestrationStrategy: projectConfig.orchestrationStrategy,
+        githubOrg: projectConfig.githubOrg || validatedInput.githubOrg,
+        repositoryUrl: repoUrl,
+        netlifyUrl: netlifyProject?.ssl_url,
+        mongodbOrgId: mongodbData?.orgId,
+        mongodbProjectId: mongodbData?.projectId,
+        mongodbDatabase: mongodbData?.databaseName,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        status: 'active' as const
+      };
+
+      await storage.storeProject(projectId, redisProjectData);
+      
+      // Update local config with project ID for future reference
+      const updatedConfig = { ...projectConfig, projectId };
+      await configManager.saveConfig(updatedConfig);
+      
+      console.log(chalk.blue(`💾 Project saved with ID: ${projectId}`));
+    } catch (error) {
+      console.log(chalk.yellow(`⚠️  Could not save to Redis: ${error.message}`));
+    }
 
     // Success output
     console.log(chalk.green('\n✅ Setup complete!'));

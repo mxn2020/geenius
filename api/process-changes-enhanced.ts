@@ -131,6 +131,47 @@ const sessionManager = new EnhancedSessionManager();
 const githubService = new EnhancedGitHubService();
 const netlifyService = new NetlifyService();
 
+// Import Redis storage for compatible logging
+import { storage } from './shared/redis-storage';
+
+/**
+ * Helper function to log to both enhanced and compatible systems
+ */
+async function logDevelopment(sessionId: string, level: 'info' | 'success' | 'warning' | 'error', message: string, metadata?: Record<string, any>): Promise<void> {
+  // Log to enhanced session manager
+  await sessionManager.addLog(sessionId, level, message, metadata);
+  // Also log to compatible Redis storage as development logs
+  await storage.addLog(sessionId, level, message, 'development', metadata);
+}
+
+/**
+ * Generate a feature branch name from change requests
+ */
+function generateBranchName(changes: EnhancedChangeRequest[]): string {
+  // Get the most common category
+  const categories = changes.map(c => c.category);
+  const categoryCount = categories.reduce((acc, cat) => {
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const mostCommonCategory = Object.entries(categoryCount)
+    .sort(([,a], [,b]) => b - a)[0][0];
+
+  // Create a descriptive name from first few changes
+  const firstChange = changes[0];
+  const description = firstChange.feedback
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(' ')
+    .slice(0, 4)
+    .join('-');
+
+  const timestamp = Date.now().toString().slice(-6);
+  
+  return `feature/${mostCommonCategory}-${description}-${timestamp}`;
+}
+
 /**
  * Main processing function with enhanced workflow
  */
@@ -149,13 +190,16 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     console.log('Session exists before validation:', !!sessionBeforeValidation);
     
     await sessionManager.updateSessionStatus(sessionId, 'validating', 5, 'Validating change requests...');
-    await sessionManager.addLog(sessionId, 'info', 'Starting validation phase');
+    await logDevelopment(sessionId, 'info', 'Starting validation phase');
     
     const aiProcessor = new AIFileProcessor(payload.globalContext.aiProvider);
     const validationResult = await aiProcessor.validateChangeRequests(payload.changes);
     
     console.log('Validation result:', JSON.stringify(validationResult, null, 2));
-    await sessionManager.addLog(sessionId, 'info', `Validation completed with result: ${JSON.stringify(validationResult)}`);
+    await logDevelopment(sessionId, 'info', `Validation completed - ${validationResult.isValid ? 'PASSED' : 'FAILED'}`, {
+      issues: validationResult.issues?.length || 0,
+      securityConcerns: validationResult.securityConcerns?.length || 0
+    });
     
     if (!validationResult.isValid) {
       const issuesText = validationResult.issues && validationResult.issues.length > 0 
@@ -167,17 +211,17 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       
       const errorMessage = `Validation failed: ${issuesText}${securityText}`;
       console.error('Validation failed:', errorMessage);
-      await sessionManager.addLog(sessionId, 'error', errorMessage);
+      await logDevelopment(sessionId, 'error', errorMessage);
       throw new Error(errorMessage);
     }
     
-    await sessionManager.addLog(sessionId, 'success', 'All change requests validated successfully');
+    await logDevelopment(sessionId, 'success', 'All change requests validated successfully');
 
     // Phase 2: File Analysis
     await sessionManager.updateSessionStatus(sessionId, 'analyzing', 15, 'Analyzing affected files...');
     
     const fileGroups = aiProcessor.groupChangesByFile(payload.changes);
-    await sessionManager.addLog(sessionId, 'info', `Identified ${fileGroups.length} files to be modified`);
+    await logDevelopment(sessionId, 'info', `Identified ${fileGroups.length} files to be modified`);
     
     // Initialize file tracking
     for (const group of fileGroups) {
@@ -190,8 +234,10 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     // Phase 3: Generate Feature Branch Name
     await sessionManager.updateSessionStatus(sessionId, 'processing', 20, 'Creating feature branch...');
     
-    const branchName = await githubService.generateFeatureBranchName(payload.changes);
+    // Generate branch name using change descriptions
+    const branchName = generateBranchName(payload.changes);
     const featureName = branchName.replace('feature/', '');
+    await logDevelopment(sessionId, 'info', `Generated branch name: ${branchName}`);
     
     // Check if branch already exists
     const branchExists = await githubService.branchExists(payload.globalContext.repositoryUrl, branchName);
@@ -204,13 +250,24 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     }
 
     // Create the feature branch
-    const branchInfo = await githubService.createFeatureBranch(
-      payload.globalContext.repositoryUrl,
-      session.branchName!,
-      session.baseBranch
-    );
-    
-    await sessionManager.addLog(sessionId, 'success', `Created feature branch: ${session.branchName}`);
+    try {
+      const branchInfo = await githubService.createFeatureBranch(
+        payload.globalContext.repositoryUrl,
+        session.branchName!,
+        session.baseBranch
+      );
+      
+      await logDevelopment(sessionId, 'success', `Created feature branch: ${session.branchName}`, {
+        repository: payload.globalContext.repositoryUrl,
+        baseBranch: session.baseBranch
+      });
+    } catch (branchError) {
+      await logDevelopment(sessionId, 'error', `Failed to create branch: ${branchError.message}`, {
+        branchName: session.branchName,
+        error: branchError.message
+      });
+      throw branchError;
+    }
 
     // Phase 4: Process Files
     await sessionManager.updateSessionStatus(sessionId, 'processing', 30, 'Processing file changes with AI...');
@@ -247,9 +304,9 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
             processingTime: Date.now() - startTime
           });
 
-          await sessionManager.addLog(sessionId, 'success', 
-            `Successfully processed ${group.filePath}`, 
-            { changesCount: group.changes.length, explanation: result.explanation }
+          await logDevelopment(sessionId, 'success', 
+            `✅ Successfully processed ${group.filePath}`, 
+            { changesCount: group.changes.length, processingTimeMs: Date.now() - startTime }
           );
         } else {
           await sessionManager.updateFileProcessing(sessionId, group.filePath, {
@@ -257,8 +314,8 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
             error: result.error
           });
 
-          await sessionManager.addLog(sessionId, 'error', 
-            `Failed to process ${group.filePath}: ${result.error}`
+          await logDevelopment(sessionId, 'error', 
+            `❌ Failed to process ${group.filePath}: ${result.error}`
           );
         }
 
@@ -301,8 +358,9 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       });
     }
 
-    await sessionManager.addLog(sessionId, 'success', 
-      `Committed ${commits.length} changes to ${session.branchName}`
+    await logDevelopment(sessionId, 'success', 
+      `📝 Committed ${commits.length} changes to ${session.branchName}`,
+      { commitCount: commits.length, branchName: session.branchName }
     );
 
     // Phase 6: Create Pull Request
@@ -377,6 +435,19 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     // Phase 9: Complete
     await sessionManager.updateSessionStatus(sessionId, 'completed', 100, 'Processing completed successfully!');
     await sessionManager.setCompleted(sessionId);
+    
+    const totalProcessingTime = Date.now() - session.startTime;
+    await logDevelopment(sessionId, 'success', 
+      `🎉 Change processing completed successfully!`,
+      { 
+        totalFiles: fileGroups.length,
+        totalChanges: payload.changes.length,
+        processingTimeMs: totalProcessingTime,
+        branchName: session.branchName,
+        prUrl: session.prUrl,
+        previewUrl: session.previewUrl
+      }
+    );
 
   } catch (error) {
     console.error('Processing error:', error);
@@ -392,10 +463,10 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       await sessionManager.setError(sessionId, 
         `Configuration error: ${error.message}`
       );
-      await sessionManager.addLog(sessionId, 'error', 
-        'Processing stopped due to configuration error', 
+      await logDevelopment(sessionId, 'error', 
+        `⚙️ Configuration error: ${error.message}`, 
         { 
-          error: error.message,
+          errorType: 'configuration',
           resolution: isConfigurationError ? 
             'Please ensure the base branch exists in the repository' :
             'Please verify the repository URL and access permissions'

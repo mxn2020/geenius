@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "build:web": "vite build",
+    "build:web": "rm -rf dist && vite build",
+    "build:clean": "rm -rf dist node_modules/.vite && vite build",
+    "preview": "vite preview",
     "dev": "tsx cli/index.ts",
     "dev:web": "vite dev",
     "server": "tsx src/server.ts",

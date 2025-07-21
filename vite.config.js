@@ -29,13 +29,22 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    fs: {
+      strict: false
+    }
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: undefined,
+        // Add hash to filenames for better cache busting
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
       },
     },
   },

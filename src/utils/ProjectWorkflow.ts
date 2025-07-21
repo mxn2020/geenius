@@ -89,7 +89,8 @@ export class ProjectWorkflow {
         options.githubOrg
       );
 
-      this.addLog(`✅ Repository forked: ${repoUrl}`);
+      this.addLog(`✅ Repository forked successfully!`);
+      this.addLog(`💻 GitHub Repository: ${repoUrl}`);
 
       // Use the user-provided project name as the final name
       const finalRepoName = options.projectName;
@@ -159,8 +160,9 @@ export class ProjectWorkflow {
                 );
                 break;
               } catch (error) {
-                if (error.message.includes('CANNOT_CREATE_FREE_CLUSTER_VIA_PUBLIC_API') || 
-                    error.message.includes('reached the limit for the number of free clusters')) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                if (errorMessage.includes('CANNOT_CREATE_FREE_CLUSTER_VIA_PUBLIC_API') || 
+                    errorMessage.includes('reached the limit for the number of free clusters')) {
                   
                   if (retryCount === 0 && projects.length > 0) {
                     retryCount++;
@@ -180,10 +182,12 @@ export class ProjectWorkflow {
             if (mongodbProject) {
               this.addLog(`✅ MongoDB database created: ${mongodbProject.databaseName}`);
               this.addLog(`🔗 Cluster: ${mongodbProject.clusterName}`);
+              this.addLog(`🌐 MongoDB Connection: ${mongodbProject.connectionString}`);
             }
 
           } catch (error) {
-            this.addLog(`❌ MongoDB setup failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown MongoDB API error';
+            this.addLog(`❌ MongoDB setup failed: ${errorMessage}`);
             this.addLog('💡 You can create a MongoDB database manually later');
             mongodbProject = null;
           }
@@ -278,7 +282,8 @@ export class ProjectWorkflow {
               'feature/*': { preview: true }
             });
 
-            this.addLog(`✅ Netlify project created: ${netlifyProject.ssl_url}`);
+            this.addLog(`✅ Netlify project created successfully!`);
+            this.addLog(`🌐 Netlify URL: ${netlifyProject.ssl_url}`);
 
             // Wait for initial deployment
             try {
@@ -287,6 +292,7 @@ export class ProjectWorkflow {
               
               if (deployment.state === 'ready') {
                 this.addLog('✅ Netlify deployment completed successfully!');
+                this.addLog(`🚀 Live URL: ${deployment.deploy_ssl_url || netlifyProject.ssl_url}`);
               } else if (deployment.state === 'error') {
                 this.addLog('❌ Netlify deployment failed - check logs');
               }
@@ -295,14 +301,15 @@ export class ProjectWorkflow {
             }
 
           } catch (error) {
-            this.addLog(`❌ Netlify setup failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown Netlify API error';
+            this.addLog(`❌ Netlify setup failed: ${errorMessage}`);
             throw error;
           }
         }
       }
 
-      // Save project configuration
-      await this.saveProjectConfig({
+      // Save project configuration to file and Redis
+      const projectData = {
         template: template.id,
         name: options.projectName,
         repoUrl,
@@ -312,8 +319,17 @@ export class ProjectWorkflow {
         model: options.model,
         netlifyProject: netlifyProject?.id,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+        updatedAt: new Date().toISOString(),
+        // Add deployment URLs and MongoDB info
+        repositoryUrl: repoUrl,
+        netlifyUrl: netlifyProject?.ssl_url,
+        mongodbOrgId: mongodbProject?.orgId,
+        mongodbProjectId: mongodbProject?.projectId,
+        mongodbDatabase: mongodbProject?.databaseName
+      };
+
+      await this.saveProjectConfig(projectData);
+      await this.saveProjectToRedis(projectData);
 
       this.addLog('💾 Project configuration saved');
       this.addLog('🎉 Setup complete!');
@@ -327,11 +343,12 @@ export class ProjectWorkflow {
       };
 
     } catch (error) {
-      this.addLog(`❌ Setup failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.addLog(`❌ Setup failed: ${errorMessage}`);
       
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         logs: this.logs
       };
     }
@@ -410,6 +427,52 @@ export class ProjectWorkflow {
     } catch (error: any) {
       console.warn('Failed to save project config:', error.message);
       // Don't throw here, just log warning since config saving is not critical
+    }
+  }
+
+  private async saveProjectToRedis(projectData: any): Promise<void> {
+    try {
+      // Import storage service
+      const { storage } = await import('../../api/shared/redis-storage');
+      
+      // Create project data in the format expected by Redis storage
+      // Use the new Redis key format (year-month format)
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2);
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const yearMonth = `${year}${month}`;
+      const random = Math.random().toString(36).substr(2, 8);
+      
+      const redisProjectData = {
+        id: `proj_${yearMonth}_${random}`,
+        name: projectData.name,
+        template: projectData.template,
+        aiProvider: projectData.aiProvider,
+        agentMode: projectData.agentMode,
+        orchestrationStrategy: projectData.orchestrationStrategy,
+        githubOrg: process.env.GITHUB_USERNAME || 'unknown',
+        repositoryUrl: projectData.repositoryUrl,
+        netlifyUrl: projectData.netlifyUrl,
+        mongodbOrgId: projectData.mongodbOrgId,
+        mongodbProjectId: projectData.mongodbProjectId,
+        mongodbDatabase: projectData.mongodbDatabase,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        status: 'active' as const
+      };
+
+      await storage.storeProject(redisProjectData.id, redisProjectData);
+      
+      // Also save project ID back to the config file so we can find it later
+      const configPath = join(process.cwd(), '.dev-agent.json');
+      const updatedConfig = { ...projectData, projectId: redisProjectData.id };
+      await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2));
+      
+      this.addLog(`💾 Project data saved to Redis with ID: ${redisProjectData.id}`);
+    } catch (error: any) {
+      console.warn('Failed to save project to Redis:', error.message);
+      this.addLog(`⚠️ Warning: Could not save project to Redis: ${error.message}`);
+      // Don't throw here, project can still work with local config
     }
   }
 }

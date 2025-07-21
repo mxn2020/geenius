@@ -9,6 +9,84 @@ export class GitHubService {
     this.token = process.env.GITHUB_TOKEN;
   }
 
+  /**
+   * Get the authenticated user's information
+   */
+  async getCurrentUser(): Promise<{ login: string; name: string; avatar_url: string }> {
+    try {
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get user info: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`GitHub API error: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get organizations that the authenticated user belongs to
+   */
+  async getUserOrganizations(): Promise<Array<{ login: string; avatar_url: string; description?: string }>> {
+    try {
+      const response = await fetch('https://api.github.com/user/orgs', {
+        headers: {
+          'Authorization': `token ${this.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get organizations: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`GitHub API error: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get available GitHub accounts (user + organizations)
+   */
+  async getAvailableAccounts(): Promise<Array<{ login: string; type: 'user' | 'organization'; avatar_url: string; description?: string }>> {
+    try {
+      const [user, orgs] = await Promise.all([
+        this.getCurrentUser(),
+        this.getUserOrganizations()
+      ]);
+
+      const accounts = [
+        {
+          login: user.login,
+          type: 'user' as const,
+          avatar_url: user.avatar_url,
+          description: user.name
+        },
+        ...orgs.map(org => ({
+          login: org.login,
+          type: 'organization' as const,
+          avatar_url: org.avatar_url,
+          description: org.description
+        }))
+      ];
+
+      return accounts;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`Failed to get GitHub accounts: ${errorMessage}`);
+    }
+  }
+
   async forkTemplate(templateRepoUrl: string, projectName: string, githubOrg: string): Promise<string> {
     // Parse the template repository URL
     const match = templateRepoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
@@ -43,7 +121,8 @@ export class GitHubService {
       const forkData = await response.json();
       return forkData.html_url;
     } catch (error) {
-      throw new Error(`GitHub API error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`GitHub API error: ${errorMessage}`);
     }
   }
 
@@ -91,7 +170,8 @@ export class GitHubService {
         throw new Error(`Failed to create branch: ${error.message || createResponse.statusText}`);
       }
     } catch (error) {
-      throw new Error(`GitHub API error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`GitHub API error: ${errorMessage}`);
     }
   }
 
@@ -118,7 +198,8 @@ export class GitHubService {
 
       return await response.json();
     } catch (error) {
-      throw new Error(`GitHub API error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown GitHub API error';
+      throw new Error(`GitHub API error: ${errorMessage}`);
     }
   }
 }

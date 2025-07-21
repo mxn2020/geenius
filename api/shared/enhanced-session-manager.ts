@@ -1,5 +1,6 @@
 // Enhanced Session Management for Agentic AI System
 import { Redis } from '@upstash/redis';
+import RedisKeys from './redis-keys';
 
 // Initialize Redis client
 const redis = new Redis({
@@ -93,21 +94,17 @@ export interface EnhancedProcessingSession {
 
 export class EnhancedSessionManager {
   private redis: Redis;
-  private keyPrefix = 'geenius:enhanced:session:';
-  private logPrefix = 'geenius:logs:';
-  private readonly SESSION_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
+  private readonly SESSION_TTL = RedisKeys.TTL.SESSION;
 
   constructor() {
     this.redis = redis;
   }
 
   /**
-   * Generate unique session ID with timestamp and randomness
+   * Generate unique session ID in clean format
    */
-  generateSessionId(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substr(2, 9);
-    return `session_${timestamp}_${random}`;
+  generateSessionId(type: string = 'INIT', projectId?: string): string {
+    return RedisKeys.generateSessionId(type as any, projectId);
   }
 
   /**
@@ -208,11 +205,11 @@ export class EnhancedSessionManager {
   }
 
   /**
-   * Store session data with TTL
+   * Store session data with TTL using RedisKeys
    */
   async setSession(sessionId: string, session: EnhancedProcessingSession): Promise<void> {
     try {
-      const key = this.keyPrefix + sessionId;
+      const key = RedisKeys.session(sessionId);
       await this.redis.setex(key, this.SESSION_TTL, JSON.stringify(session));
     } catch (error) {
       console.error('Failed to store session:', error);
@@ -226,7 +223,7 @@ export class EnhancedSessionManager {
    */
   async getSession(sessionId: string): Promise<EnhancedProcessingSession | null> {
     try {
-      const key = this.keyPrefix + sessionId;
+      const key = RedisKeys.session(sessionId);
       const sessionData = await this.redis.get(key);
       
       if (sessionData) {
@@ -302,21 +299,71 @@ export class EnhancedSessionManager {
     if (session) {
       session.logs.push(log);
       
-      // Keep only last 100 logs to prevent memory issues
-      if (session.logs.length > 100) {
-        session.logs = session.logs.slice(-100);
+      // Keep only last 500 logs to prevent memory issues but store more
+      if (session.logs.length > 500) {
+        session.logs = session.logs.slice(-500);
       }
       
       await this.setSession(sessionId, session);
     }
 
-    // Also store logs separately for querying
+    // Also store logs separately for querying with unique key using RedisKeys
     try {
-      const logKey = `${this.logPrefix}${sessionId}:${Date.now()}`;
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substr(2, 5);
+      const logKey = RedisKeys.sessionLog(sessionId, timestamp, randomId);
       await this.redis.setex(logKey, this.SESSION_TTL, JSON.stringify(log));
     } catch (error) {
       console.error('Failed to store log separately:', error);
     }
+  }
+
+  /**
+   * Get all logs for a session (both from session and separate storage)
+   */
+  async getAllSessionLogs(sessionId: string): Promise<ProcessingLog[]> {
+    const allLogs: ProcessingLog[] = [];
+    
+    try {
+      // Get logs from separate storage using RedisKeys pattern
+      const logKeys = await this.redis.keys(RedisKeys.patterns.SESSION_LOGS(sessionId));
+      
+      if (logKeys.length > 0) {
+        // Batch fetch all logs in a single call to reduce Upstash API calls
+        const logDataArray = await this.redis.mget(...logKeys);
+        
+        for (let i = 0; i < logDataArray.length; i++) {
+          try {
+            const logData = logDataArray[i];
+            if (logData) {
+              const log = typeof logData === 'string' ? JSON.parse(logData) : logData;
+              allLogs.push(log);
+            }
+          } catch (error) {
+            console.error('Error parsing log:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error retrieving separate logs:', error);
+    }
+    
+    // Get logs from session (as fallback/supplement)
+    const session = await this.getSession(sessionId);
+    if (session && session.logs) {
+      // Add session logs if they're not already in separate storage
+      for (const sessionLog of session.logs) {
+        const exists = allLogs.some(log => 
+          log.timestamp === sessionLog.timestamp && log.message === sessionLog.message
+        );
+        if (!exists) {
+          allLogs.push(sessionLog);
+        }
+      }
+    }
+    
+    // Sort by timestamp (oldest first for chronological order)
+    return allLogs.sort((a, b) => a.timestamp - b.timestamp);
   }
 
   /**
@@ -527,8 +574,8 @@ export class EnhancedSessionManager {
    */
   async listActiveSessions(): Promise<string[]> {
     try {
-      const keys = await this.redis.keys(this.keyPrefix + '*');
-      return keys.map(key => key.replace(this.keyPrefix, ''));
+      const keys = await this.redis.keys(RedisKeys.patterns.ALL_SESSIONS);
+      return keys.map(key => key.replace('geenius:session:', ''));
     } catch (error) {
       console.error('Failed to list sessions:', error);
       return Array.from(this.fallbackStorage.keys());
@@ -547,7 +594,7 @@ export class EnhancedSessionManager {
       for (const sessionId of sessionIds) {
         const session = await this.getSession(sessionId);
         if (session && session.startTime < cutoffTime) {
-          await this.redis.del(this.keyPrefix + sessionId);
+          await this.redis.del(RedisKeys.session(sessionId));
           this.fallbackStorage.delete(sessionId);
           cleaned++;
         }

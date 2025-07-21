@@ -81,6 +81,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/github-accounts"
+  to = "/.netlify/functions/github-accounts"
+  status = 200
+
+[[redirects]]
   from = "/api/init/:sessionId"
   to = "/.netlify/functions/web-init/:sessionId"
   status = 200
