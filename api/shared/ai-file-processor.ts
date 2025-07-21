@@ -181,8 +181,10 @@ IMPORTANT: Respond with ONLY a valid JSON object, no additional text:
     const fileGroups = new Map<string, ChangeRequest[]>();
 
     for (const change of changes) {
-      // Extract file path from component context or metadata
-      let filePath = change.componentContext?.filePath ||
+      // PRIORITY: Use usageFilePath (where component is used) over filePath (component definition)
+      // This ensures we modify the usage location, not the reusable component definition
+      let filePath = change.componentContext?.usageFilePath ||
+        change.componentContext?.filePath ||
         change.metadata?.filePath ||
         change.pageContext?.filePath;
 
@@ -201,22 +203,36 @@ IMPORTANT: Respond with ONLY a valid JSON object, no additional text:
       filePath,
       originalContent: '',
       changes,
-      repositoryPath: changes[0]?.componentContext?.repositoryPath
+      repositoryPath: changes[0]?.componentContext?.usageRepositoryPath || changes[0]?.componentContext?.repositoryPath
     }));
   }
 
   /**
    * Infer file path from component ID (fallback method)
+   * Focus on usage locations, not component definitions
    */
   private inferFilePathFromComponent(componentId: string): string {
-    // Basic inference logic - can be enhanced
+    // Inference logic for USAGE files (where components are implemented)
     if (componentId.includes('landing') || componentId.includes('hero')) {
       return 'src/pages/Landing.tsx';
     }
     if (componentId.includes('auth') || componentId.includes('login')) {
-      return 'src/components/auth/';
+      return 'src/pages/Auth.tsx';
     }
-    return 'src/components/'; // Default fallback
+    if (componentId.includes('dashboard') || componentId.includes('admin')) {
+      return 'src/pages/Dashboard.tsx';
+    }
+    if (componentId.includes('nav') || componentId.includes('header')) {
+      return 'src/components/Navigation.tsx';
+    }
+    if (componentId.includes('footer')) {
+      return 'src/components/Footer.tsx';
+    }
+    if (componentId.includes('sidebar')) {
+      return 'src/components/Sidebar.tsx';
+    }
+    // Default fallback - try to infer page from component ID
+    return 'src/pages/index.tsx';
   }
 
   /**
@@ -246,12 +262,20 @@ ${index + 1}. Component: ${change.componentId}
    Context: ${JSON.stringify(change.componentContext, null, 2)}
 `).join('\n')}
 
+IMPORTANT CONTEXT:
+- You are modifying the USAGE file where components are implemented/styled
+- Do NOT modify the component definition files in src/lib/dev-container/
+- Focus on changing how these components are used, styled, or configured in this specific file
+- The componentId refers to a specific instance/usage of a reusable component
+- Update props, className, styling, content, or layout as requested
+
 Please:
 1. Implement ALL requested changes in the file
 2. Ensure the code follows React/TypeScript best practices
 3. Maintain existing functionality while adding the requested changes
 4. Keep the existing import structure and dependencies
 5. Preserve component structure and naming conventions
+6. Focus on modifying component usage, NOT component definitions
 
 Provide your response in this exact format:
 
@@ -280,11 +304,30 @@ If you cannot implement the changes safely, use this format:
     let response: string = '';
     
     try {
+      console.log(`[AI-PROCESSOR] Making AI request for file: ${filePath}`);
+      console.log(`[AI-PROCESSOR] Prompt length: ${prompt.length} characters`);
+      console.log(`[AI-PROCESSOR] File content length: ${fileContent.length} characters`);
+      console.log(`[AI-PROCESSOR] Changes count: ${changes.length}`);
+      
       response = await this.aiAgent.processRequest(prompt);
+      
+      console.log(`[AI-PROCESSOR] AI response received, length: ${response.length} characters`);
+      console.log(`[AI-PROCESSOR] AI response preview: ${response.substring(0, 200)}...`);
       
       // Try to parse the new format with separate metadata and code sections
       const metadataMatch = response.match(/---METADATA---([\s\S]*?)---(?:CODE|END)---/);
       const codeMatch = response.match(/---CODE---([\s\S]*?)---END---/);
+      
+      console.log(`[AI-PROCESSOR] Metadata match found: ${!!metadataMatch}`);
+      console.log(`[AI-PROCESSOR] Code match found: ${!!codeMatch}`);
+      
+      if (metadataMatch) {
+        console.log(`[AI-PROCESSOR] Metadata content: ${metadataMatch[1].trim().substring(0, 200)}...`);
+      }
+      if (codeMatch) {
+        console.log(`[AI-PROCESSOR] Code content length: ${codeMatch[1].trim().length} characters`);
+        console.log(`[AI-PROCESSOR] Code content preview: ${codeMatch[1].trim().substring(0, 200)}...`);
+      }
       
       let result;
       
@@ -295,10 +338,14 @@ If you cannot implement the changes safely, use this format:
         // Add the code content if it exists
         if (codeMatch && result.success) {
           result.updatedContent = codeMatch[1].trim();
+          console.log(`[AI-PROCESSOR] Set updatedContent from CODE section, length: ${result.updatedContent.length}`);
         } else if (result.success) {
           result.updatedContent = '';
+          console.log(`[AI-PROCESSOR] No CODE section found or result not successful, setting empty updatedContent`);
+          console.log(`[AI-PROCESSOR] codeMatch: ${!!codeMatch}, result.success: ${result.success}`);
         }
       } else {
+        console.log(`[AI-PROCESSOR] No metadata match found, trying fallback format`);
         // Fallback to old format - try to extract JSON from response
         let jsonResponse = response.trim();
         
@@ -306,15 +353,29 @@ If you cannot implement the changes safely, use this format:
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           jsonResponse = jsonMatch[0];
+          console.log(`[AI-PROCESSOR] Found JSON in response: ${jsonResponse.substring(0, 200)}...`);
+        } else {
+          console.log(`[AI-PROCESSOR] No JSON found in response`);
         }
         
         result = JSON.parse(jsonResponse);
+        console.log(`[AI-PROCESSOR] Parsed result: ${JSON.stringify(result).substring(0, 200)}...`);
       }
 
       if (result.success) {
+        console.log(`[AI-PROCESSOR] About to validate generated code, length: ${result.updatedContent?.length || 0}`);
+        console.log(`[AI-PROCESSOR] Generated code preview: ${result.updatedContent?.substring(0, 200) || 'EMPTY'}...`);
+
         // Validate the generated code
         const validationResult = await this.validateGeneratedCode(result.updatedContent, filePath);
+        
+        console.log(`[AI-PROCESSOR] Validation result: isValid=${validationResult.isValid}, issues=${validationResult.issues.length}`);
+        if (validationResult.issues.length > 0) {
+          console.log(`[AI-PROCESSOR] Validation issues: ${validationResult.issues.join(', ')}`);
+        }
+        
         if (!validationResult.isValid) {
+          console.log(`[AI-PROCESSOR] Validation failed on attempt ${attempt}/${this.maxRetries}`);
           if (attempt < this.maxRetries) {
             console.log(`Validation failed on attempt ${attempt}, retrying...`);
             return this.processFileChanges(filePath, fileContent, changes, attempt + 1);

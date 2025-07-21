@@ -54,7 +54,8 @@ export class NetlifyService {
           dir: 'dist',
           functions_dir: 'api',
           cmd: 'pnpm build',
-          allowed_branches: ['main', 'develop', 'feature/*'],
+          //allowed_branches: ['main', 'develop', 'feature/*'],
+          allowed_branches: ['main'],
           public_repo: true,
           repo_url: repoUrl
         }
@@ -125,7 +126,8 @@ export class NetlifyService {
               dir: 'dist',
               functions_dir: 'api',
               cmd: 'pnpm build',
-              allowed_branches: ['main', 'develop', 'feature/*'],
+          //allowed_branches: ['main', 'develop', 'feature/*'],
+          allowed_branches: ['main'],
               public_repo: true,
               repo_url: repoUrl
             }
@@ -531,7 +533,8 @@ export class NetlifyService {
           dir: 'dist',
           functions_dir: 'api',
           cmd: 'pnpm build',
-          allowed_branches: ['main', 'develop', 'feature/*'],
+          //allowed_branches: ['main', 'develop', 'feature/*'],
+          allowed_branches: ['main'],
           public_repo: true,
           repo_url: repoUrl
         }

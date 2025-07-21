@@ -1,12 +1,14 @@
 // src/InitializationTab.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { AppHooks } from './app-types';
 
 interface InitializationTabProps extends AppHooks {
@@ -42,7 +44,67 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
   startLogStreaming,
   stopLogPolling
 }) => {
-  const handleInitSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const [initMode, setInitMode] = useState('simple');
+
+  const handleSimpleInitSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setLoadingMessage('Initializing project...');
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData);
+
+    // Use simplified defaults for simple mode
+    const simplifiedData = {
+      ...data,
+      aiProvider: data.aiProvider || 'anthropic',
+      agentMode: 'single',
+      templateId: data.templateId || 'vite-react-mongo',
+      autoSetup: true
+    };
+
+    // Use selected GitHub account if available, otherwise use form input
+    if (githubAccounts.available && selectedGithubAccount) {
+      simplifiedData.githubOrg = selectedGithubAccount;
+    }
+
+    try {
+      const response = await fetch('/api/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(simplifiedData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setLoadingMessage('Project initialized successfully! Starting deployment...');
+
+        if (result.sessionId) {
+          setSessionId(result.sessionId);
+          setDeploymentStatus('deploying');
+
+          setTimeout(() => {
+            setActiveView('logs');
+            setLoading(false);
+            startLogStreaming(result.sessionId, true);
+          }, 1500);
+        } else {
+          setLoadingMessage('Project initialized successfully!');
+          setTimeout(() => setLoading(false), 2000);
+        }
+      } else {
+        throw new Error(result.error || 'Failed to initialize project');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Init failed:', error);
+      setLoadingMessage(`Error: ${errorMessage}`);
+      setTimeout(() => setLoading(false), 3000);
+    }
+  };
+
+  const handleAdvancedInitSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setLoadingMessage('Initializing project...');
@@ -147,7 +209,148 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleInitSubmit} className="space-y-6">
+        {/* Nested Tabs for Simple vs Advanced */}
+        <Tabs value={initMode} onValueChange={setInitMode} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="simple">Simple Setup</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced Setup</TabsTrigger>
+          </TabsList>
+          
+          {/* Simple Mode */}
+          <TabsContent value="simple">
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                <strong>Simple Mode:</strong> Quick setup with sensible defaults. Perfect for getting started quickly.
+              </p>
+            </div>
+            <form onSubmit={handleSimpleInitSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="projectName">Project Name</Label>
+                <Input
+                  type="text"
+                  name="projectName"
+                  value={projectName}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setProjectName(newName);
+                    if (newName && selectedOrg && mongodbData.available) {
+                      handleOrgChange(selectedOrg);
+                    }
+                  }}
+                  placeholder="my-awesome-project"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="githubOrg">GitHub Organization/Username</Label>
+                {githubAccounts.loading ? (
+                  <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+                    Loading GitHub accounts...
+                  </div>
+                ) : githubAccounts.available && githubAccounts.accounts.length > 0 ? (
+                  <Select
+                    name="githubOrg"
+                    value={selectedGithubAccount}
+                    onValueChange={setSelectedGithubAccount}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select GitHub account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {githubAccounts.accounts.map(account => (
+                        <SelectItem key={account.login} value={account.login}>
+                          {account.login} ({account.type === 'user' ? '👤 Personal' : '🏢 Organization'})
+                          {account.description && ` - ${account.description}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type="text"
+                    name="githubOrg"
+                    placeholder="Enter GitHub username or organization"
+                    required
+                  />
+                )}
+                {!githubAccounts.available && !githubAccounts.loading && (
+                  <Alert>
+                    <AlertDescription>
+                      ⚠️ GitHub token not configured - manual input required
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="projectRequirements">Project Requirements</Label>
+                <Textarea
+                  name="projectRequirements"
+                  placeholder="Describe your project in detail. For example: 'Create a doctor website with client management, appointment scheduling, and visitors should be able to request appointments online. Include patient records and appointment calendar.'"
+                  rows={8}
+                  className="min-h-[200px] text-base"
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Be specific about features, functionality, and user interactions you need. The AI will generate everything based on this description.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="template">Template</Label>
+                <Select name="templateId" defaultValue="vite-react-mongo" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vite-react-mongo">Vite + React + MongoDB</SelectItem>
+                    <SelectItem value="next-supabase">Next.js + Supabase</SelectItem>
+                    <SelectItem value="react-indexeddb">React + IndexedDB + JWT</SelectItem>
+                    <SelectItem value="vue-firebase">Vue + Pinia + Firebase</SelectItem>
+                    <SelectItem value="svelte-drizzle">SvelteKit + Drizzle + PlanetScale</SelectItem>
+                    <SelectItem value="astro-content">Astro + Content Collections</SelectItem>
+                    <SelectItem value="express-prisma">Express + Prisma + PostgreSQL</SelectItem>
+                    <SelectItem value="remix-sqlite">Remix + SQLite + Auth</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  Default: Vite + React + MongoDB (recommended for most projects)
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Default Settings Applied:</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• AI Provider: Claude (Anthropic) - Best for coding</li>
+                  <li>• Agent Mode: Single Agent - Fast and focused</li>
+                  <li>• Model: Default (empty) - Uses provider's recommended model</li>
+                  <li>• GitHub Org: First available from your account</li>
+                  <li>• MongoDB Org: First available from your account</li>
+                  <li>• MongoDB Project Name: Uses your project name</li>
+                  <li>• Auto-setup: GitHub repo and Netlify deployment enabled</li>
+                </ul>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={loading}
+              >
+                🚀 Quick Initialize Project
+              </Button>
+            </form>
+          </TabsContent>
+          
+          {/* Advanced Mode */}
+          <TabsContent value="advanced">
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Advanced Mode:</strong> Full control over all configuration options.
+              </p>
+            </div>
+            <form onSubmit={handleAdvancedInitSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="aiProvider">AI Provider</Label>
             <Select name="aiProvider" required defaultValue="anthropic">
@@ -354,7 +557,9 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
           >
             🚀 Initialize Project
           </Button>
-        </form>
+            </form>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

@@ -381,4 +381,75 @@ export class EnhancedGitHubService {
       relatedFiles
     };
   }
+
+  /**
+   * Merge a pull request
+   */
+  async mergePullRequest(
+    repoUrl: string, 
+    prNumber: number, 
+    mergeOptions: {
+      commit_title?: string;
+      commit_message?: string;
+      merge_method?: 'merge' | 'squash' | 'rebase';
+    } = {}
+  ): Promise<{ success: boolean; sha?: string; error?: string }> {
+    const { owner, repo } = this.parseRepoUrl(repoUrl);
+
+    try {
+      // First check if PR is mergeable
+      const { data: pr } = await this.octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: prNumber
+      });
+
+      if (pr.state !== 'open') {
+        return {
+          success: false,
+          error: `Pull request #${prNumber} is ${pr.state}, not open for merging`
+        };
+      }
+
+      if (pr.mergeable === false) {
+        return {
+          success: false,
+          error: 'Pull request has merge conflicts and cannot be automatically merged'
+        };
+      }
+
+      // Perform the merge
+      const { data: mergeResult } = await this.octokit.rest.pulls.merge({
+        owner,
+        repo,
+        pull_number: prNumber,
+        commit_title: mergeOptions.commit_title,
+        commit_message: mergeOptions.commit_message,
+        merge_method: mergeOptions.merge_method || 'squash'
+      });
+
+      if (mergeResult.merged) {
+        return {
+          success: true,
+          sha: mergeResult.sha
+        };
+      } else {
+        return {
+          success: false,
+          error: mergeResult.message || 'Merge failed without specific reason'
+        };
+      }
+
+    } catch (error) {
+      console.error(`Failed to merge PR #${prNumber}:`, error);
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error 
+        ? (error as { message: string }).message 
+        : String(error);
+      
+      return {
+        success: false,
+        error: `Failed to merge pull request: ${errorMessage}`
+      };
+    }
+  }
 }

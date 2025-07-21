@@ -477,8 +477,8 @@ export async function initCommand(): Promise<void> {
           // Configure branch deployments
           await netlify.configureBranchDeployments(netlifyProject.id, {
             main: { production: true },
-            develop: { preview: true },
-            'feature/*': { preview: true }
+            // develop: { preview: true },
+            // 'feature/*': { preview: true }
           });
 
           // Wait for initial deployment to complete

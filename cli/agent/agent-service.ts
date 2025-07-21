@@ -211,7 +211,7 @@ export class AgentService {
 ${changes.map(c => `- ${c.category}: ${c.feedback.substring(0, 100)}...`).join('\n')}
 
 🤖 Generated automatically by Geenius AI Agent
-Co-authored-by: Geenius AI <ai@geenius.dev>`;
+Co-authored-by: Geenius AI <ai@geenius.io>`;
 
       await this.stackblitz.runCommand(this.project, 'git add .');
       await this.stackblitz.runCommand(this.project, `git commit -m "${commitMessage}"`);

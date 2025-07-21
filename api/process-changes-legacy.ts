@@ -168,7 +168,7 @@ ${payload.changes.map((change, index) =>
 ).join('\n')}
 
 Implemented by Geenius AI Agent
-Co-authored-by: Geenius AI <ai@geenius.dev>`
+Co-authored-by: Geenius AI <ai@geenius.io>`
     });
     await storage.addLog(sessionId, 'success', 'All changes committed successfully');
 

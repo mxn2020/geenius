@@ -4,6 +4,7 @@ import { EnhancedSessionManager } from './shared/enhanced-session-manager';
 import { EnhancedGitHubService, FileChange } from './shared/enhanced-github-service';
 import { AIFileProcessor, ChangeRequest } from './shared/ai-file-processor';
 import { NetlifyService } from './shared/netlify-service';
+import { DevIdRegistryScanner, RegistryContext } from './shared/devid-registry-scanner';
 
 // Enhanced Types (matching template app structure)
 export enum ChangeCategory {
@@ -268,24 +269,36 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       await logDevelopment(sessionId, 'info', `Using existing branch name from session: ${branchName}`);
     }
 
-    // Create the feature branch
+    // Create the feature branch (check if already created in previous attempts)
     try {
-      const branchInfo = await githubService.createFeatureBranch(
-        payload.globalContext.repositoryUrl,
-        branchName,
-        session.baseBranch
-      );
+      // Check if branch already exists (could be from previous retry)
+      const branchExists = await githubService.branchExists(payload.globalContext.repositoryUrl, branchName);
       
-      await logDevelopment(sessionId, 'success', `Created feature branch: ${branchName}`, {
-        repository: payload.globalContext.repositoryUrl,
-        baseBranch: session.baseBranch
-      });
+      if (branchExists) {
+        await logDevelopment(sessionId, 'info', `Branch already exists, proceeding: ${branchName}`);
+      } else {
+        const branchInfo = await githubService.createFeatureBranch(
+          payload.globalContext.repositoryUrl,
+          branchName,
+          session.baseBranch
+        );
+        
+        await logDevelopment(sessionId, 'success', `Created feature branch: ${branchName}`, {
+          repository: payload.globalContext.repositoryUrl,
+          baseBranch: session.baseBranch
+        });
+      }
     } catch (branchError) {
-      await logDevelopment(sessionId, 'error', `Failed to create branch: ${branchError.message}`, {
-        branchName: branchName,
-        error: branchError.message
-      });
-      throw branchError;
+      // If branch already exists error, that's okay - continue processing
+      if (branchError.message.includes('Reference already exists')) {
+        await logDevelopment(sessionId, 'info', `Branch already exists (from previous attempt), continuing: ${branchName}`);
+      } else {
+        await logDevelopment(sessionId, 'error', `Failed to create branch: ${branchError.message}`, {
+          branchName: branchName,
+          error: branchError.message
+        });
+        throw branchError;
+      }
     }
 
     // Phase 4: Process Files
@@ -296,12 +309,26 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
 
     for (const group of fileGroups) {
       try {
-        await sessionManager.updateFileProcessing(group.filePath, group.filePath, { status: 'processing' });
+        await sessionManager.updateFileProcessing(sessionId, group.filePath, { status: 'processing' });
+        
+        // Fetch current file content from GitHub
+        await logDevelopment(sessionId, 'info', `Fetching file content: ${group.filePath}`);
+        const fileContent = await githubService.getFileContent(
+          payload.globalContext.repositoryUrl,
+          group.filePath,
+          session.baseBranch
+        );
+        
+        if (!fileContent) {
+          throw new Error(`Could not fetch content for ${group.filePath} from ${session.baseBranch} branch`);
+        }
+        
+        await logDevelopment(sessionId, 'info', `File content loaded: ${fileContent.length} characters`);
         
         const startTime = Date.now();
         const result = await aiProcessor.processFileChanges(
           group.filePath,
-          group.originalContent,
+          fileContent,
           group.changes
         );
 
@@ -358,6 +385,56 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
       throw new Error('No files were successfully processed');
     }
 
+    // Phase 4.5: Component Registry Auto-Registration
+    try {
+      await sessionManager.updateSessionStatus(sessionId, 'processing', 65, 'Auto-registering new components...');
+      await logDevelopment(sessionId, 'info', '🔍 Scanning for new component usages...');
+      
+      // Set up registry context for template app
+      const registryContext: RegistryContext = {
+        templatePath: '', // We don't need this for our use case
+        registryDataPath: '', // This will be handled when we commit to the template repo
+        repositoryUrl: payload.globalContext.repositoryUrl
+      };
+      
+      const registryScanner = new DevIdRegistryScanner(registryContext);
+      
+      // Scan the processed files for new devIds
+      const scanResults = await registryScanner.scanAndRegisterDevIds(
+        fileChanges.map(fc => ({ path: fc.path, content: fc.content }))
+      );
+      
+      if (scanResults.newDevIds.length > 0) {
+        await logDevelopment(sessionId, 'success', 
+          `📋 Auto-registered ${scanResults.registeredCount} new component usages`,
+          { 
+            newDevIds: scanResults.newDevIds.map(d => d.id),
+            registeredCount: scanResults.registeredCount
+          }
+        );
+        
+        // Add registry updates as additional file changes if needed
+        // Note: This is prepared for when we implement registry updates as commits
+        
+      } else {
+        await logDevelopment(sessionId, 'info', '✅ No new component usages found - registry is up to date');
+      }
+      
+      if (scanResults.errors.length > 0) {
+        await logDevelopment(sessionId, 'warning', 
+          `⚠️ Registry scanning had ${scanResults.errors.length} minor issues`,
+          { errors: scanResults.errors }
+        );
+      }
+      
+    } catch (registryError) {
+      // Registry scanning is not critical - log warning but continue
+      await logDevelopment(sessionId, 'warning', 
+        `⚠️ Component registry scanning failed: ${registryError.message}. Continuing without registry updates.`,
+        { registryError: registryError.message }
+      );
+    }
+
     // Phase 5: Commit Changes
     await sessionManager.updateSessionStatus(sessionId, 'committing', 70, 'Committing changes to GitHub...');
 
@@ -397,12 +474,19 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
     );
 
     await sessionManager.setPullRequestInfo(sessionId, prInfo.htmlUrl, prInfo.number);
+    await logDevelopment(sessionId, 'success', `🔀 Pull Request created: #${prInfo.number}`, {
+      prUrl: prInfo.htmlUrl,
+      prNumber: prInfo.number
+    });
 
-    // Phase 7: Wait for Deployment
+    // Phase 7: Wait for Deployment with Enhanced Tracking
     await sessionManager.updateSessionStatus(sessionId, 'deploying', 85, 'Waiting for preview deployment...');
+    await logDevelopment(sessionId, 'info', '🚀 Waiting for Netlify preview deployment...');
 
     try {
-      // Wait for Netlify deployment (with timeout)
+      // Wait for Netlify deployment (with timeout and progress updates)
+      await logDevelopment(sessionId, 'info', '⏳ Checking deployment status...');
+      
       const deploymentResult = await netlifyService.waitForBranchDeployment(
         branchName,
         300000 // 5 minute timeout
@@ -410,18 +494,28 @@ async function processChangesEnhanced(sessionId: string, payload: SubmissionPayl
 
       if (deploymentResult.success && deploymentResult.url) {
         await sessionManager.setPreviewUrl(sessionId, deploymentResult.url);
-        await sessionManager.addLog(sessionId, 'success', 
-          'Preview deployment ready', 
-          { previewUrl: deploymentResult.url }
+        await logDevelopment(sessionId, 'success', 
+          '🌐 Preview deployment ready!', 
+          { 
+            previewUrl: deploymentResult.url,
+            deploymentStatus: 'ready',
+            canPreview: true
+          }
         );
+        
+        // Update session status to show preview is ready
+        await sessionManager.updateSessionStatus(sessionId, 'preview_ready', 95, 'Preview deployment ready for testing');
+        
       } else {
-        await sessionManager.addLog(sessionId, 'warning', 
-          'Preview deployment not detected, but PR created successfully'
+        await logDevelopment(sessionId, 'warning', 
+          '⚠️ Preview deployment not detected, but PR created successfully',
+          { deploymentStatus: 'unknown' }
         );
       }
     } catch (deployError) {
-      await sessionManager.addLog(sessionId, 'warning', 
-        `Deployment check failed: ${deployError.message}, but PR created successfully`
+      await logDevelopment(sessionId, 'warning', 
+        `⚠️ Deployment check failed: ${deployError.message}, but PR created successfully`,
+        { deploymentError: deployError.message, deploymentStatus: 'failed' }
       );
     }
 

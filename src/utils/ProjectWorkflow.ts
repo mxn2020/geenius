@@ -278,8 +278,8 @@ export class ProjectWorkflow {
             // Configure branch deployments
             await netlifyService.configureBranchDeployments(netlifyProject.id, {
               main: { production: true },
-              develop: { preview: true },
-              'feature/*': { preview: true }
+              //develop: { preview: true },
+              //'feature/*': { preview: true }
             });
 
             this.addLog(`✅ Netlify project created successfully!`);

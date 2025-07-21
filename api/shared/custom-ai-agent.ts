@@ -422,7 +422,7 @@ Session ID: ${sessionId}`;
         model: this.getModelString(),
         prompt: prompt,
         temperature: 0.1,
-        maxTokens: 4000
+        maxTokens: 12000
       });
 
       // Store in memory

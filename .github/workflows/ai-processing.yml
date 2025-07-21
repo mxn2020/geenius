@@ -222,7 +222,7 @@ jobs:
           cd target-repo
           
           git config user.name "AI Agent"
-          git config user.email "ai-agent@geenius.dev"
+          git config user.email "ai-agent@geenius.io"
           
           git add .
           git commit -m "feat: AI-generated improvements
