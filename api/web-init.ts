@@ -55,7 +55,12 @@ export const handler: Handler = async (event, context) => {
           repoUrl: session.repoUrl,
           netlifyUrl: session.netlifyUrl,
           mongodbDatabase: session.mongodbDatabase,
-          error: session.error
+          error: session.error,
+          // Include the original request data for status display
+          projectName: session.projectName || session.data?.projectName,
+          templateId: session.templateId || session.data?.templateId,
+          aiProvider: session.aiProvider || session.data?.aiProvider,
+          agentMode: session.agentMode || session.data?.agentMode
         })
       };
     } catch (error) {
@@ -170,15 +175,30 @@ export const handler: Handler = async (event, context) => {
     if (!hasProjectRequirements) {
       console.log(`[WEB-INIT] Applying default values for standard deployment`);
       
-      // Set default MongoDB values if not provided
-      if (!data.mongodbOrgId) {
-        console.log(`[WEB-INIT] Setting default MongoDB org to first available`);
-        data.mongodbOrgId = 'first_available';
+      // Set default MongoDB values if not provided and MongoDB is available
+      if (!data.mongodbOrgId && process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY) {
+        try {
+          console.log(`[WEB-INIT] Looking up first available MongoDB organization`);
+          const { MongoDBService } = await import('../src/services/mongodb');
+          const mongodb = new MongoDBService();
+          const organizations = await mongodb.getOrganizations();
+          
+          if (organizations.length > 0) {
+            data.mongodbOrgId = organizations[0].id;
+            console.log(`[WEB-INIT] Using MongoDB org: ${organizations[0].name} (${organizations[0].id})`);
+          } else {
+            console.log(`[WEB-INIT] No MongoDB organizations found - skipping MongoDB setup`);
+            data.mongodbOrgId = null;
+          }
+        } catch (mongoError) {
+          console.log(`[WEB-INIT] Failed to load MongoDB organizations: ${mongoError.message} - skipping MongoDB setup`);
+          data.mongodbOrgId = null;
+        }
       }
       
-      if (!data.mongodbProjectId) {
-        console.log(`[WEB-INIT] Setting MongoDB project name to match project name`);
-        data.mongodbProjectId = data.projectName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      if (!data.mongodbProjectId && data.mongodbOrgId) {
+        console.log(`[WEB-INIT] Setting MongoDB project to CREATE_NEW`);
+        data.mongodbProjectId = 'CREATE_NEW';
       }
       
       // Set other defaults for simple mode

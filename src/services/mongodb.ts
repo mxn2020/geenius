@@ -53,7 +53,7 @@ export class MongoDBService {
     }
   }
 
-  async createProject(projectName: string, orgId?: string): Promise<MongoDBProject> {
+  async createProject(projectName: string, orgId?: string, onProgress?: (message: string) => void): Promise<MongoDBProject> {
     try {
       console.log(`🍃 Creating MongoDB Atlas project: ${projectName}`);
 
@@ -75,21 +75,24 @@ export class MongoDBService {
       console.log(`   ✅ Project created: ${project.name} (${project.id})`);
 
       // Create cluster
+      if (onProgress) onProgress('🏗️ Creating MongoDB cluster...');
       const cluster = await this.createCluster(project.id, clusterName);
       console.log(`   ✅ Cluster created: ${cluster.name}`);
 
       // Create database user
+      if (onProgress) onProgress('👤 Creating database user...');
       const username = `${cleanName}-user`;
       const password = this.generateSecurePassword();
       await this.createDatabaseUser(project.id, username, password, databaseName);
       console.log(`   ✅ Database user created: ${username}`);
 
       // Configure IP whitelist (allow all for now - can be restricted later)
+      if (onProgress) onProgress('🔐 Configuring network access...');
       await this.whitelistIP(project.id, '0.0.0.0/0', 'Allow all IPs');
       console.log(`   ✅ IP whitelist configured`);
 
       // Wait for cluster to be ready
-      await this.waitForClusterReady(project.id, clusterName);
+      await this.waitForClusterReady(project.id, clusterName, 600000, onProgress);
       console.log(`   ✅ Cluster is ready`);
 
       // Get connection string
@@ -104,7 +107,7 @@ export class MongoDBService {
         databaseName,
         username,
         password,
-        region: cluster.providerSettings?.regionName || 'US_WEST_1',
+        region: cluster.providerSettings?.regionName || 'EU_CENTRAL_1',
         tier: cluster.providerSettings?.instanceSizeName || 'M0'
       };
     } catch (error: any) {
@@ -178,7 +181,7 @@ export class MongoDBService {
     }
   }
 
-  private async createCluster(projectId: string, clusterName: string, region: string = 'US_WEST_1'): Promise<any> {
+  private async createCluster(projectId: string, clusterName: string, region: string = 'EU_CENTRAL_1'): Promise<any> {
     const clusterConfig = {
       name: clusterName,
       clusterType: 'REPLICASET',
@@ -284,18 +287,48 @@ export class MongoDBService {
     }
   }
 
-  private async waitForClusterReady(projectId: string, clusterName: string, maxWait: number = 600000): Promise<void> {
+  private async waitForClusterReady(projectId: string, clusterName: string, maxWait: number = 600000, onProgress?: (message: string) => void): Promise<void> {
     console.log(`   ⏳ Waiting for cluster ${clusterName} to be ready...`);
+    if (onProgress) onProgress(`⏳ Creating MongoDB cluster ${clusterName}...`);
+    
     const startTime = Date.now();
+    let lastState = '';
 
     while (Date.now() - startTime < maxWait) {
       const cluster = await this.getCluster(projectId, clusterName);
+      const currentState = cluster.stateName;
+
+      if (currentState !== lastState) {
+        lastState = currentState;
+        console.log(`   ⏳ Cluster state changed to: ${currentState}`);
+        
+        if (onProgress) {
+          switch (currentState) {
+            case 'CREATING':
+              onProgress('🔧 MongoDB cluster: Initializing infrastructure...');
+              break;
+            case 'REPLICASET_PROVISIONING':
+              onProgress('⚙️ MongoDB cluster: Provisioning replica set...');
+              break;
+            case 'CONFIGURING':
+              onProgress('🔧 MongoDB cluster: Configuring settings...');
+              break;
+            case 'UPDATING':
+              onProgress('🔄 MongoDB cluster: Applying updates...');
+              break;
+            case 'IDLE':
+              onProgress('✅ MongoDB cluster: Ready and operational!');
+              break;
+            default:
+              onProgress(`🔄 MongoDB cluster: ${currentState.toLowerCase()}...`);
+          }
+        }
+      }
 
       if (cluster.stateName === 'IDLE') {
         return;
       }
 
-      console.log(`   ⏳ Cluster state: ${cluster.stateName}, waiting...`);
       await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
     }
 
@@ -436,7 +469,7 @@ export class MongoDBService {
     }
   }
 
-  async createProjectWithSelection(projectName: string, selectedOrgId?: string, selectedProjectId?: string): Promise<MongoDBProject> {
+  async createProjectWithSelection(projectName: string, selectedOrgId?: string, selectedProjectId?: string, onProgress?: (message: string) => void): Promise<MongoDBProject> {
     try {
       console.log(`🍃 Creating MongoDB Atlas database for: ${projectName}`);
 
@@ -477,21 +510,24 @@ export class MongoDBService {
       }
 
       // Create cluster
+      if (onProgress) onProgress('🏗️ Creating MongoDB cluster...');
       const cluster = await this.createCluster(project.id, clusterName);
       console.log(`   ✅ Cluster created: ${cluster.name}`);
 
       // Create database user
+      if (onProgress) onProgress('👤 Creating database user...');
       const username = `${cleanName}-user`;
       const password = this.generateSecurePassword();
       await this.createDatabaseUser(project.id, username, password, databaseName);
       console.log(`   ✅ Database user created: ${username}`);
 
       // Configure IP whitelist (allow all for now - can be restricted later)
+      if (onProgress) onProgress('🔐 Configuring network access...');
       await this.whitelistIP(project.id, '0.0.0.0/0', 'Allow all IPs');
       console.log(`   ✅ IP whitelist configured`);
 
       // Wait for cluster to be ready
-      await this.waitForClusterReady(project.id, clusterName);
+      await this.waitForClusterReady(project.id, clusterName, 600000, onProgress);
       console.log(`   ✅ Cluster is ready`);
 
       // Get connection string
@@ -506,7 +542,7 @@ export class MongoDBService {
         databaseName,
         username,
         password,
-        region: cluster.providerSettings?.regionName || 'US_WEST_1',
+        region: cluster.providerSettings?.regionName || 'EU_CENTRAL_1',
         tier: cluster.providerSettings?.instanceSizeName || 'M0'
       };
     } catch (error: any) {

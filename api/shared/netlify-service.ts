@@ -316,6 +316,11 @@ export class NetlifyService {
     }
   }
 
+  // Alias for compatibility with CLI version
+  async setEnvironmentVariables(siteId: string, variables: Record<string, string>): Promise<Record<string, string>> {
+    return this.setupEnvironmentVariables(siteId, variables);
+  }
+
   async configureBranchDeployments(siteId: string, config: Record<string, any>): Promise<void> {
     try {
       console.log(`🔧 Configuring branch deployments for site ${siteId}`);
@@ -324,11 +329,16 @@ export class NetlifyService {
       // Get current site settings
       const site = await client.getSite({ siteId });
 
-      // Configure branch deploy settings
+      // Configure branch deploy settings with PR previews enabled
       const updateData: any = {
         build_settings: {
           ...site.build_settings,
           repo_branch: site.build_settings?.repo_branch || 'main'
+        },
+        // Enable deploy previews for pull requests
+        deploy_preview_settings: {
+          deploy_previews: true,
+          branch_deploys: true
         }
       };
 
@@ -340,22 +350,75 @@ export class NetlifyService {
         }
       }
 
+      // Update site settings
       await client.updateSite({
         siteId,
         body: updateData
       });
 
       console.log('✅ Branch deployment configuration completed');
+      console.log('✅ Pull request previews enabled');
+
+      // Also set up deploy notifications and webhook settings for better PR integration
+      try {
+        await this.configurePRSettings(siteId);
+      } catch (webhookError: any) {
+        console.warn('⚠️ PR webhook configuration failed (not critical):', webhookError.message);
+      }
+
     } catch (error: any) {
       console.warn('⚠️  Branch deployment configuration failed:', error.message);
       console.log('You can configure branch deployments manually in the Netlify dashboard');
+      console.log(`Visit: https://app.netlify.com/sites/${siteId}/settings/deploys`);
     }
   }
 
-  async waitForInitialDeployment(siteId: string, timeout: number = 180000): Promise<any> {
+  private async configurePRSettings(siteId: string): Promise<void> {
+    try {
+      const client = await this.getClient();
+      
+      // Configure deploy settings to ensure PR previews work
+      const deploySettings = {
+        deploy_hook: null, // Let Netlify handle GitHub webhooks automatically
+        allowed_branches: ['main'], // Only main branch for production
+        context: {
+          production: {
+            publish_dir: 'dist',
+            command: 'pnpm build'
+          },
+          'deploy-preview': {
+            publish_dir: 'dist', 
+            command: 'pnpm build'
+          },
+          'branch-deploy': {
+            publish_dir: 'dist',
+            command: 'pnpm build'
+          }
+        }
+      };
+
+      // Update deploy settings specifically for previews
+      await client.updateSite({
+        siteId,
+        body: {
+          build_settings: deploySettings
+        }
+      });
+
+      console.log('✅ PR preview settings configured');
+    } catch (error: any) {
+      console.warn('PR settings configuration failed:', error.message);
+    }
+  }
+
+  async waitForInitialDeployment(siteId: string, timeout: number = 180000, onProgress?: (message: string) => void): Promise<any> {
     console.log(`⏳ Waiting for initial deployment to complete...`);
+    if (onProgress) onProgress('🚀 Waiting for initial deployment to start...');
+    
     const startTime = Date.now();
     const client = await this.getClient();
+    let lastState = '';
+    let deploymentStarted = false;
 
     while (Date.now() - startTime < timeout) {
       try {
@@ -363,13 +426,48 @@ export class NetlifyService {
 
         if (deployments.length === 0) {
           console.log(`   No deployments found yet, waiting...`);
+          if (onProgress && !deploymentStarted) {
+            onProgress('⏳ Waiting for build to initialize...');
+          }
           await new Promise(resolve => setTimeout(resolve, 5000));
           continue;
         }
 
         // Get the latest deployment
         const latestDeployment = deployments[0];
-        console.log(`   Deployment state: ${latestDeployment.state}, waiting...`);
+        const currentState = latestDeployment.state;
+        
+        // Only log and notify on state changes to avoid spam
+        if (currentState !== lastState) {
+          console.log(`   Deployment state changed: ${lastState} → ${currentState}`);
+          lastState = currentState;
+          deploymentStarted = true;
+          
+          if (onProgress) {
+            switch (currentState) {
+              case 'new':
+                onProgress('🔄 Build queued and starting...');
+                break;
+              case 'building':
+                onProgress('🏗️ Building application (installing dependencies, compiling...)');
+                break;
+              case 'processing':
+                onProgress('⚙️ Processing build artifacts...');
+                break;
+              case 'deploying':
+                onProgress('🚀 Deploying to CDN...');
+                break;
+              case 'ready':
+                onProgress('✅ Deployment completed successfully!');
+                break;
+              case 'error':
+                onProgress(`❌ Deployment failed: ${latestDeployment.error_message}`);
+                break;
+              default:
+                onProgress(`🔄 Build status: ${currentState}`);
+            }
+          }
+        }
 
         if (latestDeployment.state === 'ready') {
           console.log('✅ Initial deployment completed successfully!');
@@ -384,6 +482,7 @@ export class NetlifyService {
         await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (error: any) {
         console.error('❌ Error checking deployment status:', error.message);
+        if (onProgress) onProgress(`⚠️ Error checking deployment: ${error.message}`);
         throw new Error(`Failed to check deployment status: ${error.message}`);
       }
     }

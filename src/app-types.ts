@@ -49,6 +49,12 @@ export type ProjectStatusType = {
   mongodbDatabase?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Session-specific fields
+  isActiveSession?: boolean;
+  sessionId?: string;
+  sessionStatus?: string;
+  progress?: number;
+  currentStep?: string;
 };
 
 export interface AppHooks {

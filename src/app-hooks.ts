@@ -146,16 +146,58 @@ export const useAppState = () => {
 
   const loadProjectStatus = async () => {
     try {
+      // Check if there's a session ID in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionIdFromUrl = urlParams.get('session');
+      
+      // If there's an active session ID, check session status first
+      if (sessionId || sessionIdFromUrl) {
+        const activeSessionId = sessionId || sessionIdFromUrl;
+        try {
+          const sessionResponse = await fetch(`/api/init/${activeSessionId}`);
+          if (sessionResponse.ok) {
+            const sessionData = await sessionResponse.json();
+            setProjectStatus({ 
+              hasProject: true, 
+              loading: false,
+              isActiveSession: true,
+              sessionId: activeSessionId,
+              sessionStatus: sessionData.status,
+              projectName: sessionData.projectName || (sessionData.status === 'completed' ? 'Project Completed' : 'Project Initializing'),
+              templateId: sessionData.templateId || (sessionData.status === 'completed' ? 'Template Applied' : 'Loading Template'),
+              status: sessionData.status || 'initializing',
+              progress: sessionData.progress || 0,
+              currentStep: sessionData.currentStep || 'Initializing...',
+              aiProvider: sessionData.aiProvider,
+              agentMode: sessionData.agentMode,
+              // If session is completed, also show the deployed URLs
+              repositoryUrl: sessionData.repoUrl,
+              netlifyUrl: sessionData.netlifyUrl,
+              mongodbDatabase: sessionData.mongodbDatabase
+            });
+            
+            // Set the session ID if it came from URL
+            if (!sessionId && sessionIdFromUrl) {
+              setSessionId(sessionIdFromUrl);
+            }
+            return;
+          }
+        } catch (sessionError) {
+          console.log('Session not found, falling back to project status');
+        }
+      }
+      
+      // Fall back to regular project status
       const response = await fetch('/api/status');
       const data = await response.json();
       if (response.ok) {
-        setProjectStatus({ ...data, loading: false });
+        setProjectStatus({ ...data, loading: false, isActiveSession: false });
       } else {
-        setProjectStatus({ hasProject: false, loading: false, error: data.error });
+        setProjectStatus({ hasProject: false, loading: false, error: data.error, isActiveSession: false });
       }
     } catch (error) {
       console.error('Failed to load project status:', error);
-      setProjectStatus({ hasProject: false, loading: false, error: 'Failed to load status' });
+      setProjectStatus({ hasProject: false, loading: false, error: 'Failed to load status', isActiveSession: false });
     }
   };
 

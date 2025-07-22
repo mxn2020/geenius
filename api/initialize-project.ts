@@ -60,6 +60,52 @@ const githubService = new EnhancedGitHubService();
 const netlifyService = new NetlifyService();
 
 /**
+ * Get environment variables for AI provider
+ */
+function getEnvVarsForProvider(provider: string, model?: string): Record<string, string> {
+  const vars: Record<string, string> = {};
+  
+  // Get API key from environment
+  const getApiKey = (provider: string): string => {
+    const envNames: Record<string, string> = {
+      anthropic: 'ANTHROPIC_API_KEY',
+      openai: 'OPENAI_API_KEY',
+      google: 'GOOGLE_API_KEY',
+      grok: 'GROK_API_KEY'
+    };
+    return process.env[envNames[provider]] || '';
+  };
+
+  const apiKey = getApiKey(provider);
+  
+  switch (provider) {
+    case 'anthropic':
+      if (apiKey) vars.ANTHROPIC_API_KEY = apiKey;
+      if (model) vars.CLAUDE_MODEL = model;
+      break;
+    case 'openai':
+      if (apiKey) vars.OPENAI_API_KEY = apiKey;
+      if (model) vars.OPENAI_MODEL = model;
+      break;
+    case 'google':
+      if (apiKey) vars.GOOGLE_API_KEY = apiKey;
+      if (model) vars.GEMINI_MODEL = model;
+      break;
+    case 'grok':
+      if (apiKey) vars.GROK_API_KEY = apiKey;
+      if (model) vars.GROK_MODEL = model;
+      break;
+  }
+
+  // Add GitHub token if available
+  if (process.env.GITHUB_TOKEN) {
+    vars.GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  }
+
+  return vars;
+}
+
+/**
  * Helper function to log to enhanced session manager
  */
 async function logInitialization(sessionId: string, level: 'info' | 'success' | 'warning' | 'error', message: string, metadata?: Record<string, any>): Promise<void> {
@@ -294,19 +340,156 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
   const session = await sessionManager.getSession(sessionId);
   if (!session) throw new Error('Session not found');
   
-  await logInitialization(sessionId, 'info', '📋 Using standard template without AI customization');
+  await logInitialization(sessionId, 'info', '📋 Using standard template without AI customization - repository is already created');
 
-  // Phase 2: Wait for Deployment (template is already ready)
+  // Phase 2: Setup Infrastructure (same as AI mode but without file generation)
+  await sessionManager.updateSessionStatus(sessionId, 'setting_up_infrastructure', 40, 'Setting up database and deployment...');
+  
+  let mongodbProject = null;
+  let netlifyProject = null;
+  
+  try {
+    await logInitialization(sessionId, 'info', '🏗️ Setting up database and deployment infrastructure...');
+    
+    // MongoDB setup (same logic as AI mode)
+    if (request.autoSetup !== false && process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY) {
+      try {
+        await logInitialization(sessionId, 'info', '🍃 Setting up MongoDB database...');
+        
+        const { MongoDBService } = await import('../src/services/mongodb');
+        const mongodbService = new MongoDBService();
+        
+        let selectedOrgId = request.mongodbOrgId;
+        let selectedProjectId = request.mongodbProjectId;
+        
+        if (!selectedOrgId) {
+          const organizations = await mongodbService.getOrganizations();
+          if (organizations.length > 0) {
+            selectedOrgId = organizations[0].id;
+            await logInitialization(sessionId, 'info', `📁 Using MongoDB organization: ${organizations[0].name}`);
+          }
+        }
+        
+        if (!selectedProjectId && selectedOrgId) {
+          selectedProjectId = 'CREATE_NEW';
+        }
+        
+        if (selectedOrgId && selectedProjectId) {
+          mongodbProject = await mongodbService.createProjectWithSelection(
+            request.projectName,
+            selectedOrgId,
+            selectedProjectId,
+            (message: string) => logInitialization(sessionId, 'info', message)
+          );
+          
+          await logInitialization(sessionId, 'success', `✅ MongoDB database created: ${mongodbProject.databaseName}`);
+        }
+      } catch (mongoError) {
+        await logInitialization(sessionId, 'warning', `⚠️ MongoDB setup failed: ${mongoError.message}`);
+      }
+    }
+    
+    // Netlify setup (same logic as AI mode)
+    if (request.autoSetup !== false && process.env.NETLIFY_TOKEN) {
+      try {
+        await logInitialization(sessionId, 'info', '🚀 Setting up Netlify project...');
+        
+        netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl);
+        
+        // Get template and setup environment variables
+        const { TemplateRegistry } = await import('../src/services/template-registry');
+        const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
+        const templates = await templateRegistry.getAllTemplates();
+        const template = templates.find(t => t.id === request.templateId);
+        
+        if (template) {
+          const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+          
+          // Add MongoDB connection if available
+          if (mongodbProject) {
+            if (template.envVars.includes('MONGODB_URI')) {
+              templateEnvVars['MONGODB_URI'] = mongodbProject.connectionString;
+            }
+            if (template.envVars.includes('DATABASE_URL')) {
+              templateEnvVars['DATABASE_URL'] = mongodbProject.connectionString;
+            }
+            templateEnvVars['MONGODB_DATABASE_NAME'] = mongodbProject.databaseName;
+            templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
+            templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
+            templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
+          }
+          
+          // Add standard env vars
+          if (template.envVars.includes('VITE_APP_NAME')) {
+            templateEnvVars['VITE_APP_NAME'] = request.projectName;
+          }
+          if (template.envVars.includes('VITE_REPOSITORY_URL')) {
+            templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+          }
+          if (template.envVars.includes('VITE_BASE_BRANCH')) {
+            templateEnvVars['VITE_BASE_BRANCH'] = 'main';
+          }
+          
+          const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
+          
+          await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
+            ...aiProviderVars,
+            ...templateEnvVars
+          });
+          
+          await netlifyService.configureBranchDeployments(netlifyProject.id, {
+            main: { production: true },
+            develop: { preview: true },
+            'feature/*': { preview: true }
+          });
+          
+          await logInitialization(sessionId, 'success', `✅ Netlify project created: ${netlifyProject.ssl_url}`);
+        }
+      } catch (netlifyError) {
+        await logInitialization(sessionId, 'warning', `⚠️ Netlify setup failed: ${netlifyError.message}`);
+      }
+    }
+    
+    // Store infrastructure results in session
+    if (session) {
+      if (netlifyProject) {
+        session.netlifyUrl = netlifyProject.ssl_url;
+        session.netlifyProjectId = netlifyProject.id;
+      }
+      
+      if (mongodbProject) {
+        session.mongodbDatabase = mongodbProject.databaseName;
+        session.mongodbCluster = mongodbProject.clusterName;
+        session.mongodbConnectionString = mongodbProject.connectionString;
+      }
+      
+      await sessionManager.setSession(sessionId, session);
+    }
+    
+  } catch (infraError) {
+    await logInitialization(sessionId, 'warning', `⚠️ Infrastructure setup failed: ${infraError.message}`);
+  }
+
+  // Phase 3: Wait for Deployment
   await sessionManager.updateSessionStatus(sessionId, 'deploying', 80, 'Deploying standard template...');
   
   try {
-    const deploymentResult = await netlifyService.waitForBranchDeployment(session.baseBranch, 300000);
-    if (deploymentResult.success && deploymentResult.url) {
-      await sessionManager.setPreviewUrl(sessionId, deploymentResult.url);
-      await logInitialization(sessionId, 'success', '🌐 Standard deployment ready!', {
-        deploymentUrl: deploymentResult.url
-      });
-      await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Standard deployment ready');
+    if (netlifyProject) {
+      await logInitialization(sessionId, 'info', '🚀 Waiting for Netlify deployment...');
+      const deployment = await netlifyService.waitForInitialDeployment(
+        netlifyProject.id, 
+        300000,
+        (message: string) => logInitialization(sessionId, 'info', message)
+      );
+      
+      if (deployment.state === 'ready') {
+        const deployUrl = deployment.deploy_ssl_url || netlifyProject.ssl_url;
+        await sessionManager.setPreviewUrl(sessionId, deployUrl);
+        await logInitialization(sessionId, 'success', '🌐 Standard deployment ready!', {
+          deploymentUrl: deployUrl
+        });
+        await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Standard deployment ready');
+      }
     }
   } catch (deployError) {
     await logInitialization(sessionId, 'warning', 
@@ -314,7 +497,7 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
     );
   }
 
-  // Phase 3: Complete
+  // Phase 4: Complete
   await sessionManager.updateSessionStatus(sessionId, 'completed', 100, 'Standard deployment completed!');
   await sessionManager.setCompleted(sessionId);
   
@@ -324,9 +507,25 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
       businessDomain: request.businessDomain,
       repositoryUrl: request.repositoryUrl,
       deploymentUrl: session.previewUrl,
-      deploymentType: 'standard'
+      netlifyUrl: netlifyProject?.ssl_url,
+      mongodbDatabase: mongodbProject?.databaseName,
+      deploymentType: 'standard',
+      infrastructureSetup: {
+        mongodb: !!mongodbProject,
+        netlify: !!netlifyProject,
+        environmentVariables: !!(netlifyProject && mongodbProject)
+      }
     }
   );
+
+  // Log infrastructure URLs for visibility
+  if (netlifyProject) {
+    await logInitialization(sessionId, 'success', `🌐 Netlify URL: ${netlifyProject.ssl_url}`);
+  }
+  if (mongodbProject) {
+    await logInitialization(sessionId, 'success', `🍃 MongoDB Database: ${mongodbProject.databaseName}`);
+    await logInitialization(sessionId, 'success', `🔗 MongoDB Connection: ${mongodbProject.connectionString}`);
+  }
 }
 
 /**
@@ -340,12 +539,17 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
     }
 
     // Check if we should use AI customization or standard deployment
-    const hasProjectRequirements = request.userRequirements && request.userRequirements.trim().length > 0;
+    const userRequirements = request.userRequirements || request.projectRequirements || '';
+    const hasProjectRequirements = userRequirements.trim().length > 0;
     
     if (!hasProjectRequirements) {
-      await logInitialization(sessionId, 'info', '📋 No project requirements provided - proceeding with standard deployment process');
+      await logInitialization(sessionId, 'info', '📋 No project requirements provided - proceeding with standard template deployment (no AI)');
       return await processStandardDeployment(sessionId, request);
     }
+    
+    await logInitialization(sessionId, 'info', '🤖 Project requirements provided - proceeding with AI-powered customization');
+    // Update the request with the unified requirements
+    request.userRequirements = userRequirements;
 
     // Phase 1: Template Analysis (AI customization path)
     await sessionManager.updateSessionStatus(sessionId, 'analyzing', 10, 'Analyzing template structure...');
@@ -448,7 +652,146 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       );
     }
 
-    // Phase 6: Commit Generated Files to Main Branch
+    // Phase 6: Setup Infrastructure (MongoDB & Netlify)
+    await sessionManager.updateSessionStatus(sessionId, 'setting_up_infrastructure', 75, 'Setting up database and deployment...');
+    
+    let mongodbProject = null;
+    let netlifyProject = null;
+    
+    try {
+      await logInitialization(sessionId, 'info', '🏗️ Setting up database and deployment infrastructure...');
+      
+      // Setup MongoDB database if template requires it and credentials are available
+      if (request.autoSetup !== false && process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY) {
+        try {
+          await logInitialization(sessionId, 'info', '🍃 Setting up MongoDB database...');
+          
+          const { MongoDBService } = await import('../src/services/mongodb');
+          const mongodbService = new MongoDBService();
+          
+          // Use the same logic as non-AI mode for MongoDB setup
+          let selectedOrgId = request.mongodbOrgId;
+          let selectedProjectId = request.mongodbProjectId;
+          
+          if (!selectedOrgId) {
+            const organizations = await mongodbService.getOrganizations();
+            if (organizations.length > 0) {
+              selectedOrgId = organizations[0].id;
+              await logInitialization(sessionId, 'info', `📁 Using MongoDB organization: ${organizations[0].name}`);
+            }
+          }
+          
+          if (!selectedProjectId && selectedOrgId) {
+            selectedProjectId = 'CREATE_NEW';
+          }
+          
+          if (selectedOrgId && selectedProjectId) {
+            mongodbProject = await mongodbService.createProjectWithSelection(
+              request.projectName,
+              selectedOrgId,
+              selectedProjectId,
+              (message: string) => logInitialization(sessionId, 'info', message)
+            );
+            
+            await logInitialization(sessionId, 'success', `✅ MongoDB database created: ${mongodbProject.databaseName}`);
+          }
+        } catch (mongoError) {
+          await logInitialization(sessionId, 'warning', `⚠️ MongoDB setup failed: ${mongoError.message}`);
+        }
+      }
+      
+      // Setup Netlify project if enabled
+      if (request.autoSetup !== false && process.env.NETLIFY_TOKEN) {
+        try {
+          await logInitialization(sessionId, 'info', '🚀 Setting up Netlify project...');
+          
+          netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl);
+          
+          // Get template information for environment variables
+          const { TemplateRegistry } = await import('../src/services/template-registry');
+          const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
+          const templates = await templateRegistry.getAllTemplates();
+          const template = templates.find(t => t.id === request.templateId);
+          
+          if (template) {
+            // Prepare environment variables (same logic as non-AI mode)
+            const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+            
+            // Add MongoDB connection details if database was created
+            if (mongodbProject) {
+              if (template.envVars.includes('MONGODB_URI')) {
+                templateEnvVars['MONGODB_URI'] = mongodbProject.connectionString;
+              }
+              if (template.envVars.includes('DATABASE_URL')) {
+                templateEnvVars['DATABASE_URL'] = mongodbProject.connectionString;
+              }
+              templateEnvVars['MONGODB_DATABASE_NAME'] = mongodbProject.databaseName;
+              templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
+              templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
+              templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
+            }
+            
+            // Add other environment variables
+            if (template.envVars.includes('VITE_APP_NAME')) {
+              templateEnvVars['VITE_APP_NAME'] = request.projectName;
+            }
+            if (template.envVars.includes('VITE_REPOSITORY_URL')) {
+              templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+            }
+            if (template.envVars.includes('VITE_BASE_BRANCH')) {
+              templateEnvVars['VITE_BASE_BRANCH'] = 'main';
+            }
+            
+            // Get AI provider env vars
+            const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
+            
+            // Set environment variables
+            await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
+              ...aiProviderVars,
+              ...templateEnvVars
+            });
+            
+            // Configure branch deployments with PR previews
+            await netlifyService.configureBranchDeployments(netlifyProject.id, {
+              main: { production: true },
+              develop: { preview: true },
+              'feature/*': { preview: true }
+            });
+            
+            await logInitialization(sessionId, 'success', `✅ Netlify project created: ${netlifyProject.ssl_url}`);
+          }
+          
+        } catch (netlifyError) {
+          await logInitialization(sessionId, 'warning', `⚠️ Netlify setup failed: ${netlifyError.message}`);
+        }
+      }
+      
+      // Store infrastructure results in session
+      const session = await sessionManager.getSession(sessionId);
+      if (session) {
+        if (netlifyProject) {
+          session.netlifyUrl = netlifyProject.ssl_url;
+          session.netlifyProjectId = netlifyProject.id;
+        }
+        
+        if (mongodbProject) {
+          session.mongodbDatabase = mongodbProject.databaseName;
+          session.mongodbCluster = mongodbProject.clusterName;
+          session.mongodbConnectionString = mongodbProject.connectionString;
+        }
+        
+        await sessionManager.setSession(sessionId, session);
+      }
+      
+      await logInitialization(sessionId, 'success', '✅ Infrastructure setup completed');
+      
+    } catch (infraError) {
+      await logInitialization(sessionId, 'warning', 
+        `⚠️ Infrastructure setup failed: ${infraError.message}`
+      );
+    }
+
+    // Phase 7: Commit Generated Files to Main Branch
     await sessionManager.updateSessionStatus(sessionId, 'committing', 80, 'Committing project files to main branch...');
     
     const commits = await githubService.commitChanges(
@@ -471,17 +814,31 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       { commitCount: commits.length, branch: session.baseBranch }
     );
 
-    // Phase 7: Wait for Deployment (Skip PR Creation)
+    // Phase 8: Wait for Deployment 
     await sessionManager.updateSessionStatus(sessionId, 'deploying', 90, 'Waiting for deployment...');
     
     try {
-      const deploymentResult = await netlifyService.waitForBranchDeployment(session.baseBranch, 300000);
-      if (deploymentResult.success && deploymentResult.url) {
-        await sessionManager.setPreviewUrl(sessionId, deploymentResult.url);
-        await logInitialization(sessionId, 'success', '🌐 Project deployment ready!', {
-          deploymentUrl: deploymentResult.url
-        });
-        await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Project successfully deployed');
+      if (netlifyProject) {
+        // Wait for the initial deployment of our Netlify project
+        await logInitialization(sessionId, 'info', '🚀 Waiting for Netlify deployment...');
+        const deployment = await netlifyService.waitForInitialDeployment(
+          netlifyProject.id, 
+          300000,
+          (message: string) => logInitialization(sessionId, 'info', message)
+        );
+        
+        if (deployment.state === 'ready') {
+          const deployUrl = deployment.deploy_ssl_url || netlifyProject.ssl_url;
+          await sessionManager.setPreviewUrl(sessionId, deployUrl);
+          await logInitialization(sessionId, 'success', '🌐 Project deployment ready!', {
+            deploymentUrl: deployUrl
+          });
+          await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Project successfully deployed');
+        } else if (deployment.state === 'error') {
+          await logInitialization(sessionId, 'warning', '❌ Netlify deployment failed - check logs');
+        }
+      } else {
+        await logInitialization(sessionId, 'info', '⚠️ No Netlify project - skipping deployment wait');
       }
     } catch (deployError) {
       await logInitialization(sessionId, 'warning', 
@@ -499,9 +856,26 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
         businessDomain: request.businessDomain,
         generatedFiles: parseResult.files.length,
         repositoryUrl: request.repositoryUrl,
-        deploymentUrl: session.previewUrl
+        deploymentUrl: session.previewUrl,
+        netlifyUrl: netlifyProject?.ssl_url,
+        mongodbDatabase: mongodbProject?.databaseName,
+        mongodbCluster: mongodbProject?.clusterName,
+        infrastructureSetup: {
+          mongodb: !!mongodbProject,
+          netlify: !!netlifyProject,
+          environmentVariables: !!(netlifyProject && mongodbProject)
+        }
       }
     );
+
+    // Log individual infrastructure components for better visibility
+    if (netlifyProject) {
+      await logInitialization(sessionId, 'success', `🌐 Netlify URL: ${netlifyProject.ssl_url}`);
+    }
+    if (mongodbProject) {
+      await logInitialization(sessionId, 'success', `🍃 MongoDB Database: ${mongodbProject.databaseName}`);
+      await logInitialization(sessionId, 'success', `🔗 MongoDB Connection: ${mongodbProject.connectionString}`);
+    }
 
   } catch (error) {
     console.error('[PROJECT-INIT] Processing error:', error);
@@ -601,25 +975,37 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         };
       }
 
-      // Resolve repository URL from template if not provided
+      // Resolve template repository URL and CREATE NEW USER REPOSITORY
       if (!normalizedRequest.repositoryUrl && normalizedRequest.templateId) {
-        // Load template registry to get repository URL
         try {
           const { TemplateRegistry } = await import('../src/services/template-registry');
-          const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN);
+          // Use the web API GitHub service, not the CLI one
+          const { EnhancedGitHubService } = await import('./shared/enhanced-github-service');
+          
+          const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
           const templates = await templateRegistry.getAllTemplates();
           const template = templates.find(t => t.id === normalizedRequest.templateId);
           
-          if (template) {
-            normalizedRequest.repositoryUrl = template.repository;
-          } else {
+          if (!template) {
             throw new Error(`Template not found: ${normalizedRequest.templateId}`);
           }
+          
+          // Create new repository from template for the user
+          const github = new EnhancedGitHubService();
+          const newRepoUrl = await github.createFromTemplate(
+            template.repository,
+            normalizedRequest.projectName,
+            normalizedRequest.githubOrg
+          );
+          
+          normalizedRequest.repositoryUrl = newRepoUrl;
+          console.log(`[PROJECT-INIT] Created new repository: ${newRepoUrl}`);
+          
         } catch (error) {
           return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ error: `Template error: ${error.message}` })
+            body: JSON.stringify({ error: `Repository creation error: ${error.message}` })
           };
         }
       }

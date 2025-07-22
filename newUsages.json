@@ -28,6 +28,21 @@
     ]
   },
   {
+    "id": "contact-book-appointment",
+    "definitionId": "dev-div",
+    "name": "Contact Book Appointment",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Dr-Miller/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "book",
+      "appointment"
+    ]
+  },
+  {
     "id": "contact-button",
     "definitionId": "dev-button",
     "name": "Contact Button",
@@ -38,6 +53,51 @@
     "semanticTags": [
       "landing-page",
       "contact",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-call-button",
+    "definitionId": "dev-button",
+    "name": "Contact Call Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project-2/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "call",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-call-office",
+    "definitionId": "dev-div",
+    "name": "Contact Call Office",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Dr-Miller/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "call",
+      "office"
+    ]
+  },
+  {
+    "id": "contact-quote-button",
+    "definitionId": "dev-button",
+    "name": "Contact Quote Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project-2/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "quote",
       "button"
     ]
   },
@@ -57,6 +117,50 @@
     ]
   },
   {
+    "id": "cta-join-community",
+    "definitionId": "dev-div",
+    "name": "Cta Join Community",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "join",
+      "community"
+    ]
+  },
+  {
+    "id": "cta-start-project",
+    "definitionId": "dev-div",
+    "name": "Cta Start Project",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "start",
+      "project"
+    ]
+  },
+  {
+    "id": "docs-button",
+    "definitionId": "dev-button",
+    "name": "Docs Button",
+    "description": "Button component used in Landing for docs functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "docs",
+      "button"
+    ]
+  },
+  {
     "id": "doctor-name",
     "definitionId": "dev-div",
     "name": "Doctor Name",
@@ -71,6 +175,20 @@
     ]
   },
   {
+    "id": "dreams-highlight",
+    "definitionId": "dev-div",
+    "name": "Dreams Highlight",
+    "description": "Div component used in Landing for dreams functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project-2/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "dreams",
+      "highlight"
+    ]
+  },
+  {
     "id": "expertise-highlight",
     "definitionId": "dev-div",
     "name": "Expertise Highlight",
@@ -82,6 +200,19 @@
       "landing-page",
       "expertise",
       "highlight"
+    ]
+  },
+  {
+    "id": "getFeatureCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetFeatureCardId(index)",
+    "description": "Div component used in Landing for getFeatureCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getFeatureCardId(index)"
     ]
   },
   {
@@ -141,6 +272,23 @@
     }
   },
   {
+    "id": "getSpecialtyLetterId(index)",
+    "definitionId": "dev-div",
+    "name": "GetSpecialtyLetterId(index)",
+    "description": "Div component used in Landing for getSpecialtyLetterId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getSpecialtyLetterId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${specialty.color"
+    }
+  },
+  {
     "id": "getStatCardId(index)",
     "definitionId": "dev-div",
     "name": "GetStatCardId(index)",
@@ -152,6 +300,36 @@
       "landing-page",
       "getStatCardId(index)"
     ]
+  },
+  {
+    "id": "getTechBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTechBadgeId(index)",
+    "description": "Div component used in Landing for getTechBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTechBadgeId(index)"
+    ]
+  },
+  {
+    "id": "getTechLetterId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTechLetterId(index)",
+    "description": "Div component used in Landing for getTechLetterId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTechLetterId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${tech.color"
+    }
   },
   {
     "id": "getTestimonialCardId(index)",
@@ -167,6 +345,49 @@
     ]
   },
   {
+    "id": "getValueCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetValueCardId(index)",
+    "description": "Div component used in Landing for getValueCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project-2/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getValueCardId(index)"
+    ]
+  },
+  {
+    "id": "hero-book-appointment",
+    "definitionId": "dev-div",
+    "name": "Hero Book Appointment",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "book",
+      "appointment"
+    ]
+  },
+  {
+    "id": "hero-call-button",
+    "definitionId": "dev-button",
+    "name": "Hero Call Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Dr-Miller/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "call",
+      "button"
+    ]
+  },
+  {
     "id": "hero-consultation-button",
     "definitionId": "dev-button",
     "name": "Hero Consultation Button",
@@ -178,6 +399,21 @@
       "landing-page",
       "hero",
       "consultation",
+      "button"
+    ]
+  },
+  {
+    "id": "hero-contact-button",
+    "definitionId": "dev-button",
+    "name": "Hero Contact Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project-2/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "contact",
       "button"
     ]
   },
@@ -240,6 +476,21 @@
     ]
   },
   {
+    "id": "hero-github-button",
+    "definitionId": "dev-button",
+    "name": "Hero Github Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "github",
+      "button"
+    ]
+  },
+  {
     "id": "hero-learn-more",
     "definitionId": "dev-div",
     "name": "Hero Learn More",
@@ -252,6 +503,36 @@
       "hero",
       "learn",
       "more"
+    ]
+  },
+  {
+    "id": "hero-manage-practice",
+    "definitionId": "dev-div",
+    "name": "Hero Manage Practice",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Dr-Miller/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "manage",
+      "practice"
+    ]
+  },
+  {
+    "id": "hero-patient-portal",
+    "definitionId": "dev-div",
+    "name": "Hero Patient Portal",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "patient",
+      "portal"
     ]
   },
   {
@@ -282,6 +563,21 @@
       "hero",
       "schedule",
       "appointment"
+    ]
+  },
+  {
+    "id": "hero-start-building",
+    "definitionId": "dev-div",
+    "name": "Hero Start Building",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "building"
     ]
   },
   {
@@ -384,6 +680,20 @@
     ]
   },
   {
+    "id": "mongodb-highlight",
+    "definitionId": "dev-div",
+    "name": "Mongodb Highlight",
+    "description": "Div component used in Landing for mongodb functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Test-Project/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "mongodb",
+      "highlight"
+    ]
+  },
+  {
     "id": "nav-actions",
     "definitionId": "dev-div",
     "name": "Nav Actions",
@@ -442,6 +752,20 @@
     ]
   },
   {
+    "id": "priority-highlight",
+    "definitionId": "dev-div",
+    "name": "Priority Highlight",
+    "description": "Div component used in Landing for priority functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/Dr-Miller/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "priority",
+      "highlight"
+    ]
+  },
+  {
     "id": "projects-button",
     "definitionId": "dev-button",
     "name": "Projects Button",
@@ -484,6 +808,20 @@
     ]
   },
   {
+    "id": "specialty-highlight",
+    "definitionId": "dev-div",
+    "name": "Specialty Highlight",
+    "description": "Div component used in Landing for specialty functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "specialty",
+      "highlight"
+    ]
+  },
+  {
     "id": "stats-content",
     "definitionId": "dev-div",
     "name": "Stats Content",
@@ -509,6 +847,21 @@
       "landing-page",
       "stats",
       "grid"
+    ]
+  },
+  {
+    "id": "submit-appointment-request",
+    "definitionId": "dev-div",
+    "name": "Submit Appointment Request",
+    "description": "Div component used in Landing for submit functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/geenius-template-vite-react-mongo/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "submit",
+      "appointment",
+      "request"
     ]
   },
   {

@@ -15,6 +15,17 @@ const StatusTab: React.FC<StatusTabProps> = ({
   loadProjectStatus,
   setActiveView
 }) => {
+  // Auto-refresh for active sessions
+  React.useEffect(() => {
+    if (projectStatus.isActiveSession && projectStatus.status !== 'completed' && projectStatus.status !== 'failed') {
+      const interval = setInterval(() => {
+        loadProjectStatus();
+      }, 3000); // Refresh every 3 seconds for active sessions
+      
+      return () => clearInterval(interval);
+    }
+  }, [projectStatus.isActiveSession, projectStatus.status, loadProjectStatus]);
+
   return (
     <div className="space-y-6">
       {/* Project Header */}
@@ -68,14 +79,28 @@ const StatusTab: React.FC<StatusTabProps> = ({
       ) : (
         <>
           {/* Project Overview Card */}
-          <Card className="shadow-xl border-l-4 border-l-green-500">
+          <Card className={`shadow-xl border-l-4 ${projectStatus.isActiveSession ? 'border-l-blue-500' : 'border-l-green-500'}`}>
             <CardHeader>
-              <CardTitle className="text-xl text-green-800 flex items-center gap-2">
-                ✅ Project Overview
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <CardTitle className={`text-xl flex items-center gap-2 ${projectStatus.isActiveSession ? 'text-blue-800' : 'text-green-800'}`}>
+                {projectStatus.isActiveSession ? '🔄 Active Session' : '✅ Project Overview'}
+                <Badge variant="secondary" className={projectStatus.isActiveSession ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
                   {projectStatus.status || 'Active'}
                 </Badge>
               </CardTitle>
+              {projectStatus.isActiveSession && projectStatus.progress !== undefined && (
+                <div className="mt-3">
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>{projectStatus.currentStep || 'Processing...'}</span>
+                    <span>{projectStatus.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${projectStatus.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

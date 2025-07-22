@@ -366,6 +366,90 @@ export class EnhancedGitHubService {
   }
 
   /**
+   * Create repository from template (for web API initialization)
+   */
+  async createFromTemplate(
+    templateRepoUrl: string,
+    projectName: string,
+    targetOrg: string
+  ): Promise<string> {
+    // Parse template repository URL
+    const { owner: templateOwner, repo: templateName } = this.parseRepoUrl(templateRepoUrl);
+    
+    // Find available name for the new repository
+    const finalRepoName = await this.findAvailableRepoName(targetOrg, projectName);
+    
+    try {
+      // Create a new repository from the template
+      const { data: newRepo } = await this.octokit.rest.repos.createUsingTemplate({
+        template_owner: templateOwner,
+        template_repo: templateName,
+        name: finalRepoName,
+        owner: targetOrg,
+        description: `Project based on ${templateOwner}/${templateName}`,
+        private: false,
+        include_all_branches: false
+      });
+      
+      console.log(`[GITHUB] Created repository from template: ${newRepo.full_name}`);
+      
+      // Wait for the new repository to be ready
+      await this.waitForRepository(newRepo.owner.login, newRepo.name);
+      
+      const finalUrl = `https://github.com/${newRepo.owner.login}/${newRepo.name}`;
+      return finalUrl;
+      
+    } catch (error) {
+      console.error(`[GITHUB] Failed to create repository from template:`, error);
+      throw new Error(`Repository creation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Check if repository name is available and find alternative if not
+   */
+  private async findAvailableRepoName(org: string, baseName: string): Promise<string> {
+    let attempts = 0;
+    let repoName = baseName;
+    
+    while (attempts < 10) {
+      try {
+        await this.octokit.rest.repos.get({
+          owner: org,
+          repo: repoName
+        });
+        // Repository exists, try next name
+        attempts++;
+        repoName = `${baseName}-${attempts}`;
+      } catch (error) {
+        // Repository doesn't exist, we can use this name
+        return repoName;
+      }
+    }
+    
+    throw new Error(`Could not find available repository name after ${attempts} attempts`);
+  }
+
+  /**
+   * Wait for repository to be fully initialized
+   */
+  private async waitForRepository(owner: string, repo: string, maxWaitMs: number = 30000): Promise<void> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitMs) {
+      try {
+        await this.octokit.rest.repos.get({ owner, repo });
+        return; // Repository is ready
+      } catch (error) {
+        // Wait and retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    throw new Error(`Repository ${owner}/${repo} not ready after ${maxWaitMs}ms`);
+  }
+
+  /**
    * Merge a pull request
    */
   async mergePullRequest(

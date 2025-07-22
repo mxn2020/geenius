@@ -285,16 +285,15 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="projectRequirements">Project Requirements</Label>
+                <Label htmlFor="projectRequirements">Project Requirements (Optional)</Label>
                 <Textarea
                   name="projectRequirements"
-                  placeholder="Describe your project in detail. For example: 'Create a doctor website with client management, appointment scheduling, and visitors should be able to request appointments online. Include patient records and appointment calendar.'"
-                  rows={8}
-                  className="min-h-[200px] text-base"
-                  required
+                  placeholder="Optional: Describe your project for AI customization. For example: 'Create a doctor website with client management, appointment scheduling, and visitors should be able to request appointments online.' Leave empty to deploy the standard template without AI customization."
+                  rows={6}
+                  className="min-h-[150px] text-base"
                 />
                 <p className="text-xs text-gray-500">
-                  Be specific about features, functionality, and user interactions you need. The AI will generate everything based on this description.
+                  <strong>Empty:</strong> Deploy standard template without AI (faster). <strong>Filled:</strong> AI will customize the template based on your requirements.
                 </p>
               </div>
 
@@ -323,12 +322,10 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-medium text-blue-900 mb-2">Default Settings Applied:</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• AI Provider: Claude (Anthropic) - Best for coding</li>
-                  <li>• Agent Mode: Single Agent - Fast and focused</li>
-                  <li>• Model: Default (empty) - Uses provider's recommended model</li>
-                  <li>• GitHub Org: First available from your account</li>
-                  <li>• MongoDB Org: First available from your account</li>
-                  <li>• MongoDB Project Name: Uses your project name</li>
+                  <li>• Template: Vite + React + MongoDB (standard deployment)</li>
+                  <li>• AI Processing: Only if Project Requirements are provided</li>
+                  <li>• AI Provider: Claude (Anthropic) - if AI is used</li>
+                  <li>• Agent Mode: Single Agent - if AI is used</li>
                   <li>• Auto-setup: GitHub repo and Netlify deployment enabled</li>
                 </ul>
               </div>

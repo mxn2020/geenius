@@ -1,14 +1,14 @@
 {
   "template": "vite-react-mongo",
-  "name": "test-x820",
-  "repoUrl": "https://github.com/mxn2020/test-x820",
+  "name": "Amazing Project",
+  "repoUrl": "https://github.com/mxn2020/Amazing-Project",
   "aiProvider": "anthropic",
   "agentMode": "single",
   "orchestrationStrategy": "hierarchical",
-  "netlifyProject": "df7cbf2f-bbb1-4744-8187-b656ee30f39c",
-  "createdAt": "2025-07-21T22:00:21.068Z",
-  "updatedAt": "2025-07-21T22:00:21.068Z",
-  "repositoryUrl": "https://github.com/mxn2020/test-x820",
-  "netlifyUrl": "https://test-x820-mddnffcr.netlify.app",
-  "projectId": "proj_2507_mumdsgr3"
+  "netlifyProject": "08675e7f-d197-4523-a5c3-8a646aabca69",
+  "createdAt": "2025-07-21T23:48:00.833Z",
+  "updatedAt": "2025-07-21T23:48:00.833Z",
+  "repositoryUrl": "https://github.com/mxn2020/Amazing-Project",
+  "netlifyUrl": "https://amazing-project-mddr9iy0.netlify.app",
+  "projectId": "proj_2507_r26hj9km"
 }

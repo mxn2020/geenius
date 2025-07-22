@@ -156,7 +156,8 @@ export class ProjectWorkflow {
                 mongodbProject = await mongodbService.createProjectWithSelection(
                   options.projectName,
                   selectedOrg.id,
-                  selectedProjectId
+                  selectedProjectId,
+                  (message: string) => this.addLog(message) // Pass progress callback
                 );
                 break;
               } catch (error) {
@@ -268,18 +269,21 @@ export class ProjectWorkflow {
               }
             }
 
-            // Set environment variables
+            // Set environment variables including user's repository URL
             await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
               ...this.getEnvVarsForProvider(options.aiProvider, this.getExistingApiKey(options.aiProvider), options.model),
               ...this.getGitHubEnvVars(options.githubOrg, repoUrl),
-              ...templateEnvVars
+              ...templateEnvVars,
+              // Fix: Set user's repository URL instead of template URL
+              'VITE_REPOSITORY_URL': repoUrl,
+              'VITE_BASE_BRANCH': 'main'
             });
 
-            // Configure branch deployments
+            // Configure branch deployments with PR previews
             await netlifyService.configureBranchDeployments(netlifyProject.id, {
               main: { production: true },
-              //develop: { preview: true },
-              //'feature/*': { preview: true }
+              develop: { preview: true },
+              'feature/*': { preview: true }
             });
 
             this.addLog(`✅ Netlify project created successfully!`);
@@ -288,7 +292,11 @@ export class ProjectWorkflow {
             // Wait for initial deployment
             try {
               this.addLog('🚀 Waiting for Netlify deployment...');
-              const deployment = await netlifyService.waitForInitialDeployment(netlifyProject.id, 180000);
+              const deployment = await netlifyService.waitForInitialDeployment(
+                netlifyProject.id, 
+                180000,
+                (message: string) => this.addLog(message) // Pass progress callback
+              );
               
               if (deployment.state === 'ready') {
                 this.addLog('✅ Netlify deployment completed successfully!');

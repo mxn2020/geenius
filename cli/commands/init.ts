@@ -459,11 +459,14 @@ export async function initCommand(): Promise<void> {
             templateEnvVars['VITE_GEENIUS_API_URL'] = netlifyProject.ssl_url || netlifyProject.url;
           }
 
-          // Set environment variables
+          // Set environment variables including user's repository URL
           const netlifyVars = await netlify.setupEnvironmentVariables(netlifyProject.id, {
             ...getEnvVarsForProvider(validatedInput.aiProvider, configManager.getApiKey(validatedInput.aiProvider), validatedInput.model),
             ...getGitHubEnvVars(validatedInput.githubOrg, repoUrl),
-            ...templateEnvVars
+            ...templateEnvVars,
+            // Fix: Set user's repository URL instead of template URL
+            'VITE_REPOSITORY_URL': repoUrl,
+            'VITE_BASE_BRANCH': 'main'
           });
 
           // Log the important URLs for the user
@@ -477,8 +480,8 @@ export async function initCommand(): Promise<void> {
           // Configure branch deployments
           await netlify.configureBranchDeployments(netlifyProject.id, {
             main: { production: true },
-            // develop: { preview: true },
-            // 'feature/*': { preview: true }
+            develop: { preview: true },
+            'feature/*': { preview: true }
           });
 
           // Wait for initial deployment to complete
