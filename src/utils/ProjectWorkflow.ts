@@ -4,6 +4,8 @@ import { MongoDBService } from '../services/mongodb';
 import { GitHubService } from '../services/github';
 import { TemplateRegistry } from '../services/template-registry';
 import { randomBytes } from 'crypto';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 const netlifyService = new NetlifyService();
 const mongodbService = new MongoDBService();
@@ -181,7 +183,7 @@ export class ProjectWorkflow {
             if (mongodbProject) {
               this.addLog(`✅ MongoDB database created: ${mongodbProject.databaseName}`);
               this.addLog(`🔗 Cluster: ${mongodbProject.clusterName}`);
-              this.addLog(`🌐 MongoDB connection established successfully`);
+              this.addLog(`🌐 MongoDB Connection: ${mongodbProject.connectionString}`);
             }
 
           } catch (error) {
@@ -203,9 +205,10 @@ export class ProjectWorkflow {
         } else {
           try {
             this.addLog('🚀 Setting up Netlify project...');
-            
-            // Prepare environment variables for template
-            const templateEnvVars: Record<string, string> = {};
+            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl);
+
+            // Prepare environment variables
+            const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
 
             // Add MongoDB connection details if database was created
             if (mongodbProject) {
@@ -219,19 +222,15 @@ export class ProjectWorkflow {
               templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
               templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
               templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
-            } else {
-              // Set placeholder values when MongoDB is not configured
-              if (template.envVars.includes('MONGODB_URI')) {
-                templateEnvVars['MONGODB_URI'] = 'mongodb://localhost:27017/localdb';
-              }
-              if (template.envVars.includes('DATABASE_URL')) {
-                templateEnvVars['DATABASE_URL'] = 'mongodb://localhost:27017/localdb';
-              }
             }
 
-            // Generate secure secrets (always set these if required by template)
+            // Generate secure secrets
             if (template.envVars.includes('BETTER_AUTH_SECRET')) {
               templateEnvVars['BETTER_AUTH_SECRET'] = this.generateSecureSecret();
+            }
+
+            if (template.envVars.includes('BETTER_AUTH_URL')) {
+              templateEnvVars['BETTER_AUTH_URL'] = netlifyProject ? netlifyProject.ssl_url : 'http://localhost:5176';
             }
 
             if (template.envVars.includes('JWT_SECRET')) {
@@ -251,73 +250,34 @@ export class ProjectWorkflow {
               templateEnvVars['VITE_APP_DESCRIPTION'] = `${template.description} - ${options.projectName}`;
             }
 
-            // Always set repository URL and base branch (required for web interface)
-            templateEnvVars['VITE_REPOSITORY_URL'] = repoUrl;
-            templateEnvVars['VITE_BASE_BRANCH'] = 'main';
-
-            // Log which template environment variables are being set
-            this.addLog(`🔧 Setting template environment variables: ${template.envVars.join(', ')}`);
-            const nonEmptyVars = Object.entries(templateEnvVars).filter(([_, value]) => value !== '').map(([key, _]) => key);
-            this.addLog(`✅ Non-empty variables: ${nonEmptyVars.join(', ')}`);
-
-            // Prepare all environment variables before creating Netlify project
-            const apiKey = this.getExistingApiKey(options.aiProvider);
-            if (!apiKey) {
-              throw new Error(`API key for ${options.aiProvider} is required`);
-            }
-            
-            const allEnvVars = {
-              ...this.getEnvVarsForProvider(options.aiProvider, apiKey, options.model),
-              ...this.getGitHubEnvVars(options.githubOrg, repoUrl),
-              ...templateEnvVars
-            };
-
-            // Debug: Log all environment variables being passed to Netlify
-            const envVarNames = Object.keys(allEnvVars);
-            this.addLog(`🔍 All environment variables to be set (${envVarNames.length}): ${envVarNames.join(', ')}`);
-            const templateVarNames = template.envVars.filter(varName => allEnvVars[varName] !== '');
-            this.addLog(`📋 Template variables with values (${templateVarNames.length}): ${templateVarNames.join(', ')}`);
-            
-            // Filter out empty environment variables before sending to Netlify
-            const filteredEnvVars = Object.entries(allEnvVars)
-              .filter(([_, value]) => value !== '')
-              .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
-            
-            this.addLog(`✅ Filtered environment variables (${Object.keys(filteredEnvVars).length}): ${Object.keys(filteredEnvVars).join(', ')}`);
-
-            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl, undefined, filteredEnvVars);
-
-            // Set API URLs and other dynamic values based on the created Netlify project
+            // Set API URLs based on Netlify project
             if (netlifyProject) {
-              const dynamicEnvVars: Record<string, string> = {};
-                
-                // Helper to ensure URLs start with https://
-                const ensureHttps = (url: string) => url.startsWith('https://') ? url : `https://${url.replace(/^http:\/\//, '').replace(/^https:\/\//, '')}`;
-
-                if (template.envVars.includes('BETTER_AUTH_URL')) {
-                dynamicEnvVars['BETTER_AUTH_URL'] = ensureHttps(netlifyProject.ssl_url);
-                }
-                if (template.envVars.includes('VITE_APP_URL')) {
-                dynamicEnvVars['VITE_APP_URL'] = ensureHttps(netlifyProject.ssl_url);
-                }
-                if (template.envVars.includes('VITE_API_URL')) {
-                dynamicEnvVars['VITE_API_URL'] = `${ensureHttps(netlifyProject.ssl_url)}/api`;
-                }
-                if (template.envVars.includes('VITE_API_BASE_URL')) {
-                dynamicEnvVars['VITE_API_BASE_URL'] = ensureHttps(netlifyProject.ssl_url);
-                }
-                if (template.envVars.includes('NETLIFY_FUNCTIONS_URL')) {
-                dynamicEnvVars['NETLIFY_FUNCTIONS_URL'] = '/api';
-                }
-              if (template.envVars.includes('CORS_ORIGIN')) {
-                dynamicEnvVars['CORS_ORIGIN'] = netlifyProject.ssl_url;
+              if (template.envVars.includes('VITE_APP_URL')) {
+                templateEnvVars['VITE_APP_URL'] = netlifyProject.ssl_url;
               }
-
-              // Update environment variables with dynamic values if there are any
-              if (Object.keys(dynamicEnvVars).length > 0) {
-                await netlifyService.setupEnvironmentVariables(netlifyProject.id, dynamicEnvVars);
+              if (template.envVars.includes('VITE_API_URL')) {
+                templateEnvVars['VITE_API_URL'] = `${netlifyProject.ssl_url}/api`;
+              }
+              if (template.envVars.includes('VITE_API_BASE_URL')) {
+                templateEnvVars['VITE_API_BASE_URL'] = netlifyProject.ssl_url;
+              }
+              if (template.envVars.includes('NETLIFY_FUNCTIONS_URL')) {
+                templateEnvVars['NETLIFY_FUNCTIONS_URL'] = '/api';
+              }
+              if (template.envVars.includes('CORS_ORIGIN')) {
+                templateEnvVars['CORS_ORIGIN'] = netlifyProject.ssl_url;
               }
             }
+
+            // Set environment variables including user's repository URL
+            await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
+              ...this.getEnvVarsForProvider(options.aiProvider, this.getExistingApiKey(options.aiProvider), options.model),
+              ...this.getGitHubEnvVars(options.githubOrg, repoUrl),
+              ...templateEnvVars,
+              // Fix: Set user's repository URL instead of template URL
+              'VITE_REPOSITORY_URL': repoUrl,
+              'VITE_BASE_BRANCH': 'main'
+            });
 
             // Configure branch deployments with PR previews
             await netlifyService.configureBranchDeployments(netlifyProject.id, {
@@ -356,7 +316,7 @@ export class ProjectWorkflow {
         }
       }
 
-      // Save project configuration to Redis only
+      // Save project configuration to file and Redis
       const projectData = {
         template: template.id,
         name: options.projectName,
@@ -371,14 +331,15 @@ export class ProjectWorkflow {
         // Add deployment URLs and MongoDB info
         repositoryUrl: repoUrl,
         netlifyUrl: netlifyProject?.ssl_url,
-        mongodbOrgId: options.mongodbOrgId,
-        mongodbProjectId: mongodbProject?.id,
+        mongodbOrgId: mongodbProject?.orgId,
+        mongodbProjectId: mongodbProject?.projectId,
         mongodbDatabase: mongodbProject?.databaseName
       };
 
+      await this.saveProjectConfig(projectData);
       await this.saveProjectToRedis(projectData);
 
-      this.addLog('💾 Project configuration saved to Redis');
+      this.addLog('💾 Project configuration saved');
       this.addLog('🎉 Setup complete!');
 
       return {
@@ -467,6 +428,16 @@ export class ProjectWorkflow {
     return vars;
   }
 
+  private async saveProjectConfig(config: any): Promise<void> {
+    try {
+      const configPath = join(process.cwd(), '.dev-agent.json');
+      await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+    } catch (error: any) {
+      console.warn('Failed to save project config:', error.message);
+      // Don't throw here, just log warning since config saving is not critical
+    }
+  }
+
   private async saveProjectToRedis(projectData: any): Promise<void> {
     try {
       // Import storage service
@@ -478,7 +449,7 @@ export class ProjectWorkflow {
       const year = now.getFullYear().toString().slice(-2);
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const yearMonth = `${year}${month}`;
-      const random = Math.random().toString(36).substring(2, 10);
+      const random = Math.random().toString(36).substr(2, 8);
       
       const redisProjectData = {
         id: `proj_${yearMonth}_${random}`,
@@ -500,11 +471,16 @@ export class ProjectWorkflow {
 
       await storage.storeProject(redisProjectData.id, redisProjectData);
       
+      // Also save project ID back to the config file so we can find it later
+      const configPath = join(process.cwd(), '.dev-agent.json');
+      const updatedConfig = { ...projectData, projectId: redisProjectData.id };
+      await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2));
+      
       this.addLog(`💾 Project data saved to Redis with ID: ${redisProjectData.id}`);
     } catch (error: any) {
       console.warn('Failed to save project to Redis:', error.message);
       this.addLog(`⚠️ Warning: Could not save project to Redis: ${error.message}`);
-      // Don't throw here, just log warning since Redis saving is not critical for initialization
+      // Don't throw here, project can still work with local config
     }
   }
 }

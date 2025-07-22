@@ -8,14 +8,7 @@
       "branch": "main",
       "stack": ["Vite", "React", "MongoDB", "TypeScript", "Netlify Functions", "BetterAuth"],
       "features": ["Fast development with Vite", "MongoDB Atlas integration", "Netlify Functions for API", "React 18 with hooks", "TypeScript support", "Hot module replacement", "BetterAuth integration", "Dev-container integration"],
-      "envVars": [
-        "DATABASE_URL",
-        "MONGODB_URI",
-        "VITE_APP_URL",
-        "VITE_APP_NAME",
-        "BETTER_AUTH_SECRET",
-        "BETTER_AUTH_URL"
-      ],
+      "envVars": ["DATABASE_URL", "MONGODB_URI", "VITE_APP_URL", "VITE_APP_NAME", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
       "testCommand": "pnpm test",
       "buildCommand": "pnpm build",
       "devCommand": "pnpm dev",
@@ -635,7 +628,8 @@
       "name": "Anthropic (Claude)",
       "description": "Best for coding and technical tasks",
       "models": [
-        "claude-claude-sonnet-4-20250514    "claude-opus-4-20250514",
+        "claude-sonnet-4-20250514",
+        "claude-opus-4-20250514",
         "claude-3-7-sonnet-20250219",
         "claude-sonnet-4-20250514",
         "claude-3-5-haiku-20241022",
