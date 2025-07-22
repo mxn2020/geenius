@@ -1,15 +1,14 @@
 {
   "template": "vite-react-mongo",
-  "name": "test 24",
-  "repoUrl": "https://github.com/mxn2020/test-24",
+  "name": "test-30",
+  "repoUrl": "https://github.com/mxn2020/test-30",
   "aiProvider": "anthropic",
   "agentMode": "single",
   "orchestrationStrategy": "hierarchical",
-  "netlifyProject": "4ca0b4e9-d0ab-44d0-9e0c-52d18e8c37b5",
-  "createdAt": "2025-07-22T16:42:40.991Z",
-  "updatedAt": "2025-07-22T16:42:40.991Z",
-  "repositoryUrl": "https://github.com/mxn2020/test-24",
-  "netlifyUrl": "https://test-24-mderier6.netlify.app",
-  "mongodbDatabase": "test_24",
-  "projectId": "proj_2507_qilj6bvn"
+  "netlifyProject": "51d7ea09-e2b0-4656-9dd6-cdc928c34bcf",
+  "createdAt": "2025-07-22T17:17:40.914Z",
+  "updatedAt": "2025-07-22T17:17:40.914Z",
+  "repositoryUrl": "https://github.com/mxn2020/test-30",
+  "netlifyUrl": "https://test-30-mdesra3z.netlify.app",
+  "mongodbDatabase": "test_30"
 }

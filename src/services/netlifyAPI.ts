@@ -1,3 +1,4 @@
+// src/services/netlifyAPI.ts
 // Custom Netlify API implementation for use within Netlify Functions
 // This replaces the problematic NetlifyAPI client with direct HTTP requests
 

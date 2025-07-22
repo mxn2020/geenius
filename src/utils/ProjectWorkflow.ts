@@ -1,3 +1,5 @@
+// src/utils/ProjectWorkflow.ts
+
 // Project workflow utilities for web app
 import { NetlifyService } from '../services/netlify';
 import { MongoDBService } from '../services/mongodb';
@@ -205,10 +207,10 @@ export class ProjectWorkflow {
         } else {
           try {
             this.addLog('🚀 Setting up Netlify project...');
-            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl);
-
-            // Prepare environment variables
-            const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+            this.addLog(`⏰ Creating Netlify project at: ${new Date().toISOString()}`);
+            
+            // Prepare environment variables BEFORE creating the project
+            const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {}) as Record<string, string>;
 
             // Add MongoDB connection details if database was created
             if (mongodbProject) {
@@ -229,10 +231,6 @@ export class ProjectWorkflow {
               templateEnvVars['BETTER_AUTH_SECRET'] = this.generateSecureSecret();
             }
 
-            if (template.envVars.includes('BETTER_AUTH_URL')) {
-              templateEnvVars['BETTER_AUTH_URL'] = netlifyProject ? netlifyProject.ssl_url : 'http://localhost:5176';
-            }
-
             if (template.envVars.includes('JWT_SECRET')) {
               templateEnvVars['JWT_SECRET'] = this.generateSecureSecret();
             }
@@ -250,34 +248,58 @@ export class ProjectWorkflow {
               templateEnvVars['VITE_APP_DESCRIPTION'] = `${template.description} - ${options.projectName}`;
             }
 
-            // Set API URLs based on Netlify project
-            if (netlifyProject) {
-              if (template.envVars.includes('VITE_APP_URL')) {
-                templateEnvVars['VITE_APP_URL'] = netlifyProject.ssl_url;
-              }
-              if (template.envVars.includes('VITE_API_URL')) {
-                templateEnvVars['VITE_API_URL'] = `${netlifyProject.ssl_url}/api`;
-              }
-              if (template.envVars.includes('VITE_API_BASE_URL')) {
-                templateEnvVars['VITE_API_BASE_URL'] = netlifyProject.ssl_url;
-              }
-              if (template.envVars.includes('NETLIFY_FUNCTIONS_URL')) {
-                templateEnvVars['NETLIFY_FUNCTIONS_URL'] = '/api';
-              }
-              if (template.envVars.includes('CORS_ORIGIN')) {
-                templateEnvVars['CORS_ORIGIN'] = netlifyProject.ssl_url;
-              }
-            }
-
-            // Set environment variables including user's repository URL
-            await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
-              ...this.getEnvVarsForProvider(options.aiProvider, this.getExistingApiKey(options.aiProvider), options.model),
+            // Prepare all environment variables (without Netlify URLs since we don't have them yet)
+            const initialEnvVars = {
+              ...this.getEnvVarsForProvider(options.aiProvider, this.getExistingApiKey(options.aiProvider)!, options.model),
               ...this.getGitHubEnvVars(options.githubOrg, repoUrl),
               ...templateEnvVars,
-              // Fix: Set user's repository URL instead of template URL
               'VITE_REPOSITORY_URL': repoUrl,
               'VITE_BASE_BRANCH': 'main'
+            };
+
+            // Log VITE_ environment variables before project creation
+            const viteVars = Object.keys(initialEnvVars).filter(key => key.startsWith('VITE_'));
+            this.addLog(`🔧 Preparing ${viteVars.length} VITE_ environment variables for initial deployment:`);
+            viteVars.forEach(key => {
+              this.addLog(`   - ${key}: ${initialEnvVars[key]}`);
             });
+
+            // Create Netlify project WITH initial environment variables
+            this.addLog(`⏰ Creating Netlify project with env vars at: ${new Date().toISOString()}`);
+            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl, undefined, initialEnvVars);
+            this.addLog(`✅ Netlify project created with environment variables at: ${new Date().toISOString()}`);
+
+            // Now set Netlify-specific URLs that require the project to exist
+            const netlifySpecificVars: Record<string, string> = {};
+            if (template.envVars.includes('BETTER_AUTH_URL')) {
+              netlifySpecificVars['BETTER_AUTH_URL'] = netlifyProject.ssl_url || 'http://localhost:5176';
+            }
+            if (template.envVars.includes('VITE_APP_URL')) {
+              netlifySpecificVars['VITE_APP_URL'] = netlifyProject.ssl_url;
+            }
+            if (template.envVars.includes('VITE_API_URL')) {
+              netlifySpecificVars['VITE_API_URL'] = `${netlifyProject.ssl_url}/api`;
+            }
+            if (template.envVars.includes('VITE_API_BASE_URL')) {
+              netlifySpecificVars['VITE_API_BASE_URL'] = netlifyProject.ssl_url;
+            }
+            if (template.envVars.includes('NETLIFY_FUNCTIONS_URL')) {
+              netlifySpecificVars['NETLIFY_FUNCTIONS_URL'] = '/api';
+            }
+            if (template.envVars.includes('CORS_ORIGIN')) {
+              netlifySpecificVars['CORS_ORIGIN'] = netlifyProject.ssl_url;
+            }
+
+            // Update with Netlify-specific environment variables if needed
+            if (Object.keys(netlifySpecificVars).length > 0) {
+              this.addLog(`🔧 Setting ${Object.keys(netlifySpecificVars).length} Netlify-specific environment variables:`);
+              Object.keys(netlifySpecificVars).forEach(key => {
+                this.addLog(`   - ${key}: ${netlifySpecificVars[key]}`);
+              });
+              await netlifyService.setupEnvironmentVariables(netlifyProject.id, netlifySpecificVars);
+              this.addLog(`✅ Netlify-specific environment variables updated at: ${new Date().toISOString()}`);
+              this.addLog(`💡 Netlify-specific URLs have been configured and will be available in the next deployment`);
+            }
 
             // Configure branch deployments with PR previews
             await netlifyService.configureBranchDeployments(netlifyProject.id, {

@@ -889,6 +889,32 @@ export class NetlifyService {
     }
   }
 
+  async triggerDeploy(siteId: string, onProgress?: (message: string) => void): Promise<any> {
+    try {
+      console.log(`🚀 Triggering new deployment for site ${siteId}`);
+      if (onProgress) onProgress('🚀 Triggering new deployment...');
+
+      const client = await this.getClient();
+      
+      // Create a new deployment
+      const deployment = await client.createSiteBuild({
+        siteId,
+        body: {
+          clear_cache: true // Clear cache to ensure fresh build
+        }
+      });
+
+      console.log(`✅ Deployment triggered successfully: ${deployment.id}`);
+      if (onProgress) onProgress(`✅ Deployment triggered: ${deployment.id}`);
+
+      return deployment;
+    } catch (error: any) {
+      console.error('❌ Error triggering deployment:', error.message);
+      if (onProgress) onProgress(`❌ Deployment trigger failed: ${error.message}`);
+      throw new Error(`Failed to trigger deployment: ${error.message}`);
+    }
+  }
+
   private async getCurrentSiteId(onProgress?: (message: string) => void): Promise<string | null> {
     try {
       // Try to get site ID from environment variable
