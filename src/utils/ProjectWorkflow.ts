@@ -441,7 +441,7 @@ export class ProjectWorkflow {
   private async saveProjectToRedis(projectData: any): Promise<void> {
     try {
       // Import storage service
-      const { storage } = await import('../services/redis-storage');
+      const { storage } = await import('../../api/shared/redis-storage');
       
       // Create project data in the format expected by Redis storage
       // Use the new Redis key format (year-month format)
