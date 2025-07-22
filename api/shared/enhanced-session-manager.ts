@@ -1,6 +1,6 @@
 // Enhanced Session Management for Agentic AI System
 import { Redis } from '@upstash/redis';
-import RedisKeys from './redis-keys';
+import RedisKeys from '../../src/services/redis-keys';
 
 // Initialize Redis client
 const redis = new Redis({

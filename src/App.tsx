@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppState, useKeyboardNavigation } from './app-hooks';
-import InitializationTab from './InitializationTab';
-import StatusTab from './StatusTab';
-import DevelopmentTab from './DevelopmentTab';
-import LogsTab from './LogsTab';
+import InitializationTab from './components/InitializationTab';
+import StatusTab from './components/StatusTab';
+import DevelopmentTab from './components/DevelopmentTab';
+import LogsTab from './components/LogsTab';
 
 function App() {
   const [activeView, setActiveView] = useState('init');

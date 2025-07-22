@@ -1,6 +1,6 @@
 // netlify/functions/merge-pull-request.ts
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { storage } from './shared/redis-storage';
+import { storage } from '../src/services/redis-storage';
 import { Octokit } from 'octokit';
 
 // Merge functionality for UI integration

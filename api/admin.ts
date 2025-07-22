@@ -1,6 +1,6 @@
 // netlify/functions/admin.ts
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { storage } from './shared/redis-storage';
+import { storage } from '../src/services/redis-storage';
 import { AnalyticsService } from './shared/analytics';
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {

@@ -150,7 +150,7 @@ export const useAppState = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const sessionIdFromUrl = urlParams.get('session');
       
-      // If there's an active session ID, check session status first
+      // Only load project status if there's an active session ID
       if (sessionId || sessionIdFromUrl) {
         const activeSessionId = sessionId || sessionIdFromUrl;
         try {
@@ -183,18 +183,12 @@ export const useAppState = () => {
             return;
           }
         } catch (sessionError) {
-          console.log('Session not found, falling back to project status');
+          console.log('Session not found');
         }
       }
       
-      // Fall back to regular project status
-      const response = await fetch('/api/status');
-      const data = await response.json();
-      if (response.ok) {
-        setProjectStatus({ ...data, loading: false, isActiveSession: false });
-      } else {
-        setProjectStatus({ hasProject: false, loading: false, error: data.error, isActiveSession: false });
-      }
+      // No session ID found - clear project status
+      setProjectStatus({ hasProject: false, loading: false, isActiveSession: false });
     } catch (error) {
       console.error('Failed to load project status:', error);
       setProjectStatus({ hasProject: false, loading: false, error: 'Failed to load status', isActiveSession: false });

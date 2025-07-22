@@ -1,6 +1,6 @@
 // netlify/functions/get-session.ts
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { storage } from './shared/redis-storage';
+import { storage } from '../src/services/redis-storage';
 
 function getProgressPercentage(status: string): number {
   const statusOrder = {

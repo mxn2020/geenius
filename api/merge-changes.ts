@@ -1,8 +1,8 @@
 // netlify/functions/merge-changes.ts
 // Endpoint for handling merge operations
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { GitHubService } from './shared/github-service';
-import { storage } from './shared/redis-storage';
+import { GitHubService } from '../src/services/github';
+import { storage } from '../src/services/redis-storage';
 
 interface MergeRequest {
   sessionId: string;

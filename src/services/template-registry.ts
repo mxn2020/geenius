@@ -1,4 +1,4 @@
-// web/services/template-registry.ts - Web-friendly template registry
+// src/services/template-registry.ts - Web-friendly template registry
 import { TemplateFetcher } from './template-fetcher';
 import type { ProjectTemplate } from '../types/template';
 
@@ -61,3 +61,4 @@ export class TemplateRegistry {
 
 export { TemplateFetcher };
 export * from '../types/template';
+

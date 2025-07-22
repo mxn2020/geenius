@@ -1,7 +1,7 @@
 // netlify/functions/health.ts
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { MonitoringService } from './shared/monitoring';
-import { storage } from './shared/redis-storage';
+import { storage } from '../src/services/redis-storage';
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   const headers = {

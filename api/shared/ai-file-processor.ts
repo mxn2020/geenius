@@ -1,6 +1,6 @@
 // AI File Processor for Agentic AI System
 import { CustomAIAgent } from './custom-ai-agent';
-import { EnhancedGitHubService } from './enhanced-github-service';
+import { EnhancedGitHubService } from '../../src/services/enhanced-github-service';
 
 export interface ChangeRequest {
   id: string;

@@ -18,7 +18,7 @@ export const handler: Handler = async (event, context) => {
 
     if (process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY) {
       try {
-        const { MongoDBService } = require('../cli/services/mongodb');
+        const { MongoDBService } = await import('../src/services/mongodb');
         const mongodb = new MongoDBService();
         const validation = await mongodb.validateCredentials();
         

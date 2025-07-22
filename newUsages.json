@@ -117,6 +117,36 @@
     ]
   },
   {
+    "id": "cta-book-consultation",
+    "definitionId": "dev-div",
+    "name": "Cta Book Consultation",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "book",
+      "consultation"
+    ]
+  },
+  {
+    "id": "cta-explore-services",
+    "definitionId": "dev-div",
+    "name": "Cta Explore Services",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "explore",
+      "services"
+    ]
+  },
+  {
     "id": "cta-join-community",
     "definitionId": "dev-div",
     "name": "Cta Join Community",
@@ -229,6 +259,19 @@
     ]
   },
   {
+    "id": "getServiceBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetServiceBadgeId(index)",
+    "description": "Div component used in Landing for getServiceBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getServiceBadgeId(index)"
+    ]
+  },
+  {
     "id": "getServiceCardId(index)",
     "definitionId": "dev-div",
     "name": "GetServiceCardId(index)",
@@ -240,6 +283,23 @@
       "landing-page",
       "getServiceCardId(index)"
     ]
+  },
+  {
+    "id": "getServiceLetterId(index)",
+    "definitionId": "dev-div",
+    "name": "GetServiceLetterId(index)",
+    "description": "Div component used in Landing for getServiceLetterId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getServiceLetterId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${service.color"
+    }
   },
   {
     "id": "getSpecialtyBadgeId(index)",
@@ -355,6 +415,21 @@
     "semanticTags": [
       "landing-page",
       "getValueCardId(index)"
+    ]
+  },
+  {
+    "id": "health-resources-button",
+    "definitionId": "dev-button",
+    "name": "Health Resources Button",
+    "description": "Button component used in Landing for health functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "health",
+      "resources",
+      "button"
     ]
   },
   {
@@ -506,6 +581,22 @@
     ]
   },
   {
+    "id": "hero-learn-more-button",
+    "definitionId": "dev-button",
+    "name": "Hero Learn More Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "learn",
+      "more",
+      "button"
+    ]
+  },
+  {
     "id": "hero-manage-practice",
     "definitionId": "dev-div",
     "name": "Hero Manage Practice",
@@ -578,6 +669,21 @@
       "hero",
       "start",
       "building"
+    ]
+  },
+  {
+    "id": "hero-start-journey",
+    "definitionId": "dev-div",
+    "name": "Hero Start Journey",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "journey"
     ]
   },
   {
@@ -791,6 +897,20 @@
       "landing-page",
       "services",
       "button"
+    ]
+  },
+  {
+    "id": "simplified-highlight",
+    "definitionId": "dev-div",
+    "name": "Simplified Highlight",
+    "description": "Div component used in Landing for simplified functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-13/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "simplified",
+      "highlight"
     ]
   },
   {

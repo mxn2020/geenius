@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { MongoDBService } from '../cli/services/mongodb';
+import { MongoDBService } from '../src/services/mongodb';
 
 export const handler: Handler = async (event, context) => {
   const headers = {

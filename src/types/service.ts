@@ -1,4 +1,5 @@
 // src/types/service.ts
+
 export interface GitHubServiceConfig {
   token: string;
   baseUrl?: string;

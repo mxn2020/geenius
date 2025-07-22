@@ -1,4 +1,5 @@
 // src/types/template.ts
+
 export interface ProjectTemplate {
   id: string;
   name: string;
@@ -6,7 +7,7 @@ export interface ProjectTemplate {
   repository: string;
   branch: string;
   stack: string[];
-  aiProvider: 'anthropic' | 'openai' | 'google' | 'grok';
+  aiProvider: 'anthropic' | 'openai' | 'google' | 'grok' | 'claude' | 'gemini';
   aiConfig: {
     model: string;
     tools: string[];

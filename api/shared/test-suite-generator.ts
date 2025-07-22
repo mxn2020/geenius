@@ -1,6 +1,6 @@
 // Test Suite Generator for Agentic AI System
 import { CustomAIAgent } from './custom-ai-agent';
-import { EnhancedGitHubService, FileChange } from './enhanced-github-service';
+import { EnhancedGitHubService, FileChange } from '../../src/services/enhanced-github-service';
 
 export interface TestFile {
   path: string;

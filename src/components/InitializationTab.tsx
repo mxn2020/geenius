@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { AppHooks } from './app-types';
+import { AppHooks } from '../app-types';
 
 interface InitializationTabProps extends AppHooks {
   setActiveView: (view: string) => void;
@@ -39,6 +39,10 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
   setLogs,
   setActiveView,
   setDeploymentStatus,
+  setSessionProgress,
+  setRepoUrl,
+  setNetlifyUrl,
+  setProjectStatus,
   handleOrgChange,
   getSelectedOrgProjects,
   startLogStreaming,
@@ -50,6 +54,23 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
     e.preventDefault();
     setLoading(true);
     setLoadingMessage('Initializing project...');
+    
+    // Complete reset of all project-related state
+    setSessionLogs([]);
+    setLogs([]);
+    setSessionId('');
+    setSessionStatus('');
+    setSessionProgress(0);
+    setRepoUrl('');
+    setNetlifyUrl('');
+    setDeploymentStatus('');
+    setProjectStatus({ hasProject: false, loading: false });
+    stopLogPolling();
+    
+    // Clear URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.delete('session');
+    window.history.replaceState({}, '', url.toString());
 
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData);
@@ -108,6 +129,23 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
     e.preventDefault();
     setLoading(true);
     setLoadingMessage('Initializing project...');
+    
+    // Complete reset of all project-related state
+    setSessionLogs([]);
+    setLogs([]);
+    setSessionId('');
+    setSessionStatus('');
+    setSessionProgress(0);
+    setRepoUrl('');
+    setNetlifyUrl('');
+    setDeploymentStatus('');
+    setProjectStatus({ hasProject: false, loading: false });
+    stopLogPolling();
+    
+    // Clear URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.delete('session');
+    window.history.replaceState({}, '', url.toString());
 
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData);
@@ -193,11 +231,22 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
                   </Button>
                   <Button
                     onClick={() => {
-                      setSessionId('');
-                      setSessionStatus('');
+                      // Complete reset of all project-related state
                       setSessionLogs([]);
                       setLogs([]);
+                      setSessionId('');
+                      setSessionStatus('');
+                      setSessionProgress(0);
+                      setRepoUrl('');
+                      setNetlifyUrl('');
+                      setDeploymentStatus('');
+                      setProjectStatus({ hasProject: false, loading: false });
                       stopLogPolling();
+                      
+                      // Clear URL parameters
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete('session');
+                      window.history.replaceState({}, '', url.toString());
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
@@ -535,11 +584,19 @@ const InitializationTab: React.FC<InitializationTabProps> = ({
                           🆕 Create new project: "{projectName}"
                         </SelectItem>
                       )}
-                      {getSelectedOrgProjects().map(project => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name} {project.clusters && project.clusters.length > 0 && `(${project.clusters.length} clusters)`}
-                        </SelectItem>
-                      ))}
+                      {getSelectedOrgProjects().map(project => {
+                        const hasExistingClusters = project.clusters && project.clusters.length > 0;
+                        return (
+                          <SelectItem 
+                            key={project.id} 
+                            value={project.id}
+                            disabled={hasExistingClusters}
+                            className={hasExistingClusters ? 'opacity-50 cursor-not-allowed' : ''}
+                          >
+                            {project.name} {hasExistingClusters && `(${project.clusters.length} cluster${project.clusters.length > 1 ? 's' : ''})`}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

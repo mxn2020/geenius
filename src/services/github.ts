@@ -1,4 +1,4 @@
-// web/services/github.ts - Web-friendly GitHub service using REST API
+// src/services/github.ts - Web-friendly GitHub service using REST API
 export class GitHubService {
   private token: string;
 

@@ -1,6 +1,6 @@
 // Enhanced Agent Orchestrator for Agentic AI System
 import { CustomAIAgent } from './custom-ai-agent';
-import { AIFileProcessor, ChangeRequest, ProcessingResult } from './ai-file-processor';
+import { AIFileProcessor, ChangeRequest } from './ai-file-processor';
 import { DependencyAnalyzer } from './dependency-analyzer';
 import { TestSuiteGenerator, TestGenerationConfig } from './test-suite-generator';
 import { EnhancedSessionManager } from './enhanced-session-manager';

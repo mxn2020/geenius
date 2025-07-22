@@ -1,9 +1,9 @@
 // AI-Driven Project Initialization - Complete template generation
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { EnhancedSessionManager } from './shared/enhanced-session-manager';
-import { EnhancedGitHubService, FileChange } from './shared/enhanced-github-service';
+import { EnhancedGitHubService, FileChange } from '../src/services/enhanced-github-service';
 import { AIFileProcessor } from './shared/ai-file-processor';
-import { NetlifyService } from './shared/netlify-service';
+import { NetlifyService } from '../src/services/netlify';
 import { DevIdRegistryScanner, RegistryContext } from './shared/devid-registry-scanner';
 import { CustomAIAgent } from './shared/custom-ai-agent';
 
@@ -394,8 +394,6 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
       try {
         await logInitialization(sessionId, 'info', '🚀 Setting up Netlify project...');
         
-        netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl);
-        
         // Get template and setup environment variables
         const { TemplateRegistry } = await import('../src/services/template-registry');
         const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
@@ -403,7 +401,7 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
         const template = templates.find(t => t.id === request.templateId);
         
         if (template) {
-          const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+          const templateEnvVars: Record<string, string> = {};
           
           // Add MongoDB connection if available
           if (mongodbProject) {
@@ -419,23 +417,28 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
             templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
           }
           
+          // Generate BETTER_AUTH_SECRET if template requires it
+          if (template.envVars.includes('BETTER_AUTH_SECRET')) {
+            templateEnvVars['BETTER_AUTH_SECRET'] = require('crypto').randomBytes(32).toString('hex');
+          }
+          
           // Add standard env vars
           if (template.envVars.includes('VITE_APP_NAME')) {
             templateEnvVars['VITE_APP_NAME'] = request.projectName;
           }
-          if (template.envVars.includes('VITE_REPOSITORY_URL')) {
-            templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
-          }
-          if (template.envVars.includes('VITE_BASE_BRANCH')) {
-            templateEnvVars['VITE_BASE_BRANCH'] = 'main';
-          }
+          // Always set repository URL and base branch (required for web interface)
+          templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+          templateEnvVars['VITE_BASE_BRANCH'] = 'main';
           
           const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
           
-          await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
+          // Prepare all environment variables before creating Netlify project
+          const allEnvVars = {
             ...aiProviderVars,
             ...templateEnvVars
-          });
+          };
+          
+          netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
           
           await netlifyService.configureBranchDeployments(netlifyProject.id, {
             main: { production: true },
@@ -705,8 +708,6 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
         try {
           await logInitialization(sessionId, 'info', '🚀 Setting up Netlify project...');
           
-          netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl);
-          
           // Get template information for environment variables
           const { TemplateRegistry } = await import('../src/services/template-registry');
           const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
@@ -735,21 +736,20 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
             if (template.envVars.includes('VITE_APP_NAME')) {
               templateEnvVars['VITE_APP_NAME'] = request.projectName;
             }
-            if (template.envVars.includes('VITE_REPOSITORY_URL')) {
-              templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
-            }
-            if (template.envVars.includes('VITE_BASE_BRANCH')) {
-              templateEnvVars['VITE_BASE_BRANCH'] = 'main';
-            }
+            // Always set repository URL and base branch (required for web interface)
+            templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+            templateEnvVars['VITE_BASE_BRANCH'] = 'main';
             
             // Get AI provider env vars
             const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
             
-            // Set environment variables
-            await netlifyService.setupEnvironmentVariables(netlifyProject.id, {
+            // Prepare all environment variables before creating Netlify project
+            const allEnvVars = {
               ...aiProviderVars,
               ...templateEnvVars
-            });
+            };
+            
+            netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
             
             // Configure branch deployments with PR previews
             await netlifyService.configureBranchDeployments(netlifyProject.id, {
@@ -980,7 +980,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         try {
           const { TemplateRegistry } = await import('../src/services/template-registry');
           // Use the web API GitHub service, not the CLI one
-          const { EnhancedGitHubService } = await import('./shared/enhanced-github-service');
+          const { EnhancedGitHubService } = await import('../src/services/enhanced-github-service');
           
           const templateRegistry = new TemplateRegistry(process.env.GITHUB_TOKEN!);
           const templates = await templateRegistry.getAllTemplates();

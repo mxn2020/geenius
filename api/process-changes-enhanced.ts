@@ -1,9 +1,9 @@
 // Enhanced Agentic AI Process Changes API
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { EnhancedSessionManager } from './shared/enhanced-session-manager';
-import { EnhancedGitHubService, FileChange } from './shared/enhanced-github-service';
+import { EnhancedGitHubService, FileChange } from '../src/services/enhanced-github-service';
 import { AIFileProcessor, ChangeRequest } from './shared/ai-file-processor';
-import { NetlifyService } from './shared/netlify-service';
+import { NetlifyService } from '../src/services/netlify';
 import { DevIdRegistryScanner, RegistryContext } from './shared/devid-registry-scanner';
 
 // Enhanced Types (matching template app structure)

@@ -409,25 +409,72 @@ export class EnhancedGitHubService {
    * Check if repository name is available and find alternative if not
    */
   private async findAvailableRepoName(org: string, baseName: string): Promise<string> {
-    let attempts = 0;
+    // First try the original name
     let repoName = baseName;
     
-    while (attempts < 10) {
+    try {
+      await this.octokit.rest.repos.get({
+        owner: org,
+        repo: repoName
+      });
+      // Repository exists, need to find alternative
+    } catch (error) {
+      // Repository doesn't exist, we can use the original name
+      return repoName;
+    }
+    
+    // Generate alternatives with random words and short random strings
+    const adjectives = [
+      'amazing', 'brilliant', 'clever', 'dynamic', 'elegant', 'fantastic', 'genius', 'happy',
+      'incredible', 'joyful', 'kind', 'lovely', 'magnificent', 'nice', 'outstanding', 'perfect',
+      'quick', 'radiant', 'smart', 'terrific', 'unique', 'vibrant', 'wonderful', 'excellent',
+      'awesome', 'cool', 'epic', 'fresh', 'great', 'modern', 'new', 'prime', 'super', 'swift'
+    ];
+    
+    const nouns = [
+      'app', 'bird', 'cat', 'dog', 'eagle', 'fish', 'garden', 'house', 'idea', 'joy',
+      'key', 'lake', 'moon', 'nest', 'ocean', 'park', 'quest', 'river', 'star', 'tree',
+      'unicorn', 'valley', 'wave', 'spark', 'light', 'code', 'tech', 'web', 'site', 'tool'
+    ];
+    
+    let attempts = 0;
+    const maxAttempts = 15;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      
+      let candidateName: string;
+      
+      if (attempts <= 5) {
+        // Try with random adjective + noun combination
+        const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const noun = nouns[Math.floor(Math.random() * nouns.length)];
+        candidateName = `${baseName}-${adjective}-${noun}`;
+      } else if (attempts <= 10) {
+        // Try with just a random word
+        const randomWord = [...adjectives, ...nouns][Math.floor(Math.random() * (adjectives.length + nouns.length))];
+        candidateName = `${baseName}-${randomWord}`;
+      } else {
+        // Fallback to short random string
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        candidateName = `${baseName}-${randomSuffix}`;
+      }
+      
       try {
         await this.octokit.rest.repos.get({
           owner: org,
-          repo: repoName
+          repo: candidateName
         });
         // Repository exists, try next name
-        attempts++;
-        repoName = `${baseName}-${attempts}`;
+        continue;
       } catch (error) {
         // Repository doesn't exist, we can use this name
-        return repoName;
+        console.log(`[GITHUB] Found available repository name: ${candidateName}`);
+        return candidateName;
       }
     }
     
-    throw new Error(`Could not find available repository name after ${attempts} attempts`);
+    throw new Error(`Could not find available repository name after ${maxAttempts} attempts`);
   }
 
   /**

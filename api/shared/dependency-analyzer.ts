@@ -1,5 +1,5 @@
 // Component Dependency Analyzer for Agentic AI System
-import { EnhancedGitHubService } from './enhanced-github-service';
+import { EnhancedGitHubService } from '../../src/services/enhanced-github-service';
 
 export interface DependencyInfo {
   imports: string[];

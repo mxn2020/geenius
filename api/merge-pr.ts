@@ -1,7 +1,7 @@
 // Merge Pull Request API - Merge PR after preview approval
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { EnhancedSessionManager } from './shared/enhanced-session-manager';
-import { EnhancedGitHubService } from './shared/enhanced-github-service';
+import { EnhancedGitHubService } from '../src/services//enhanced-github-service';
 
 // Initialize services
 const sessionManager = new EnhancedSessionManager();

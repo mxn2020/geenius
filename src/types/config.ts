@@ -1,6 +1,7 @@
+// src/types/config.ts
+
 import { AgentMode } from "./agent";
 
-// src/types/config.ts
 export interface ProjectConfig {
   template: string;
   name: string;
@@ -68,3 +69,4 @@ export interface MemoryStats {
   patterns: number;
   successRate: number;
 }
+

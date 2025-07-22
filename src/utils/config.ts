@@ -42,7 +42,9 @@ export class ConfigManager {
       if (error.code === 'ENOENT') {
         return null; // Config file doesn't exist
       }
-      throw new Error(`Failed to load config: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to load config: ${errorMessage}`);
+      throw new Error(`Failed to load config: ${errorMessage}`);
     }
   }
 
@@ -57,7 +59,9 @@ export class ConfigManager {
       const configPath = join(process.cwd(), this.configFile);
       await fs.writeFile(configPath, JSON.stringify(validatedConfig, null, 2));
     } catch (error) {
-      throw new Error(`Failed to save config: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to save config: ${errorMessage}`);
+      throw new Error(`Failed to save config: ${errorMessage}`);
     }
   }
 
@@ -72,7 +76,9 @@ export class ConfigManager {
           errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
         };
       }
-      return { valid: false, errors: [error.message] };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Config validation error: ${errorMessage}`);
+      return { valid: false, errors: [errorMessage] };
     }
   }
 
@@ -94,7 +100,9 @@ export class ConfigManager {
       const globalConfigPath = join(this.globalConfigDir, 'global.json');
       await fs.writeFile(globalConfigPath, JSON.stringify(config, null, 2));
     } catch (error) {
-      throw new Error(`Failed to save global config: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Failed to save global config: ${errorMessage}`);
+      throw new Error(`Failed to save global config: ${errorMessage}`);
     }
   }
 
@@ -157,7 +165,9 @@ export class ConfigManager {
       await fs.unlink(configPath);
     } catch (error) {
       if (error.code !== 'ENOENT') {
-        throw new Error(`Failed to delete config: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to delete config: ${errorMessage}`);
+        throw new Error(`Failed to delete config: ${errorMessage}`);
       }
     }
   }
