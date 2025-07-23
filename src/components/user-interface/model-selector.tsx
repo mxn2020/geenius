@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import * as React from "react"
 import { ChevronDown, ChevronRight, Settings, MoreHorizontal, Brain, Zap, Search, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useProjectInit } from "../project-initialization/ProjectInitializationContext"
 
 const providers = [
   {
@@ -62,10 +63,10 @@ const providers = [
 
 // Featured models for the main section
 const featuredModels = [
-  { name: "Claude Sonnet 4", provider: "Anthropic", model: "claude-sonnet-4-20250514", icon: Brain },
-  { name: "GPT 4o", provider: "OpenAI", model: "gpt-4.1", icon: Zap },
-  { name: "Grok 4", provider: "xAi", model: "grok-4-0709", icon: Search },
-  { name: "Gemini 2.5 Pro", provider: "Google", model: "gemini-2.5-pro", icon: Sparkles },
+  { name: "Claude Sonnet 4", provider: "Anthropic", providerId: "anthropic", model: "claude-sonnet-4-20250514", icon: Brain },
+  { name: "GPT 4o", provider: "OpenAI", providerId: "openai", model: "gpt-4.1", icon: Zap },
+  { name: "Grok 4", provider: "xAi", providerId: "grok", model: "grok-4-0709", icon: Search },
+  { name: "Gemini 2.5 Pro", provider: "Google", providerId: "google", model: "gemini-2.5-pro", icon: Sparkles },
 ]
 
 // Provider icons mapping
@@ -77,12 +78,31 @@ const providerIcons = {
 }
 
 export function ModelSelector() {
-  const [selectedModel, setSelectedModel] = useState("Claude Sonnet 4")
+  const { state, updateAIConfig } = useProjectInit()
   const [isOpen, setIsOpen] = useState(false)
   const [isMoreModelsOpen, setIsMoreModelsOpen] = useState(false)
 
-  const handleModelSelect = (modelName: string) => {
-    setSelectedModel(modelName)
+  // Get display name from context state
+  const getDisplayName = () => {
+    const provider = providers.find(p => p.id === state.aiProvider)
+    if (!provider) return "Claude Sonnet 4"
+    
+    const model = provider.models.find(m => m === state.model)
+    if (model) {
+      return formatModelName(model)
+    }
+    
+    // Default to first featured model for this provider
+    const featured = featuredModels.find(f => f.provider === provider.name.split(' ')[0])
+    return featured ? featured.name : "Claude Sonnet 4"
+  }
+
+  const handleModelSelect = (modelName: string, model: string, providerId: string) => {
+    // Update context with both provider and model
+    updateAIConfig({ 
+      aiProvider: providerId as any,
+      model: model 
+    })
     setIsOpen(false)
   }
 
@@ -99,7 +119,7 @@ export function ModelSelector() {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-9 px-3 gap-2 text-sm font-medium">
-          {selectedModel}
+          {getDisplayName()}
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
@@ -109,7 +129,7 @@ export function ModelSelector() {
           <DropdownMenuItem 
             key={index} 
             className="flex items-center justify-between p-3 cursor-pointer"
-            onClick={() => handleModelSelect(model.name)}
+            onClick={() => handleModelSelect(model.name, model.model, model.providerId)}
           >
             <model.icon className="h-4 w-4 text-muted-foreground mr-3" />
             <div className="flex-1">
@@ -152,7 +172,7 @@ export function ModelSelector() {
                   <DropdownMenuItem 
                     key={`${provider.id}-${modelIndex}`}
                     className="flex items-center justify-between p-3 cursor-pointer pl-6"
-                    onClick={() => handleModelSelect(formatModelName(model))}
+                    onClick={() => handleModelSelect(formatModelName(model), model, provider.id)}
                   >
                     <div className="flex-1">
                       <div className="text-sm font-medium">{formatModelName(model)}</div>

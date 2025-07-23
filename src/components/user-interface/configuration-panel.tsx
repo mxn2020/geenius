@@ -31,20 +31,6 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
         <Card className="pt-6 pb-4 px-4 bg-muted/30 border-muted-foreground/20 rounded-t-none rounded-b-lg border-t-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
-            <Label htmlFor="ai-provider">AI Provider</Label>
-            <Select value={state.aiProvider} onValueChange={(value) => updateAIConfig({ aiProvider: value as any })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select AI provider" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anthropic">🤖 Claude (Anthropic) - Best for coding</SelectItem>
-                <SelectItem value="openai">🧠 GPT-4 (OpenAI) - Most versatile</SelectItem>
-                <SelectItem value="google">✨ Gemini (Google) - Creative problem solving</SelectItem>
-                <SelectItem value="grok">⚡ Grok (X.AI) - Fast and witty</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="project-name">Project Name</Label>
             <Input 
               value={state.projectName} 
