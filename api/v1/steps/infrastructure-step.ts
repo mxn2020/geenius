@@ -2,7 +2,7 @@
 
 import { NetlifyService } from '../../../src/services/netlify';
 import { WorkflowContext } from '../types/project-types';
-import { generateTemplateEnvironmentVariables, getEnvVarsForProvider, updateUrlEnvironmentVariables } from '../utils/environment-utils';
+import { generateTemplateEnvironmentVariables, getEnvVarsForProvider, createBareNetlifySite, updateNetlifyWithRepository } from '../utils/environment-utils';
 
 export class InfrastructureStep {
   private netlifyService: NetlifyService;
@@ -108,11 +108,16 @@ export class InfrastructureStep {
 
   private async setupNetlify(request: any, template: any, mongodbProject: any, onProgress?: (message: string) => void): Promise<any> {
     try {
-      console.log('[INFRASTRUCTURE-STEP] 🚀 Setting up Netlify project...');
-      if (onProgress) onProgress('🚀 Setting up Netlify project...');
+      console.log('[INFRASTRUCTURE-STEP] 🚀 Setting up Netlify project with real URL...');
+      if (onProgress) onProgress('🚀 Creating Netlify site to get real URL...');
 
-      // Generate environment variables
-      const templateEnvVars = generateTemplateEnvironmentVariables(template, request, mongodbProject);
+      // Step 1: Create bare Netlify site first to get the real URL
+      const bareSite = await createBareNetlifySite(this.netlifyService, request.projectName);
+      console.log(`[INFRASTRUCTURE-STEP] ✅ Bare site created with URL: ${bareSite.sslUrl}`);
+      if (onProgress) onProgress(`✅ Site created with URL: ${bareSite.sslUrl}`);
+
+      // Step 2: Generate environment variables with the real Netlify URL
+      const templateEnvVars = generateTemplateEnvironmentVariables(template, request, mongodbProject, bareSite.sslUrl);
       const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
       
       // Prepare all environment variables
@@ -121,37 +126,23 @@ export class InfrastructureStep {
         ...templateEnvVars
       };
 
-      console.log(`[INFRASTRUCTURE-STEP] Setting ${Object.keys(allEnvVars).length} environment variables:`, Object.keys(allEnvVars));
-      if (onProgress) onProgress(`🔧 Configuring ${Object.keys(allEnvVars).length} environment variables...`);
+      console.log(`[INFRASTRUCTURE-STEP] Generated ${Object.keys(allEnvVars).length} environment variables with real URL`);
+      if (onProgress) onProgress(`🔧 Prepared ${Object.keys(allEnvVars).length} environment variables with real URL...`);
 
-      // Create Netlify project
-      const netlifyProject = await this.netlifyService.createProject(
-        request.projectName,
-        request.repositoryUrl,
-        undefined,
-        allEnvVars
-      );
+      // Step 3: Update the site with repository and build settings (after code is committed)
+      // This will be done later in the deployment step after code is ready
+      
+      console.log(`[INFRASTRUCTURE-STEP] ✅ Netlify setup completed: ${bareSite.sslUrl}`);
+      if (onProgress) onProgress(`✅ Netlify setup completed: ${bareSite.sslUrl}`);
 
-      // Configure branch deployments
-      await this.netlifyService.configureBranchDeployments(netlifyProject.id, {
-        main: { production: true },
-        develop: { preview: true },
-        'feature/*': { preview: true }
-      });
-
-      // Update URL-based environment variables with actual site URL
-      await updateUrlEnvironmentVariables(
-        this.netlifyService,
-        netlifyProject.id,
-        netlifyProject.account_id,
-        netlifyProject.ssl_url || netlifyProject.url,
-        template
-      );
-
-      console.log(`[INFRASTRUCTURE-STEP] ✅ Netlify project created: ${netlifyProject.ssl_url}`);
-      if (onProgress) onProgress(`✅ Netlify project created: ${netlifyProject.ssl_url}`);
-
-      return netlifyProject;
+      return {
+        id: bareSite.siteId,
+        url: bareSite.url,
+        ssl_url: bareSite.sslUrl,
+        account_id: null, // Will be set when we update with repository
+        pendingRepository: true, // Flag to indicate we need to attach repo later
+        environmentVariables: allEnvVars // Store env vars for later use
+      };
 
     } catch (error: any) {
       console.error('[INFRASTRUCTURE-STEP] ❌ Netlify setup failed:', error.message);

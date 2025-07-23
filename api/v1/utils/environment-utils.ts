@@ -50,7 +50,8 @@ export function getEnvVarsForProvider(provider: string, model?: string): Record<
 export function generateTemplateEnvironmentVariables(
   template: any,
   request: any,
-  mongodbProject?: any
+  mongodbProject?: any,
+  netlifyUrl?: string
 ): Record<string, string> {
   const templateEnvVars: Record<string, string> = {};
   
@@ -104,14 +105,14 @@ export function generateTemplateEnvironmentVariables(
       case 'NEXT_PUBLIC_APP_URL':
       case 'NUXT_PUBLIC_API_URL':
       case 'VITE_API_URL':
-        // Will be updated after Netlify site creation
-        templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+        // Use real Netlify URL if available, otherwise placeholder
+        templateEnvVars[envVar] = netlifyUrl || 'https://placeholder.netlify.app';
         break;
       
       case 'BETTER_AUTH_URL':
       case 'NEXTAUTH_URL':
-        // Will be updated after Netlify site creation
-        templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+        // Use real Netlify URL if available, otherwise placeholder
+        templateEnvVars[envVar] = netlifyUrl || 'https://placeholder.netlify.app';
         break;
       
       // Supabase variables (need to be configured by user)
@@ -169,6 +170,104 @@ export function generateTemplateEnvironmentVariables(
   templateEnvVars['VITE_BASE_BRANCH'] = 'main';
   
   return templateEnvVars;
+}
+
+/**
+ * Create a bare Netlify site to get the URL before setting up the full project
+ */
+export async function createBareNetlifySite(
+  netlifyService: NetlifyService,
+  projectName: string
+): Promise<{ siteId: string; url: string; sslUrl: string }> {
+  try {
+    console.log(`[BARE-NETLIFY] Creating bare Netlify site to get URL: ${projectName}`);
+    
+    // Find available name first
+    const availableName = await netlifyService.findAvailableNetlifyName(projectName);
+    
+    // Get the client
+    const client = await (netlifyService as any).getClient();
+    
+    // Create a site without repository first to get the URL
+    const response = await client.createSite({
+      body: {
+        name: availableName,
+        // No repo configuration yet - we'll add it later
+      }
+    });
+    
+    console.log(`[BARE-NETLIFY] ✅ Bare site created: ${response.ssl_url || response.url}`);
+    
+    return {
+      siteId: response.id,
+      url: response.url,
+      sslUrl: response.ssl_url || response.url
+    };
+  } catch (error: any) {
+    console.error(`[BARE-NETLIFY] ❌ Failed to create bare site: ${error.message}`);
+    throw new Error(`Failed to create bare Netlify site: ${error.message}`);
+  }
+}
+
+/**
+ * Update an existing Netlify site with repository and build settings
+ */
+export async function updateNetlifyWithRepository(
+  netlifyService: NetlifyService,
+  siteId: string,
+  repositoryUrl: string,
+  environmentVariables: Record<string, string>
+): Promise<void> {
+  try {
+    console.log(`[NETLIFY-UPDATE] Updating site ${siteId} with repository: ${repositoryUrl}`);
+    
+    // Parse the GitHub URL to get owner/repo format
+    const repoMatch = repositoryUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!repoMatch) {
+      throw new Error(`Invalid GitHub repository URL: ${repositoryUrl}`);
+    }
+
+    const [, owner, repo] = repoMatch;
+    const repoPath = `${owner}/${repo.replace(/\.git$/, '')}`; // Remove .git suffix if present
+    
+    // Get the client
+    const client = await (netlifyService as any).getClient();
+    
+    // Create deploy key
+    const deployKey = await client.createDeployKey();
+    
+    // Add deploy key to GitHub repository
+    await (netlifyService as any).addDeployKeyToGitHub(owner, repo, deployKey.public_key, `Netlify Deploy Key - ${siteId}`);
+    
+    // Update the site with repository and build settings
+    await client.updateSite({
+      siteId,
+      body: {
+        repo: {
+          provider: 'github',
+          deploy_key_id: deployKey.id,
+          repo_path: repoPath,
+          repo_branch: 'main',
+          dir: 'dist',
+          cmd: 'npm run build',
+          allowed_branches: ['main', 'develop'],
+          public_repo: false
+        }
+      }
+    });
+    
+    // Set environment variables if provided
+    if (Object.keys(environmentVariables).length > 0) {
+      // Get account ID from the site
+      const site = await client.getSite({ siteId });
+      await netlifyService.updateEnvironmentVariables(siteId, site.account_id, environmentVariables);
+    }
+    
+    console.log(`[NETLIFY-UPDATE] ✅ Site updated with repository and build settings`);
+  } catch (error: any) {
+    console.error(`[NETLIFY-UPDATE] ❌ Failed to update site: ${error.message}`);
+    throw new Error(`Failed to update Netlify site with repository: ${error.message}`);
+  }
 }
 
 /**

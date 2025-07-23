@@ -3,6 +3,7 @@
 import { NetlifyService } from '../../../src/services/netlify';
 import { WorkflowContext } from '../types/project-types';
 import { parseDeploymentError, fixCodeWithAI, applyFixesToRepository } from '../utils/ai-error-utils';
+import { updateNetlifyWithRepository } from '../utils/environment-utils';
 
 export class DeploymentStep {
   private netlifyService: NetlifyService;
@@ -18,6 +19,39 @@ export class DeploymentStep {
       console.log('[DEPLOYMENT-STEP] ⚠️ No Netlify project - skipping deployment wait');
       if (onProgress) onProgress('⚠️ No Netlify project - skipping deployment wait');
       return context;
+    }
+
+    // Check if we need to attach the repository first
+    if (infrastructure.netlifyProject.pendingRepository) {
+      console.log('[DEPLOYMENT-STEP] 🔗 Attaching repository to existing Netlify site...');
+      if (onProgress) onProgress('🔗 Attaching repository to existing Netlify site...');
+
+      try {
+        await updateNetlifyWithRepository(
+          this.netlifyService,
+          infrastructure.netlifyProject.id,
+          request.repositoryUrl,
+          infrastructure.netlifyProject.environmentVariables || {}
+        );
+
+        // Configure branch deployments
+        await this.netlifyService.configureBranchDeployments(infrastructure.netlifyProject.id, {
+          main: { production: true },
+          develop: { preview: true },
+          'feature/*': { preview: true }
+        });
+
+        console.log('[DEPLOYMENT-STEP] ✅ Repository attached successfully');
+        if (onProgress) onProgress('✅ Repository attached successfully');
+
+        // Mark as no longer pending
+        infrastructure.netlifyProject.pendingRepository = false;
+        
+      } catch (error: any) {
+        console.error('[DEPLOYMENT-STEP] ❌ Failed to attach repository:', error.message);
+        if (onProgress) onProgress(`❌ Failed to attach repository: ${error.message}`);
+        // Continue anyway, maybe it was already attached
+      }
     }
 
     console.log('[DEPLOYMENT-STEP] 🚀 Waiting for Netlify deployment...');
