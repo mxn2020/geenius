@@ -138,7 +138,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 pt-8">
+    <div className="flex flex-col items-center justify-center min-h-[70vh]">
 
       {/* View Content Wrapper */}
       <div className={`w-full relative transition-all duration-500 ease-in-out ${currentView === 'project' ? 'max-w-4xl' : 'max-w-3xl'}`}>
