@@ -45,10 +45,14 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
                 <SelectValue placeholder="Select project template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="vite-react-mongo">React + MongoDB + Prisma</SelectItem>
-                <SelectItem value="vite-react-supabase">React + Supabase</SelectItem>
+                <SelectItem value="vite-react-mongo">MongoDB + Prisma</SelectItem>
+                <SelectItem value="vite-react-supabase">Supabase</SelectItem>
                 <SelectItem value="nextjs-supabase">Next.js + Supabase</SelectItem>
-                <SelectItem value="vite-react-planetscale">React + PlanetScale</SelectItem>
+                <SelectItem value="vite-react-planetscale">PlanetScale</SelectItem>
+                <SelectItem value="vite-react-upstash">Upstash Redis</SelectItem>
+                <SelectItem value="nextjs-indexeddb">IndexedDB</SelectItem>
+                <SelectItem value="nuxt-supabase">Nuxt + Supabase</SelectItem>
+                <SelectItem value="vue-supabase">Vue + Supabase</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -58,14 +62,6 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
               value={state.githubOrg}
               onChange={(e) => updateInfrastructureConfig({ githubOrg: e.target.value })}
               placeholder="Enter GitHub username or organization" 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="model">Model (optional)</Label>
-            <Input 
-              value={state.model}
-              onChange={(e) => updateAIConfig({ model: e.target.value })}
-              placeholder="Leave empty for default" 
             />
           </div>
           <div className="space-y-2">
@@ -83,18 +79,6 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
               onChange={(e) => updateInfrastructureConfig({ mongodbProjectId: e.target.value })}
               placeholder="Select MongoDB project or CREATE_NEW" 
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="auto-setup" className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="auto-setup"
-                checked={state.autoSetup}
-                onChange={(e) => updateInfrastructureConfig({ autoSetup: e.target.checked })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span>Auto-setup GitHub repo and Netlify project</span>
-            </Label>
           </div>
         </div>
       </Card>

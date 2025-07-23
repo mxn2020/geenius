@@ -45,14 +45,17 @@ export function InitView({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (message.trim()) {
-      // Update the project requirements in context
+      // Update the project requirements in context first
       updateProjectConfig({ userRequirements: message.trim() })
       
-      // Start the initialization process
-      await startInitialization()
-      
-      // The view will automatically change to 'processing' via context state change
-      setMessage("")
+      // Small delay to ensure context is updated
+      setTimeout(async () => {
+        // Start the initialization process
+        await startInitialization()
+        
+        // Clear the message after successful submission
+        setMessage("")
+      }, 100)
     }
   }
 
