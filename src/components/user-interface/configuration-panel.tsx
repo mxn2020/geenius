@@ -31,16 +31,16 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
         <Card className="pt-6 pb-4 px-4 bg-muted/30 border-muted-foreground/20 rounded-t-none rounded-b-lg border-t-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
-            <Label htmlFor="agent-architecture">Agent Architecture</Label>
+            <Label htmlFor="ai-provider">AI Provider</Label>
             <Select value={state.aiProvider} onValueChange={(value) => updateAIConfig({ aiProvider: value as any })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select architecture" />
+                <SelectValue placeholder="Select AI provider" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="anthropic">React Agent</SelectItem>
-                <SelectItem value="openai">Autonomous Agent</SelectItem>
-                <SelectItem value="google">Workflow Agent</SelectItem>
-                <SelectItem value="grok">RAG Agent</SelectItem>
+                <SelectItem value="anthropic">🤖 Claude (Anthropic) - Best for coding</SelectItem>
+                <SelectItem value="openai">🧠 GPT-4 (OpenAI) - Most versatile</SelectItem>
+                <SelectItem value="google">✨ Gemini (Google) - Creative problem solving</SelectItem>
+                <SelectItem value="grok">⚡ Grok (X.AI) - Fast and witty</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -56,13 +56,13 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
             <Label htmlFor="project-template">Project Template</Label>
             <Select value={state.templateId} onValueChange={(value) => updateProjectConfig({ templateId: value })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select template" />
+                <SelectValue placeholder="Select project template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="vite-react-mongo">Next.js</SelectItem>
-                <SelectItem value="vite-react-supabase">React</SelectItem>
-                <SelectItem value="nextjs-supabase">Vue.js</SelectItem>
-                <SelectItem value="vite-react-planetscale">Svelte</SelectItem>
+                <SelectItem value="vite-react-mongo">React + MongoDB + Prisma</SelectItem>
+                <SelectItem value="vite-react-supabase">React + Supabase</SelectItem>
+                <SelectItem value="nextjs-supabase">Next.js + Supabase</SelectItem>
+                <SelectItem value="vite-react-planetscale">React + PlanetScale</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -71,7 +71,15 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
             <Input 
               value={state.githubOrg}
               onChange={(e) => updateInfrastructureConfig({ githubOrg: e.target.value })}
-              placeholder="Enter GitHub username" 
+              placeholder="Enter GitHub username or organization" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="model">Model (optional)</Label>
+            <Input 
+              value={state.model}
+              onChange={(e) => updateAIConfig({ model: e.target.value })}
+              placeholder="Leave empty for default" 
             />
           </div>
           <div className="space-y-2">
@@ -79,7 +87,7 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
             <Input 
               value={state.mongodbOrgId}
               onChange={(e) => updateInfrastructureConfig({ mongodbOrgId: e.target.value })}
-              placeholder="Enter MongoDB org" 
+              placeholder="Select MongoDB organization" 
             />
           </div>
           <div className="space-y-2">
@@ -87,8 +95,20 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
             <Input 
               value={state.mongodbProjectId}
               onChange={(e) => updateInfrastructureConfig({ mongodbProjectId: e.target.value })}
-              placeholder="Enter MongoDB project" 
+              placeholder="Select MongoDB project or CREATE_NEW" 
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="auto-setup" className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="auto-setup"
+                checked={state.autoSetup}
+                onChange={(e) => updateInfrastructureConfig({ autoSetup: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span>Auto-setup GitHub repo and Netlify project</span>
+            </Label>
           </div>
         </div>
       </Card>
