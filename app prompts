@@ -1,0 +1,8 @@
+A nice website for ConstructionAlpha, a construction company from new york spezialised on high rise buildings.
+with client and apointment management.
+white, black and red colors.
+
+
+create a website for doctor mike
+with client management and appointment management in dashboard
+with appointment request option for visitors on website
