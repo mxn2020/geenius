@@ -48,6 +48,29 @@ interface ProjectInitResponse {
   error?: string;
 }
 
+interface ParsedError {
+  file: string;
+  line?: number;
+  column?: number;
+  message: string;
+  code?: string;
+  type: 'typescript' | 'build' | 'dependency' | 'config' | 'unknown';
+}
+
+interface FileFix {
+  file: string;
+  oldContent: string;
+  newContent: string;
+  description: string;
+}
+
+interface DeploymentErrorInfo {
+  errorType: 'typescript' | 'build' | 'dependency' | 'config' | 'unknown';
+  errors: ParsedError[];
+  buildLog: string;
+  canFix: boolean;
+}
+
 interface TemplateFileContent {
   path: string;
   content: string;
@@ -58,6 +81,81 @@ interface TemplateFileContent {
 const sessionManager = new EnhancedSessionManager();
 const githubService = new EnhancedGitHubService();
 const netlifyService = new NetlifyService();
+
+/**
+ * Update URL-based environment variables after Netlify site creation
+ */
+async function updateUrlEnvironmentVariables(
+  siteId: string,
+  accountId: string,
+  siteUrl: string,
+  template: any
+): Promise<void> {
+  const urlEnvVars: Record<string, string> = {};
+  let needsUpdate = false;
+  
+  // Check which URL-based env vars this template needs and update them
+  for (const envVar of template.envVars) {
+    switch (envVar) {
+      case 'VITE_APP_URL':
+      case 'NEXT_PUBLIC_APP_URL':
+      case 'NUXT_PUBLIC_API_URL':
+      case 'VITE_API_URL':
+      case 'BETTER_AUTH_URL':
+      case 'NEXTAUTH_URL':
+        urlEnvVars[envVar] = siteUrl;
+        needsUpdate = true;
+        break;
+    }
+  }
+  
+  if (needsUpdate && Object.keys(urlEnvVars).length > 0) {
+    try {
+      console.log(`[ENV-UPDATE] Updating ${Object.keys(urlEnvVars).length} URL-based environment variables with: ${siteUrl}`);
+      
+      // Use the same Netlify service instance to update env vars
+      const netlifyEnvVars: Record<string, string> = {};
+      Object.entries(urlEnvVars).forEach(([key, value]) => {
+        netlifyEnvVars[key] = value;
+      });
+
+      // Call the update method that we'll add to NetlifyService
+      await netlifyService.updateEnvironmentVariables(siteId, accountId, netlifyEnvVars);
+      
+      console.log(`   ✅ Successfully updated URL-based environment variables`);
+    } catch (error: any) {
+      console.warn(`⚠️ Failed to update URL-based environment variables: ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Clean markdown code blocks and language identifiers from AI-generated code
+ */
+function cleanMarkdownFromCode(content: string): string {
+  // Remove markdown code blocks with language identifiers
+  let cleaned = content
+    // Remove opening code blocks: ```typescript, ```javascript, ```tsx, etc.
+    .replace(/^```\w*\s*\n?/gm, '')
+    // Remove closing code blocks: ```
+    .replace(/^```\s*$/gm, '')
+    // Remove any remaining backticks at start/end of lines
+    .replace(/^`{1,3}/gm, '')
+    .replace(/`{1,3}$/gm, '');
+  
+  // Clean up extra whitespace but preserve intentional spacing
+  cleaned = cleaned.trim();
+  
+  // If the content looks like it has markdown artifacts, try additional cleaning
+  if (cleaned.includes('```') || cleaned.match(/^(typescript|javascript|tsx|jsx|ts|js)\s*$/m)) {
+    cleaned = cleaned
+      .replace(/^(typescript|javascript|tsx|jsx|ts|js)\s*$/gm, '')
+      .replace(/```/g, '')
+      .trim();
+  }
+  
+  return cleaned;
+}
 
 /**
  * Get environment variables for AI provider
@@ -71,7 +169,7 @@ function getEnvVarsForProvider(provider: string, model?: string): Record<string,
       anthropic: 'ANTHROPIC_API_KEY',
       openai: 'OPENAI_API_KEY',
       google: 'GOOGLE_API_KEY',
-      grok: 'GROK_API_KEY'
+      grok: 'XAI_API_KEY'
     };
     return process.env[envNames[provider]] || '';
   };
@@ -92,7 +190,7 @@ function getEnvVarsForProvider(provider: string, model?: string): Record<string,
       if (model) vars.GEMINI_MODEL = model;
       break;
     case 'grok':
-      if (apiKey) vars.GROK_API_KEY = apiKey;
+      if (apiKey) vars.XAI_API_KEY = apiKey;
       if (model) vars.GROK_MODEL = model;
       break;
   }
@@ -329,6 +427,308 @@ function parseAIResponse(response: string): {
   }
 }
 
+/**
+ * Parse deployment error logs to extract specific error information
+ */
+async function parseDeploymentError(deployment: any): Promise<DeploymentErrorInfo> {
+  // Try to get detailed build logs from WebSocket first
+  let buildLog = '';
+  
+  console.log(`[ERROR-PARSER] Analyzing deployment error...`);
+  console.log(`[ERROR-PARSER] Available deployment keys:`, Object.keys(deployment));
+  
+  if (deployment.site_id && deployment.id) {
+    try {
+      console.log(`[ERROR-PARSER] Fetching detailed logs via WebSocket...`);
+      buildLog = await netlifyService.getBuildLogs(deployment.site_id, deployment.id);
+      console.log(`[ERROR-PARSER] Retrieved ${buildLog.length} chars from WebSocket`);
+    } catch (error: any) {
+      console.warn(`[ERROR-PARSER] Failed to get WebSocket logs:`, error.message);
+    }
+  }
+  
+  // Fallback to error_message if WebSocket fails
+  if (!buildLog) {
+    buildLog = deployment.error_message || '';
+    console.log(`[ERROR-PARSER] Using error_message fallback: ${buildLog.length} chars`);
+  }
+  
+  const errors: ParsedError[] = [];
+  let errorType: 'typescript' | 'build' | 'dependency' | 'config' | 'unknown' = 'unknown';
+  let canFix = false;
+
+  console.log(`[ERROR-PARSER] First 500 chars of logs:`, buildLog.substring(0, 500));
+  
+  // TypeScript unused variable/import errors (TS6133) - improved pattern
+  const ts6133Regex = /src\/([^(]+)\((\d+),(\d+)\): error TS6133: '([^']+)' is declared but its value is never read\.?/g;
+  let match: RegExpExecArray | null;
+  
+  while ((match = ts6133Regex.exec(buildLog)) !== null) {
+    const [, file, line, column, variable] = match;
+    errors.push({
+      file: `src/${file}`,
+      line: parseInt(line),
+      column: parseInt(column),
+      message: `'${variable}' is declared but its value is never read`,
+      code: 'TS6133',
+      type: 'typescript'
+    });
+    errorType = 'typescript';
+    canFix = true;
+  }
+
+  // TypeScript type errors (TS2345, TS2322, etc.) - improved pattern
+  const tsErrorRegex = /src\/([^(]+)\((\d+),(\d+)\): error (TS\d+): (.+?)(?=\n|\r|$)/g;
+  while ((match = tsErrorRegex.exec(buildLog)) !== null) {
+    const [, file, line, column, code, message] = match;
+    errors.push({
+      file: `src/${file}`,
+      line: parseInt(line),
+      column: parseInt(column),
+      message: message.trim(),
+      code,
+      type: 'typescript'
+    });
+    errorType = 'typescript';
+    canFix = true;
+  }
+
+  // Build command errors
+  if (buildLog.includes('Command failed with exit code')) {
+    errorType = 'build';
+    if (errors.length > 0) {
+      canFix = true; // Can fix if we identified specific issues
+    }
+  }
+
+  // Dependency errors
+  if (buildLog.includes('npm ERR!') || buildLog.includes('pnpm ERR!') || buildLog.includes('Cannot resolve')) {
+    errorType = 'dependency';
+    canFix = false; // Usually need manual intervention
+  }
+
+  console.log(`[ERROR-PARSER] Found ${errors.length} errors of type: ${errorType}, canFix: ${canFix}`);
+  
+  return {
+    errorType,
+    errors,
+    buildLog,
+    canFix
+  };
+}
+
+/**
+ * Fix code errors using AI agent
+ */
+async function fixCodeWithAI(
+  sessionId: string,
+  errorInfo: DeploymentErrorInfo, 
+  repoUrl: string,
+  aiProvider: string = 'anthropic'
+): Promise<{ success: boolean; fixes: FileFix[]; explanation: string }> {
+  
+  console.log(`[AI-FIXER] Starting AI fix for ${errorInfo.errors.length} errors`);
+  await logInitialization(sessionId, 'info', `🤖 AI analyzing ${errorInfo.errors.length} deployment errors...`);
+
+  try {
+    const customAgent = new CustomAIAgent({
+      sessionId,
+      sandbox: null,
+      repositoryUrl: repoUrl,
+      provider: aiProvider as 'anthropic' | 'openai' | 'google' | 'grok',
+      model: 'claude-sonnet-4-20250514',
+      projectContext: {
+        componentRegistry: {},
+        dependencies: {},
+        framework: 'react',
+        structure: 'standard'
+      }
+    });
+    const fixes: FileFix[] = [];
+    
+    // Group errors by file for efficient processing
+    const fileErrors = new Map<string, ParsedError[]>();
+    for (const error of errorInfo.errors) {
+      if (!fileErrors.has(error.file)) {
+        fileErrors.set(error.file, []);
+      }
+      fileErrors.get(error.file)!.push(error);
+    }
+
+    // Process each file with errors
+    for (const [filePath, fileErrorList] of fileErrors) {
+      await logInitialization(sessionId, 'info', `🔧 Fixing errors in ${filePath}...`);
+      
+      // Get current file content
+      const currentContent = await githubService.getFileContent(repoUrl, filePath, 'main');
+      
+      // Create fix prompt for this file
+      const fixPrompt = `
+You are a TypeScript/React code fixer. Fix the following errors in this file:
+
+FILE: ${filePath}
+CURRENT CONTENT:
+\`\`\`typescript
+${currentContent}
+\`\`\`
+
+ERRORS TO FIX:
+${fileErrorList.map(error => 
+  `- Line ${error.line}: ${error.message} (${error.code})`
+).join('\n')}
+
+CRITICAL INSTRUCTIONS:
+1. For TS6133 errors (unused variables/imports): Remove the unused imports or variables
+2. For syntax errors (TS1443, TS1005, TS1434, etc.): Fix the syntax issues carefully
+3. For other TypeScript errors: Fix the type issues while preserving functionality
+4. DO NOT change the overall structure or functionality of the code
+5. IMPORTANT: Return ONLY the raw TypeScript/React code - NO markdown code blocks, NO language identifiers, NO explanations
+6. Do NOT wrap your response in \`\`\`typescript or \`\`\` blocks
+7. Preserve all existing imports that are actually used
+8. Maintain the same code style and formatting
+9. Remove any markdown formatting artifacts like \`\`\`typescript or \`\`\`
+
+Return the complete fixed file content as raw code:`;
+
+      const fixResult = await customAgent.processRequest(fixPrompt);
+      
+      if (fixResult && fixResult.trim()) {
+        // Clean any markdown formatting from the AI response
+        const cleanedContent = cleanMarkdownFromCode(fixResult);
+        
+        fixes.push({
+          file: filePath,
+          oldContent: currentContent,
+          newContent: cleanedContent,
+          description: `Fixed ${fileErrorList.length} errors: ${fileErrorList.map(e => e.code).join(', ')}`
+        });
+        
+        console.log(`[AI-FIXER] Fixed ${fileErrorList.length} errors in ${filePath}`);
+      } else {
+        console.warn(`[AI-FIXER] Failed to fix errors in ${filePath}: No content returned`);
+      }
+    }
+
+    const explanation = `AI successfully fixed ${fixes.length} files with TypeScript errors. Removed unused imports and variables.`;
+    
+    return {
+      success: fixes.length > 0,
+      fixes,
+      explanation
+    };
+
+  } catch (error: any) {
+    console.error(`[AI-FIXER] Error during AI fixing:`, error);
+    return {
+      success: false,
+      fixes: [],
+      explanation: `AI fixing failed: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Apply fixes to the repository
+ */
+async function applyFixesToRepository(
+  sessionId: string,
+  repoUrl: string,
+  fixes: FileFix[]
+): Promise<boolean> {
+  console.log(`[REPO-FIXER] Applying ${fixes.length} fixes to repository`);
+  await logInitialization(sessionId, 'info', `📝 Applying ${fixes.length} code fixes to repository...`);
+
+  try {
+    // Prepare file changes for commitChanges method
+    const fileChanges = fixes.map(fix => ({
+      path: fix.file,
+      content: fix.newContent,
+      message: `AI fix: ${fix.description}`
+    }));
+
+    // Apply all fixes in a single commit
+    const commits = await githubService.commitChanges(
+      repoUrl,
+      'main',
+      fileChanges
+    );
+    
+    if (commits.length > 0) {
+      console.log(`[REPO-FIXER] Applied ${fixes.length} fixes in ${commits.length} commits`);
+      await logInitialization(sessionId, 'success', `✅ Applied ${fixes.length} fixes to repository`);
+      return true;
+    } else {
+      console.warn(`[REPO-FIXER] No commits were created`);
+      return false;
+    }
+  } catch (error: any) {
+    console.error(`[REPO-FIXER] Error applying fixes:`, error);
+    await logInitialization(sessionId, 'error', `❌ Failed to apply fixes: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Attempt to fix deployment errors using AI
+ */
+async function attemptAIErrorFix(
+  sessionId: string,
+  deployment: any,
+  repoUrl: string,
+  session: any
+): Promise<{ success: boolean; message: string }> {
+  
+  try {
+    // Parse the deployment error
+    const errorInfo = await parseDeploymentError(deployment);
+    
+    if (!errorInfo.canFix) {
+      await logInitialization(sessionId, 'warning', `⚠️ Error type '${errorInfo.errorType}' cannot be automatically fixed`);
+      return {
+        success: false,
+        message: `Cannot automatically fix ${errorInfo.errorType} errors`
+      };
+    }
+
+    await logInitialization(sessionId, 'info', `🔍 Found ${errorInfo.errors.length} fixable ${errorInfo.errorType} errors`);
+
+    // Use AI to generate fixes
+    const aiProvider = session.aiProvider || 'anthropic';
+    const fixResult = await fixCodeWithAI(sessionId, errorInfo, repoUrl, aiProvider);
+    
+    if (!fixResult.success) {
+      return {
+        success: false,
+        message: `AI could not generate fixes: ${fixResult.explanation}`
+      };
+    }
+
+    // Apply fixes to repository
+    const applySuccess = await applyFixesToRepository(sessionId, repoUrl, fixResult.fixes);
+    
+    if (applySuccess) {
+      await logInitialization(sessionId, 'success', `🎉 Successfully applied ${fixResult.fixes.length} AI-generated fixes`);
+      return {
+        success: true,
+        message: fixResult.explanation
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Failed to apply fixes to repository'
+      };
+    }
+
+  } catch (error: any) {
+    console.error(`[AI-ERROR-FIX] Error during AI error fixing:`, error);
+    await logInitialization(sessionId, 'error', `❌ AI error fixing failed: ${error.message}`);
+    return {
+      success: false,
+      message: `AI error fixing failed: ${error.message}`
+    };
+  }
+}
+
 
 /**
  * Process standard deployment without AI customization
@@ -403,31 +803,118 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
         if (template) {
           const templateEnvVars: Record<string, string> = {};
           
-          // Add MongoDB connection if available
-          if (mongodbProject) {
-            if (template.envVars.includes('MONGODB_URI')) {
-              templateEnvVars['MONGODB_URI'] = mongodbProject.connectionString;
+          // Process each required environment variable for this template
+          for (const envVar of template.envVars) {
+            switch (envVar) {
+              // MongoDB-related variables
+              case 'MONGODB_URI':
+              case 'DATABASE_URL':
+                if (mongodbProject) {
+                  templateEnvVars[envVar] = mongodbProject.connectionString;
+                }
+                break;
+              case 'MONGODB_DATABASE_NAME':
+                if (mongodbProject) {
+                  templateEnvVars[envVar] = mongodbProject.databaseName;
+                }
+                break;
+              case 'MONGODB_CLUSTER_NAME':
+                if (mongodbProject) {
+                  templateEnvVars[envVar] = mongodbProject.clusterName;
+                }
+                break;
+              case 'MONGODB_USERNAME':
+                if (mongodbProject) {
+                  templateEnvVars[envVar] = mongodbProject.username;
+                }
+                break;
+              case 'MONGODB_PASSWORD':
+                if (mongodbProject) {
+                  templateEnvVars[envVar] = mongodbProject.password;
+                }
+                break;
+              
+              // Authentication secrets
+              case 'BETTER_AUTH_SECRET':
+              case 'NEXTAUTH_SECRET':
+              case 'AUTH_SECRET':
+              case 'NUXT_SECRET_KEY':
+                templateEnvVars[envVar] = require('crypto').randomBytes(32).toString('hex');
+                break;
+              
+              // App URLs and names
+              case 'VITE_APP_NAME':
+              case 'NEXT_PUBLIC_APP_NAME':
+              case 'NUXT_PUBLIC_APP_NAME':
+                templateEnvVars[envVar] = request.projectName || 'My App';
+                break;
+              
+              case 'VITE_APP_URL':
+              case 'NEXT_PUBLIC_APP_URL':
+              case 'NUXT_PUBLIC_API_URL':
+              case 'VITE_API_URL':
+                // Will be updated after Netlify site creation
+                templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+                break;
+              
+              case 'BETTER_AUTH_URL':
+              case 'NEXTAUTH_URL':
+                // Will be updated after Netlify site creation
+                templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+                break;
+              
+              // Supabase variables (need to be configured by user)
+              case 'VITE_SUPABASE_URL':
+              case 'NEXT_PUBLIC_SUPABASE_URL':
+              case 'SUPABASE_URL':
+                templateEnvVars[envVar] = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
+                break;
+              case 'VITE_SUPABASE_ANON_KEY':
+              case 'NEXT_PUBLIC_SUPABASE_ANON_KEY':
+              case 'SUPABASE_ANON_KEY':
+                templateEnvVars[envVar] = process.env.SUPABASE_ANON_KEY || 'your-supabase-anon-key';
+                break;
+              case 'SUPABASE_SERVICE_KEY':
+              case 'SUPABASE_SERVICE_ROLE_KEY':
+              case 'NEXT_PUBLIC_SUPABASE_SERVICE_KEY':
+                templateEnvVars[envVar] = process.env.SUPABASE_SERVICE_KEY || 'your-supabase-service-key';
+                break;
+              case 'SUPABASE_PROJECT_ID':
+                templateEnvVars[envVar] = process.env.SUPABASE_PROJECT_ID || 'your-supabase-project-id';
+                break;
+              
+              // PlanetScale variables
+              case 'PLANETSCALE_TOKEN':
+                templateEnvVars[envVar] = process.env.PLANETSCALE_TOKEN || 'your-planetscale-token';
+                break;
+              
+              // Upstash Redis variables
+              case 'VITE_UPSTASH_REDIS_REST_URL':
+              case 'UPSTASH_REDIS_REST_URL':
+                templateEnvVars[envVar] = process.env.UPSTASH_REDIS_REST_URL || 'https://your-redis.upstash.io';
+                break;
+              case 'VITE_UPSTASH_REDIS_REST_TOKEN':
+              case 'UPSTASH_REDIS_REST_TOKEN':
+                templateEnvVars[envVar] = process.env.UPSTASH_REDIS_REST_TOKEN || 'your-upstash-token';
+                break;
+              
+              // App version for IndexedDB templates
+              case 'VITE_APP_VERSION':
+              case 'NEXT_PUBLIC_APP_VERSION':
+              case 'NUXT_PUBLIC_APP_VERSION':
+                templateEnvVars[envVar] = '1.0.0';
+                break;
+              
+              // Default fallback for any unhandled env vars
+              default:
+                console.warn(`[ENV-SETUP] Unknown environment variable: ${envVar}, setting as placeholder`);
+                templateEnvVars[envVar] = `placeholder-${envVar.toLowerCase()}`;
+                break;
             }
-            if (template.envVars.includes('DATABASE_URL')) {
-              templateEnvVars['DATABASE_URL'] = mongodbProject.connectionString;
-            }
-            templateEnvVars['MONGODB_DATABASE_NAME'] = mongodbProject.databaseName;
-            templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
-            templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
-            templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
           }
           
-          // Generate BETTER_AUTH_SECRET if template requires it
-          if (template.envVars.includes('BETTER_AUTH_SECRET')) {
-            templateEnvVars['BETTER_AUTH_SECRET'] = require('crypto').randomBytes(32).toString('hex');
-          }
-          
-          // Add standard env vars
-          if (template.envVars.includes('VITE_APP_NAME')) {
-            templateEnvVars['VITE_APP_NAME'] = request.projectName;
-          }
           // Always set repository URL and base branch (required for web interface)
-          templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+          templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl || '';
           templateEnvVars['VITE_BASE_BRANCH'] = 'main';
           
           const aiProviderVars = getEnvVarsForProvider(request.aiProvider || 'anthropic', request.model);
@@ -438,6 +925,9 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
             ...templateEnvVars
           };
           
+          console.log(`[ENV-SETUP] Setting ${Object.keys(allEnvVars).length} environment variables:`, Object.keys(allEnvVars));
+          await logInitialization(sessionId, 'info', `🔧 Configuring ${Object.keys(allEnvVars).length} environment variables...`);
+          
           netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
           
           await netlifyService.configureBranchDeployments(netlifyProject.id, {
@@ -445,6 +935,14 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
             develop: { preview: true },
             'feature/*': { preview: true }
           });
+          
+          // Update URL-based environment variables with actual site URL
+          await updateUrlEnvironmentVariables(
+            netlifyProject.id,
+            netlifyProject.account_id,
+            netlifyProject.ssl_url || netlifyProject.url,
+            template
+          );
           
           await logInitialization(sessionId, 'success', `✅ Netlify project created: ${netlifyProject.ssl_url}`);
         }
@@ -655,14 +1153,37 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       );
     }
 
-    // Phase 6: Setup Infrastructure (MongoDB & Netlify)
-    await sessionManager.updateSessionStatus(sessionId, 'setting_up_infrastructure', 75, 'Setting up database and deployment...');
+    // Phase 6: Commit Generated Files to Repository First
+    await sessionManager.updateSessionStatus(sessionId, 'committing', 75, 'Committing project files to main branch...');
+    
+    const commits = await githubService.commitChanges(
+      request.repositoryUrl,
+      session.baseBranch, // Commit directly to main branch
+      fileChanges
+    );
+    
+    for (const commit of commits) {
+      await sessionManager.addCommit(sessionId, {
+        sha: commit.sha,
+        message: commit.message,
+        url: commit.url,
+        filePath: fileChanges.find(fc => fc.message === commit.message)?.path || 'unknown'
+      });
+    }
+    
+    await logInitialization(sessionId, 'success', 
+      `📝 Committed ${commits.length} files directly to ${session.baseBranch} branch`,
+      { commitCount: commits.length, branch: session.baseBranch }
+    );
+
+    // Phase 7: Setup Infrastructure (MongoDB & Netlify) with Updated Repository
+    await sessionManager.updateSessionStatus(sessionId, 'setting_up_infrastructure', 80, 'Setting up database and deployment...');
     
     let mongodbProject = null;
     let netlifyProject = null;
     
     try {
-      await logInitialization(sessionId, 'info', '🏗️ Setting up database and deployment infrastructure...');
+      await logInitialization(sessionId, 'info', '🏗️ Setting up database and deployment infrastructure with updated repository...');
       
       // Setup MongoDB database if template requires it and credentials are available
       if (request.autoSetup !== false && process.env.MONGODB_ATLAS_PUBLIC_KEY && process.env.MONGODB_ATLAS_PRIVATE_KEY) {
@@ -716,28 +1237,120 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
           
           if (template) {
             // Prepare environment variables (same logic as non-AI mode)
-            const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});
+            const templateEnvVars: Record<string, string> = {};
             
-            // Add MongoDB connection details if database was created
-            if (mongodbProject) {
-              if (template.envVars.includes('MONGODB_URI')) {
-                templateEnvVars['MONGODB_URI'] = mongodbProject.connectionString;
+            // Process each required environment variable for this template
+            for (const envVar of template.envVars) {
+              switch (envVar) {
+                // MongoDB-related variables
+                case 'MONGODB_URI':
+                case 'DATABASE_URL':
+                  if (mongodbProject) {
+                    templateEnvVars[envVar] = mongodbProject.connectionString;
+                  }
+                  break;
+                case 'MONGODB_DATABASE_NAME':
+                  if (mongodbProject) {
+                    templateEnvVars[envVar] = mongodbProject.databaseName;
+                  }
+                  break;
+                case 'MONGODB_CLUSTER_NAME':
+                  if (mongodbProject) {
+                    templateEnvVars[envVar] = mongodbProject.clusterName;
+                  }
+                  break;
+                case 'MONGODB_USERNAME':
+                  if (mongodbProject) {
+                    templateEnvVars[envVar] = mongodbProject.username;
+                  }
+                  break;
+                case 'MONGODB_PASSWORD':
+                  if (mongodbProject) {
+                    templateEnvVars[envVar] = mongodbProject.password;
+                  }
+                  break;
+                
+                // Authentication secrets
+                case 'BETTER_AUTH_SECRET':
+                case 'NEXTAUTH_SECRET':
+                case 'AUTH_SECRET':
+                case 'NUXT_SECRET_KEY':
+                  templateEnvVars[envVar] = require('crypto').randomBytes(32).toString('hex');
+                  break;
+                
+                // App URLs and names
+                case 'VITE_APP_NAME':
+                case 'NEXT_PUBLIC_APP_NAME':
+                case 'NUXT_PUBLIC_APP_NAME':
+                  templateEnvVars[envVar] = request.projectName || 'My App';
+                  break;
+                
+                case 'VITE_APP_URL':
+                case 'NEXT_PUBLIC_APP_URL':
+                case 'NUXT_PUBLIC_API_URL':
+                case 'VITE_API_URL':
+                  // Will be updated after Netlify site creation
+                  templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+                  break;
+                
+                case 'BETTER_AUTH_URL':
+                case 'NEXTAUTH_URL':
+                  // Will be updated after Netlify site creation
+                  templateEnvVars[envVar] = 'https://placeholder.netlify.app';
+                  break;
+                
+                // Supabase variables (need to be configured by user)
+                case 'VITE_SUPABASE_URL':
+                case 'NEXT_PUBLIC_SUPABASE_URL':
+                case 'SUPABASE_URL':
+                  templateEnvVars[envVar] = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
+                  break;
+                case 'VITE_SUPABASE_ANON_KEY':
+                case 'NEXT_PUBLIC_SUPABASE_ANON_KEY':
+                case 'SUPABASE_ANON_KEY':
+                  templateEnvVars[envVar] = process.env.SUPABASE_ANON_KEY || 'your-supabase-anon-key';
+                  break;
+                case 'SUPABASE_SERVICE_KEY':
+                case 'SUPABASE_SERVICE_ROLE_KEY':
+                case 'NEXT_PUBLIC_SUPABASE_SERVICE_KEY':
+                  templateEnvVars[envVar] = process.env.SUPABASE_SERVICE_KEY || 'your-supabase-service-key';
+                  break;
+                case 'SUPABASE_PROJECT_ID':
+                  templateEnvVars[envVar] = process.env.SUPABASE_PROJECT_ID || 'your-supabase-project-id';
+                  break;
+                
+                // PlanetScale variables
+                case 'PLANETSCALE_TOKEN':
+                  templateEnvVars[envVar] = process.env.PLANETSCALE_TOKEN || 'your-planetscale-token';
+                  break;
+                
+                // Upstash Redis variables
+                case 'VITE_UPSTASH_REDIS_REST_URL':
+                case 'UPSTASH_REDIS_REST_URL':
+                  templateEnvVars[envVar] = process.env.UPSTASH_REDIS_REST_URL || 'https://your-redis.upstash.io';
+                  break;
+                case 'VITE_UPSTASH_REDIS_REST_TOKEN':
+                case 'UPSTASH_REDIS_REST_TOKEN':
+                  templateEnvVars[envVar] = process.env.UPSTASH_REDIS_REST_TOKEN || 'your-upstash-token';
+                  break;
+                
+                // App version for IndexedDB templates
+                case 'VITE_APP_VERSION':
+                case 'NEXT_PUBLIC_APP_VERSION':
+                case 'NUXT_PUBLIC_APP_VERSION':
+                  templateEnvVars[envVar] = '1.0.0';
+                  break;
+                
+                // Default fallback for any unhandled env vars
+                default:
+                  console.warn(`[ENV-SETUP] Unknown environment variable: ${envVar}, setting as placeholder`);
+                  templateEnvVars[envVar] = `placeholder-${envVar.toLowerCase()}`;
+                  break;
               }
-              if (template.envVars.includes('DATABASE_URL')) {
-                templateEnvVars['DATABASE_URL'] = mongodbProject.connectionString;
-              }
-              templateEnvVars['MONGODB_DATABASE_NAME'] = mongodbProject.databaseName;
-              templateEnvVars['MONGODB_CLUSTER_NAME'] = mongodbProject.clusterName;
-              templateEnvVars['MONGODB_USERNAME'] = mongodbProject.username;
-              templateEnvVars['MONGODB_PASSWORD'] = mongodbProject.password;
             }
             
-            // Add other environment variables
-            if (template.envVars.includes('VITE_APP_NAME')) {
-              templateEnvVars['VITE_APP_NAME'] = request.projectName;
-            }
             // Always set repository URL and base branch (required for web interface)
-            templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl;
+            templateEnvVars['VITE_REPOSITORY_URL'] = request.repositoryUrl || '';
             templateEnvVars['VITE_BASE_BRANCH'] = 'main';
             
             // Get AI provider env vars
@@ -749,6 +1362,9 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
               ...templateEnvVars
             };
             
+            console.log(`[ENV-SETUP] Setting ${Object.keys(allEnvVars).length} environment variables:`, Object.keys(allEnvVars));
+            await logInitialization(sessionId, 'info', `🔧 Configuring ${Object.keys(allEnvVars).length} environment variables...`);
+            
             netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
             
             // Configure branch deployments with PR previews
@@ -757,6 +1373,14 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
               develop: { preview: true },
               'feature/*': { preview: true }
             });
+            
+            // Update URL-based environment variables with actual site URL
+            await updateUrlEnvironmentVariables(
+              netlifyProject.id,
+              netlifyProject.account_id,
+              netlifyProject.ssl_url || netlifyProject.url,
+              template
+            );
             
             await logInitialization(sessionId, 'success', `✅ Netlify project created: ${netlifyProject.ssl_url}`);
           }
@@ -791,29 +1415,6 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       );
     }
 
-    // Phase 7: Commit Generated Files to Main Branch
-    await sessionManager.updateSessionStatus(sessionId, 'committing', 80, 'Committing project files to main branch...');
-    
-    const commits = await githubService.commitChanges(
-      request.repositoryUrl,
-      session.baseBranch, // Commit directly to main branch
-      fileChanges
-    );
-    
-    for (const commit of commits) {
-      await sessionManager.addCommit(sessionId, {
-        sha: commit.sha,
-        message: commit.message,
-        url: commit.url,
-        filePath: fileChanges.find(fc => fc.message === commit.message)?.path || 'unknown'
-      });
-    }
-    
-    await logInitialization(sessionId, 'success', 
-      `📝 Committed ${commits.length} files directly to ${session.baseBranch} branch`,
-      { commitCount: commits.length, branch: session.baseBranch }
-    );
-
     // Phase 8: Wait for Deployment 
     await sessionManager.updateSessionStatus(sessionId, 'deploying', 90, 'Waiting for deployment...');
     
@@ -830,12 +1431,84 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
         if (deployment.state === 'ready') {
           const deployUrl = deployment.deploy_ssl_url || netlifyProject.ssl_url;
           await sessionManager.setPreviewUrl(sessionId, deployUrl);
-          await logInitialization(sessionId, 'success', '🌐 Project deployment ready!', {
+          await logInitialization(sessionId, 'success', '🌐 Deployment ready with customized project!', {
             deploymentUrl: deployUrl
           });
+
           await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Project successfully deployed');
         } else if (deployment.state === 'error') {
-          await logInitialization(sessionId, 'warning', '❌ Netlify deployment failed - check logs');
+          await logInitialization(sessionId, 'warning', '❌ Netlify deployment failed - attempting AI fix...');
+          
+          // NEW: AI Error Fixing Loop with retries
+          let retryAttempt = 0;
+          const maxRetries = 3;
+          let currentDeployment = deployment;
+          let finalDeployUrl = null;
+          
+          while (retryAttempt < maxRetries && currentDeployment.state === 'error') {
+            retryAttempt++;
+            await logInitialization(sessionId, 'info', `🔄 AI Fix Attempt ${retryAttempt}/${maxRetries}...`);
+            
+            try {
+              const fixResult = await attemptAIErrorFix(
+                sessionId, 
+                currentDeployment, 
+                request.repositoryUrl || '', 
+                session
+              );
+              
+              if (fixResult.success) {
+                await logInitialization(sessionId, 'info', '🔄 Triggering redeployment after AI fixes...');
+                
+                // Trigger a new deployment after fixes
+                const buildId = await netlifyService.triggerRedeploy(
+                  netlifyProject.id,
+                  (message: string) => logInitialization(sessionId, 'info', message)
+                );
+                
+                if (buildId) {
+                  // Wait for retry deployment
+                  const retryDeployment = await netlifyService.waitForInitialDeployment(
+                    netlifyProject.id, 
+                    300000,
+                    (message: string) => logInitialization(sessionId, 'info', message)
+                  );
+                  
+                  currentDeployment = retryDeployment;
+                  
+                  if (retryDeployment.state === 'ready') {
+                    finalDeployUrl = retryDeployment.deploy_ssl_url || netlifyProject.ssl_url;
+                    await sessionManager.setPreviewUrl(sessionId, finalDeployUrl);
+                    await logInitialization(sessionId, 'success', `🎉 AI successfully fixed deployment errors on attempt ${retryAttempt}!`, {
+                      deploymentUrl: finalDeployUrl
+                    });
+                    await sessionManager.updateSessionStatus(sessionId, 'deployed', 98, 'Project successfully deployed after AI fixes');
+                    break; // Success! Exit the retry loop
+                  } else if (retryDeployment.state === 'error') {
+                    await logInitialization(sessionId, 'warning', `⚠️ Attempt ${retryAttempt} failed, deployment still has errors`);
+                    if (retryAttempt < maxRetries) {
+                      await logInitialization(sessionId, 'info', '🔄 Analyzing new errors for next retry...');
+                    }
+                  }
+                } else {
+                  await logInitialization(sessionId, 'warning', `⚠️ Failed to trigger redeployment on attempt ${retryAttempt}`);
+                  break;
+                }
+              } else {
+                await logInitialization(sessionId, 'warning', `⚠️ AI could not generate fixes on attempt ${retryAttempt}: ${fixResult.message}`);
+                break;
+              }
+            } catch (retryError: any) {
+              await logInitialization(sessionId, 'warning', `❌ Error during retry attempt ${retryAttempt}: ${retryError.message}`);
+              break;
+            }
+          }
+          
+          // Final result handling
+          if (currentDeployment.state === 'error') {
+            await logInitialization(sessionId, 'error', `❌ Deployment failed after ${retryAttempt} AI fix attempts`);
+            await logInitialization(sessionId, 'info', '💡 Manual intervention may be required');
+          }
         }
       } else {
         await logInitialization(sessionId, 'info', '⚠️ No Netlify project - skipping deployment wait');
@@ -877,10 +1550,24 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       await logInitialization(sessionId, 'success', `🔗 MongoDB Connection: ${mongodbProject.connectionString}`);
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[PROJECT-INIT] Processing error:', error);
-    await sessionManager.setError(sessionId, `Project initialization failed: ${error.message}`);
-    await logInitialization(sessionId, 'error', `❌ ${error.message}`);
+    
+    // Check if this is a retry exhaustion error from AI overload
+    if (error.isRetryExhausted) {
+      const retryMessage = `AI service is currently overloaded. Tried ${error.attemptCount} times over several minutes. Please try again in a few minutes or use the manual retry button.`;
+      await sessionManager.setError(sessionId, retryMessage, { 
+        canRetry: true, 
+        retryExhausted: true,
+        attemptCount: error.attemptCount 
+      });
+      await logInitialization(sessionId, 'error', `⚠️ AI Overloaded - Retry Available`);
+      await logInitialization(sessionId, 'warning', `🔄 Attempted ${error.attemptCount} times with exponential backoff`);
+      await logInitialization(sessionId, 'info', `💡 Use "Retry Deployment" button to try again`);
+    } else {
+      await sessionManager.setError(sessionId, `Project initialization failed: ${error.message}`);
+      await logInitialization(sessionId, 'error', `❌ ${error.message}`);
+    }
   }
 }
 

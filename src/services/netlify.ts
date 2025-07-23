@@ -1,5 +1,5 @@
 // src/sservices/netlify.ts
-import { NetlifyAPI } from './netlifyAPI';
+import { NetlifyAPI } from './netlify/netlifyAPI';
 
 export class NetlifyService {
   private client: NetlifyAPI | null = null;
@@ -18,6 +18,30 @@ export class NetlifyService {
       this.client = new NetlifyAPI(process.env.NETLIFY_TOKEN);
     }
     return this.client;
+  }
+
+  /**
+   * Update environment variables for a site
+   */
+  async updateEnvironmentVariables(siteId: string, accountId: string, envVars: Record<string, string>): Promise<void> {
+    try {
+      const client = await this.getClient();
+      
+      // Convert envVars to Netlify format
+      const netlifyEnvVars = Object.entries(envVars).map(([key, value]) => ({
+        key,
+        values: [{ context: 'all' as const, value }]
+      }));
+
+      await client.createEnvVars({
+        accountId,
+        siteId,
+        body: netlifyEnvVars
+      });
+    } catch (error: any) {
+      console.error(`Failed to update environment variables for site ${siteId}:`, error.message);
+      throw error;
+    }
   }
 
   async validateCredentials(onProgress?: (message: string) => void): Promise<{ valid: boolean; error?: string }> {
@@ -135,6 +159,33 @@ export class NetlifyService {
       console.log(`   Admin URL: ${site.admin_url}`);
       if (onProgress) onProgress(`✅ Netlify site created: ${site.ssl_url || site.url}`);
 
+      // Step 5: Set environment variables using the dedicated API (more reliable than build_settings)
+      if (envVars && Object.keys(envVars).length > 0) {
+        try {
+          if (onProgress) onProgress('🔧 Setting environment variables...');
+          console.log(`🔧 Setting ${Object.keys(envVars).length} environment variables...`);
+          
+          // Convert envVars to Netlify format
+          const netlifyEnvVars = Object.entries(envVars).map(([key, value]) => ({
+            key,
+            values: [{ context: 'all' as const, value }]
+          }));
+
+          await client.createEnvVars({
+            accountId: site.account_id,
+            siteId: site.id,
+            body: netlifyEnvVars
+          });
+
+          console.log(`   ✅ Successfully set ${Object.keys(envVars).length} environment variables`);
+          if (onProgress) onProgress(`✅ Environment variables configured`);
+        } catch (envError: any) {
+          console.warn(`⚠️ Failed to set environment variables: ${envError.message}`);
+          if (onProgress) onProgress(`⚠️ Environment variable setup failed: ${envError.message}`);
+          // Don't throw here - site creation was successful, just env vars failed
+        }
+      }
+
       return site;
     } catch (error: any) {
       console.error('❌ Error creating Netlify site:', error);
@@ -245,6 +296,32 @@ export class NetlifyService {
 
       console.log(`✅ Successfully created Netlify site with fallback name: ${fallbackSite.name}`);
       if (onProgress) onProgress(`✅ Site created with unique name: ${fallbackSite.name}`);
+
+      // Set environment variables for fallback site using the dedicated API
+      if (envVars && Object.keys(envVars).length > 0) {
+        try {
+          if (onProgress) onProgress('🔧 Setting environment variables for fallback site...');
+          console.log(`🔧 Setting ${Object.keys(envVars).length} environment variables for fallback site...`);
+          
+          const netlifyEnvVars = Object.entries(envVars).map(([key, value]) => ({
+            key,
+            values: [{ context: 'all' as const, value }]
+          }));
+
+          await fallbackClient.createEnvVars({
+            accountId: fallbackSite.account_id,
+            siteId: fallbackSite.id,
+            body: netlifyEnvVars
+          });
+
+          console.log(`   ✅ Successfully set ${Object.keys(envVars).length} environment variables for fallback site`);
+          if (onProgress) onProgress(`✅ Environment variables configured for fallback site`);
+        } catch (envError: any) {
+          console.warn(`⚠️ Failed to set environment variables for fallback site: ${envError.message}`);
+          if (onProgress) onProgress(`⚠️ Fallback site environment variable setup failed: ${envError.message}`);
+        }
+      }
+
       return fallbackSite;
     } catch (fallbackError: any) {
       console.error('❌ Fallback site creation also failed:', fallbackError);
@@ -609,6 +686,61 @@ export class NetlifyService {
     throw new Error(timeoutMsg);
   }
 
+  /**
+   * Get detailed build logs using WebSocket connection
+   */
+  async getBuildLogs(siteId: string, deployId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      try {
+        const WebSocket = require('ws');
+        const ws = new WebSocket(`wss://socketeer.services.netlify.com/build/logs`);
+        let logs: string[] = [];
+        
+        console.log(`🔌 Connecting to Netlify WebSocket for deploy: ${deployId}`);
+        
+        ws.on('open', () => {
+          console.log('✅ WebSocket connected, requesting logs...');
+          ws.send(JSON.stringify({
+            access_token: process.env.NETLIFY_TOKEN,
+            deploy_id: deployId,
+            site_id: siteId
+          }));
+        });
+        
+        ws.on('message', (data: any) => {
+          try {
+            const logEntry = JSON.parse(data.toString());
+            if (logEntry.message) {
+              logs.push(logEntry.message);
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse log entry:', data.toString());
+          }
+        });
+        
+        ws.on('close', () => {
+          console.log(`🔒 WebSocket closed, retrieved ${logs.length} log entries`);
+          resolve(logs.join('\n'));
+        });
+        
+        ws.on('error', (error: any) => {
+          console.error('❌ WebSocket error:', error);
+          reject(error);
+        });
+        
+        // Set a timeout to close the connection after 15 seconds
+        setTimeout(() => {
+          console.log('⏰ WebSocket timeout, closing connection...');
+          ws.close();
+        }, 15000);
+        
+      } catch (error: any) {
+        console.error('❌ Failed to create WebSocket connection:', error);
+        reject(error);
+      }
+    });
+  }
+
   private async findAvailableNetlifyName(baseName: string, onProgress?: (message: string) => void): Promise<string> {
     const cleanName = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     console.log(`🔍 Generating unique Netlify name from: ${cleanName}`);
@@ -779,7 +911,7 @@ export class NetlifyService {
       console.log(`🚀 Triggering build for site ${siteId} on branch ${branch}`);
 
       const client = await this.getClient();
-      const build = await client.createSiteBuild({
+      const build = await client.createSiteDeploy({
         siteId,
         body: {
           branch: branch || 'main'
@@ -795,6 +927,40 @@ export class NetlifyService {
       console.error('❌ Trigger build error:', error.message);
       if (onProgress) onProgress(`❌ Build trigger failed: ${error.message}`);
       throw new Error(`Failed to trigger build: ${error.message}`);
+    }
+  }
+
+  async triggerRedeploy(siteId: string, onProgress?: (message: string) => void): Promise<string | null> {
+    try {
+      if (onProgress) onProgress('🔄 Triggering redeployment with updated code and environment variables...');
+      console.log(`🔄 Triggering redeployment for site ${siteId}`);
+
+      const client = await this.getClient();
+      
+      // Use createSiteBuild to trigger a new build (which creates a deployment)
+      const build = await client.createSiteBuild({
+        siteId,
+        body: {
+          clear_cache: false // Don't clear cache unless needed
+        }
+      });
+
+      const buildId = build.id;
+      console.log(`✅ Build triggered: ${buildId}`);
+      if (onProgress) onProgress(`✅ Build triggered: ${buildId}`);
+
+      // Wait a moment for the build to start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (onProgress) onProgress('⏳ New build in progress - this will use updated code from repository');
+      
+      return buildId;
+      
+    } catch (error: any) {
+      console.error('❌ Trigger redeploy error:', error.message);
+      if (onProgress) onProgress(`⚠️ Failed to trigger redeployment: ${error.message}`);
+      // Don't throw here - redeployment is nice-to-have, not critical
+      return null;
     }
   }
 
