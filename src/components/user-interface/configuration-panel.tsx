@@ -31,16 +31,16 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
         <Card className="pt-6 pb-4 px-4 bg-muted/30 border-muted-foreground/20 rounded-t-none rounded-b-lg border-t-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
-            <Label htmlFor="ai-provider">AI Provider</Label>
+            <Label htmlFor="agent-architecture">Agent Architecture</Label>
             <Select value={state.aiProvider} onValueChange={(value) => updateAIConfig({ aiProvider: value as any })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select AI provider" />
+                <SelectValue placeholder="Select architecture" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                <SelectItem value="openai">OpenAI (GPT)</SelectItem>
-                <SelectItem value="google">Google (Gemini)</SelectItem>
-                <SelectItem value="grok">X.AI (Grok)</SelectItem>
+                <SelectItem value="anthropic">React Agent</SelectItem>
+                <SelectItem value="openai">Autonomous Agent</SelectItem>
+                <SelectItem value="google">Workflow Agent</SelectItem>
+                <SelectItem value="grok">RAG Agent</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -59,10 +59,10 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
                 <SelectValue placeholder="Select template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="vite-react-mongo">React + MongoDB + Prisma</SelectItem>
-                <SelectItem value="vite-react-supabase">React + Supabase</SelectItem>
-                <SelectItem value="nextjs-supabase">Next.js + Supabase</SelectItem>
-                <SelectItem value="vite-react-planetscale">React + PlanetScale</SelectItem>
+                <SelectItem value="vite-react-mongo">Next.js</SelectItem>
+                <SelectItem value="vite-react-supabase">React</SelectItem>
+                <SelectItem value="nextjs-supabase">Vue.js</SelectItem>
+                <SelectItem value="vite-react-planetscale">Svelte</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -87,7 +87,7 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
             <Input 
               value={state.mongodbProjectId}
               onChange={(e) => updateInfrastructureConfig({ mongodbProjectId: e.target.value })}
-              placeholder="CREATE_NEW or existing project ID" 
+              placeholder="Enter MongoDB project" 
             />
           </div>
         </div>
