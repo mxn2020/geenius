@@ -564,7 +564,7 @@ export class MongoDBService {
       const databaseName = cleanName.replace(/-/g, '_');
 
       let project;
-      if (targetProjectId && targetOrgId) {
+      if (targetProjectId && targetProjectId !== 'CREATE_NEW' && targetOrgId) {
         // Use existing project
         const existingProjects = await this.getProjects(targetOrgId);
         project = existingProjects.find(p => p.id === targetProjectId);
@@ -573,7 +573,7 @@ export class MongoDBService {
         }
         console.log(`   📁 Using existing project: ${project.name} (${project.id})`);
       } else if (targetOrgId) {
-        // Create new project
+        // Create new project (either targetProjectId is 'CREATE_NEW' or not provided)
         project = await this.createAtlasProject(projectName, targetOrgId);
         console.log(`   ✅ Project created: ${project.name} (${project.id})`);
       } else {
