@@ -78,7 +78,8 @@ export function InitView({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault()
-                  handleSubmit(e)
+                  const formEvent = e as any
+                  handleSubmit(formEvent)
                 }
               }}
               style={{
