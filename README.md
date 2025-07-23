@@ -139,7 +139,7 @@ geenius memory --import memory.json
 OPENAI_API_KEY=your_openai_key
 ANTHROPIC_API_KEY=your_anthropic_key
 GOOGLE_API_KEY=your_google_key
-GROK_API_KEY=your_grok_key
+XAI_API_KEY=your_grok_key
 
 # GitHub Integration
 GITHUB_TOKEN=your_github_token
