@@ -4,12 +4,14 @@ import React from 'react';
 import { ProjectInitProvider } from './components/project-initialization/ProjectInitializationContext';
 import { ChatInterface } from './components/user-interface/chat-interface';
 import { ThemeProvider } from './components/user-interface/theme-provider';
+import { Header } from './components/ui/header';
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="geenius-ui-theme">
       <ProjectInitProvider>
         <div className="min-h-screen bg-background">
+          <Header />
           <ChatInterface />
         </div>
       </ProjectInitProvider>

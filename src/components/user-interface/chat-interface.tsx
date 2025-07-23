@@ -138,18 +138,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      {/* Logo */}
-      <div className="mb-8 z-50">
-        <div className="flex items-center gap-2 text-2xl font-bold">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 bg-primary-foreground rounded-full relative">
-              <div className="absolute inset-0 border-2 border-primary rounded-full transform rotate-45"></div>
-            </div>
-          </div>
-          Geenius
-        </div>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 pt-8">
 
       {/* View Content Wrapper */}
       <div className={`w-full relative transition-all duration-500 ease-in-out ${currentView === 'project' ? 'max-w-4xl' : 'max-w-3xl'}`}>
