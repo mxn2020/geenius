@@ -299,11 +299,36 @@ Create a complete new project that fulfills the user requirements while followin
 7. **UI/UX Consistency**: Maintain the same styling approach and component usage patterns
 
 ### Specific Instructions:
-- **Landing Page**: Create a new landing page that serves the business domain with relevant sections
-- **Dashboard**: Update the dashboard with navigation items specific to the business requirements  
-- **Database Schema**: Add appropriate models for the business data (clients, appointments, etc.)
-- **App Structure**: Update routing and authentication flow as needed
-- **Tailwind Config**: Customize colors, fonts, and design tokens to match the business domain theme
+
+#### **Database & Feature Implementation**:
+- **Database Features**: For ANY features requiring data storage/management → UPDATE THE DASHBOARD with new pages, forms, and functionality
+- **Visitor Features**: For public-facing features → UPDATE THE LANDING PAGE with relevant sections and information
+- **Navigation Structure**: Use the dashboard's existing navigation structure (sidebar, header menu) to add new routes/pages. If none exists, create a simple header menu for the different features
+
+#### **Template-Specific Database Handling**:
+- **MongoDB + Prisma Templates**: Update the Prisma schema file (schema.prisma) with new models. Prisma will auto-generate the client during build
+- **Supabase Templates**: Design the database structure but focus on client-side queries and components since Supabase handles the backend
+- **Other Database Templates**: Follow the template's specific database patterns and conventions
+
+#### **Feature Distribution Strategy**:
+- **Public Features** (marketing, info, contact) → Landing Page updates
+- **User Management Features** (accounts, profiles, settings) → Dashboard user sections  
+- **Business Logic Features** (appointments, orders, projects) → Dashboard main functionality
+- **Admin Features** (management, reports, configuration) → Dashboard admin sections
+
+#### **Examples of Proper Implementation**:
+- **"Add appointment booking system"** → Update Landing Page (booking form for visitors) + Dashboard (appointment management for staff) + Prisma Schema (Appointment model)
+- **"Patient management system"** → Dashboard only (patient records, history) + Prisma Schema (Patient, Visit models)  
+- **"Restaurant menu display"** → Landing Page (public menu) + Dashboard (menu management) + Prisma Schema (MenuItem, Category models)
+- **"User profiles"** → Dashboard only (profile management) + Prisma Schema (User model updates)
+- **"Contact forms"** → Landing Page (contact form) + Dashboard (inquiry management) + Prisma Schema (ContactInquiry model)
+
+#### **Page Structure Updates**:
+- **Landing Page**: Create new landing page sections that serve the business domain with relevant information
+- **Dashboard**: Add navigation items, pages, and functionality specific to the database-driven business requirements
+- **Database Schema**: Add appropriate Prisma models for business data with proper relationships
+- **App Structure**: Update routing, authentication flow, and component organization as needed
+- **Tailwind Config**: Customize colors, fonts, and design tokens to match business domain theme
 
 ### Business Domain Guidelines:
 - **Medical/Healthcare**: Focus on appointments, patient management, HIPAA considerations. Colors: blues, greens (trust, health)

@@ -159,6 +159,18 @@ INSTRUCTIONS:
 4. Maintain all existing imports and exports
 5. Ensure TypeScript compatibility
 6. Keep the same file structure and component architecture
+
+DATABASE & FEATURE DISTRIBUTION:
+- **If this is a Landing Page file**: Add public-facing features (marketing, contact, booking forms for visitors)
+- **If this is a Dashboard file**: Add admin/user management features (data management, forms, business logic)
+- **If this is a Prisma Schema file**: Add database models for the required business features with proper relationships
+- **Navigation**: Use existing navigation structure or create simple header menu for new features
+
+TEMPLATE-SPECIFIC DATABASE HANDLING:
+- **MongoDB + Prisma**: Update schema.prisma with new models (Prisma auto-generates client on build)
+- **Supabase**: Focus on client-side queries and components (Supabase handles backend)
+- **Other databases**: Follow template's specific database patterns
+
 7. Return ONLY the complete file content, no explanations
 
 Generate the customized file content:`;
