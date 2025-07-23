@@ -47,30 +47,41 @@ export class AIGenerationStep {
       const userRequirements = request.userRequirements || request.projectRequirements!;
       const generatedFiles: FileChange[] = [];
 
-      // Process each template file with AI
-      for (const templateFile of template.files) {
-        console.log(`[AI-GENERATION-STEP] Processing: ${templateFile.path}`);
-        
-        const prompt = this.createGenerationPrompt(
-          templateFile,
+      // Process ALL template files in a single comprehensive AI request
+      console.log(`[AI-GENERATION-STEP] Processing all ${template.files.length} files in one comprehensive request`);
+      if (onProgress) onProgress(`🤖 Generating complete project with all ${template.files.length} files...`);
+      
+      try {
+        const prompt = this.createComprehensivePrompt(
+          template.files,
           userRequirements,
           request.businessDomain,
           request.projectName
         );
 
-        const generatedContent = await customAgent.processRequest(prompt);
+        console.log(`[AI-GENERATION-STEP] Comprehensive prompt length: ${prompt.length} characters`);
+        const aiResponse = await customAgent.processRequest(prompt);
         
-        if (generatedContent && generatedContent.trim()) {
-          generatedFiles.push({
-            path: templateFile.path,
-            content: generatedContent.trim(),
-            encoding: 'utf-8'
-          });
+        if (aiResponse && aiResponse.trim()) {
+          // Parse the AI response to extract individual files
+          const parsedFiles = this.parseAIResponse(aiResponse, template.files);
           
-          console.log(`[AI-GENERATION-STEP] ✅ Generated: ${templateFile.path}`);
+          if (parsedFiles.length > 0) {
+            generatedFiles.push(...parsedFiles);
+            console.log(`[AI-GENERATION-STEP] ✅ Generated ${parsedFiles.length} files from comprehensive request`);
+            if (onProgress) onProgress(`✅ Generated ${parsedFiles.length} files from comprehensive AI request`);
+          } else {
+            console.warn(`[AI-GENERATION-STEP] ⚠️ No files parsed from AI response`);
+            if (onProgress) onProgress(`⚠️ Failed to parse files from AI response`);
+          }
         } else {
-          console.warn(`[AI-GENERATION-STEP] ⚠️ No content generated for: ${templateFile.path}`);
+          console.warn(`[AI-GENERATION-STEP] ⚠️ No response from AI`);
+          if (onProgress) onProgress(`⚠️ AI returned empty response`);
         }
+      } catch (error: any) {
+        console.error(`[AI-GENERATION-STEP] ❌ Error in comprehensive generation:`, error.message);
+        if (onProgress) onProgress(`❌ Error in comprehensive generation: ${error.message}`);
+        throw error;
       }
 
       if (generatedFiles.length === 0) {
@@ -131,48 +142,101 @@ export class AIGenerationStep {
     }
   }
 
-  private createGenerationPrompt(
-    templateFile: any,
+  private createComprehensivePrompt(
+    templateFiles: any[],
     userRequirements: string,
     businessDomain?: string,
     projectName?: string
   ): string {
-    return `
-You are an expert React/TypeScript developer. Create a customized version of this file based on the user requirements.
-
-FILE: ${templateFile.path}
-PURPOSE: ${templateFile.purpose}
-
-ORIGINAL TEMPLATE:
+    const filesSection = templateFiles.map(file => `
+### FILE: ${file.path}
+PURPOSE: ${file.purpose}
+ORIGINAL CONTENT:
 \`\`\`typescript
-${templateFile.content}
+${file.content}
 \`\`\`
+`).join('\n');
 
+    return `
+You are an expert React/TypeScript developer. You need to customize ALL provided template files to create a complete, functional application based on the user requirements.
+
+## PROJECT REQUIREMENTS
 USER REQUIREMENTS: ${userRequirements}
 ${businessDomain ? `BUSINESS DOMAIN: ${businessDomain}` : ''}
 ${projectName ? `PROJECT NAME: ${projectName}` : ''}
 
-INSTRUCTIONS:
-1. Customize the file content to match the user requirements
-2. Keep the same structure and component patterns
-3. Update text, branding, and functionality to fit the business domain
-4. Maintain all existing imports and exports
-5. Ensure TypeScript compatibility
-6. Keep the same file structure and component architecture
+## TEMPLATE FILES TO CUSTOMIZE
+${filesSection}
 
-DATABASE & FEATURE DISTRIBUTION:
-- **If this is a Landing Page file**: Add public-facing features (marketing, contact, booking forms for visitors)
-- **If this is a Dashboard file**: Add admin/user management features (data management, forms, business logic)
-- **If this is a Prisma Schema file**: Add database models for the required business features with proper relationships
-- **Navigation**: Use existing navigation structure or create simple header menu for new features
+## CRITICAL INSTRUCTIONS
 
-TEMPLATE-SPECIFIC DATABASE HANDLING:
-- **MongoDB + Prisma**: Update schema.prisma with new models (Prisma auto-generates client on build)
-- **Supabase**: Focus on client-side queries and components (Supabase handles backend)
-- **Other databases**: Follow template's specific database patterns
+**YOU MUST UPDATE ALL 5 FILES** - Do not skip any files. Each file serves a specific purpose:
 
-7. Return ONLY the complete file content, no explanations
+### 1. DATABASE & FEATURE DISTRIBUTION (MANDATORY):
+- **Landing Page (src/pages/Landing.tsx)**: Add public-facing features (hero section, contact forms, booking forms, service info for visitors)
+- **Dashboard (src/components/auth/Dashboard.tsx)**: Add admin/management features (data tables, forms, business logic, user management) 
+- **App.tsx**: Add routing for new pages/features
+- **Prisma Schema (prisma/schema.prisma)**: Add database models for ALL business features with proper relationships
+- **Tailwind Config**: Update with project-specific styling if needed
 
-Generate the customized file content:`;
+### 2. COMPREHENSIVE FEATURE IMPLEMENTATION:
+- **For ANY business features requiring data storage** → UPDATE the Dashboard with management interfaces
+- **For ANY public-facing features** → UPDATE the Landing page with visitor-friendly interfaces  
+- **For ANY data models needed** → UPDATE the Prisma schema with proper models and relationships
+- **For ANY new pages/routes needed** → UPDATE App.tsx routing
+
+### 3. DATABASE CONNECTION REQUIREMENTS:
+- **MongoDB + Prisma Template**: You MUST update schema.prisma with ALL required business models
+- Prisma auto-generates the client on build, so focus on complete schema design
+- Include proper relationships between models (User, business-specific entities)
+- Use appropriate field types and constraints
+
+### 4. QUALITY REQUIREMENTS:
+- Maintain all existing imports and exports
+- Keep TypeScript compatibility
+- Follow existing code patterns and structure
+- Create functional, production-ready components
+- Add meaningful content, not placeholder text
+
+## RESPONSE FORMAT
+
+Provide your response in this EXACT format for each file you're updating:
+
+===FILE: [filepath]===
+[complete file content]
+===END FILE===
+
+**IMPORTANT**: You must include ALL 5 files in your response, even if some files only need minor changes. Do not skip any files.
+
+Generate the complete customized project:`;
+  }
+
+  private parseAIResponse(aiResponse: string, originalFiles: any[]): FileChange[] {
+    const files: FileChange[] = [];
+    const fileRegex = /===FILE:\s*([^=]+)===\n([\s\S]*?)(?====END FILE===|$)/g;
+    
+    let match;
+    while ((match = fileRegex.exec(aiResponse)) !== null) {
+      const filePath = match[1].trim();
+      const content = match[2].trim();
+      
+      if (content) {
+        files.push({
+          path: filePath,
+          content: content,
+          encoding: 'utf-8'
+        });
+        console.log(`[AI-GENERATION-STEP] Parsed file: ${filePath} (${content.length} chars)`);
+      }
+    }
+    
+    // Log which original files were not updated
+    const updatedPaths = files.map(f => f.path);
+    const missedFiles = originalFiles.filter(f => !updatedPaths.includes(f.path));
+    if (missedFiles.length > 0) {
+      console.warn(`[AI-GENERATION-STEP] ⚠️ AI did not update these files: ${missedFiles.map(f => f.path).join(', ')}`);
+    }
+    
+    return files;
   }
 }
