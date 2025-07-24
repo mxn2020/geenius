@@ -611,6 +611,21 @@
     ]
   },
   {
+    "id": "cta-schedule-demo",
+    "definitionId": "dev-div",
+    "name": "Cta Schedule Demo",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "schedule",
+      "demo"
+    ]
+  },
+  {
     "id": "cta-signup-button",
     "definitionId": "dev-button",
     "name": "Cta Signup Button",
@@ -623,6 +638,21 @@
       "cta",
       "signup",
       "button"
+    ]
+  },
+  {
+    "id": "cta-start-free",
+    "definitionId": "dev-div",
+    "name": "Cta Start Free",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "start",
+      "free"
     ]
   },
   {
@@ -708,6 +738,33 @@
       "landing-page",
       "expertise",
       "highlight"
+    ]
+  },
+  {
+    "id": "features-button",
+    "definitionId": "dev-button",
+    "name": "Features Button",
+    "description": "Button component used in Landing for features functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "features",
+      "button"
+    ]
+  },
+  {
+    "id": "getBenefitCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetBenefitCardId(index)",
+    "description": "Div component used in Landing for getBenefitCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getBenefitCardId(index)"
     ]
   },
   {
@@ -896,6 +953,19 @@
     }
   },
   {
+    "id": "getTestCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestCardId(index)",
+    "description": "Div component used in Landing for getTestCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestCardId(index)"
+    ]
+  },
+  {
     "id": "getTestimonialCardId(index)",
     "definitionId": "dev-div",
     "name": "GetTestimonialCardId(index)",
@@ -933,6 +1003,23 @@
       "landing-page",
       "getValueCardId(index)"
     ]
+  },
+  {
+    "id": "getWorkflowStepId(index)",
+    "definitionId": "dev-div",
+    "name": "GetWorkflowStepId(index)",
+    "description": "Div component used in Landing for getWorkflowStepId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getWorkflowStepId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "text-center"
+    }
   },
   {
     "id": "health-resources-button",
@@ -1065,6 +1152,21 @@
       "landing-page",
       "hero",
       "dashboard",
+      "button"
+    ]
+  },
+  {
+    "id": "hero-demo-button",
+    "definitionId": "dev-button",
+    "name": "Hero Demo Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "demo",
       "button"
     ]
   },
@@ -1294,6 +1396,21 @@
     ]
   },
   {
+    "id": "hero-start-organizing",
+    "definitionId": "dev-div",
+    "name": "Hero Start Organizing",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "organizing"
+    ]
+  },
+  {
     "id": "hero-start-project",
     "definitionId": "dev-div",
     "name": "Hero Start Project",
@@ -1306,6 +1423,21 @@
       "hero",
       "start",
       "project"
+    ]
+  },
+  {
+    "id": "hero-start-testing",
+    "definitionId": "dev-div",
+    "name": "Hero Start Testing",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "testing"
     ]
   },
   {
@@ -1536,6 +1668,20 @@
       "nav",
       "services",
       "button"
+    ]
+  },
+  {
+    "id": "platform-highlight",
+    "definitionId": "dev-div",
+    "name": "Platform Highlight",
+    "description": "Div component used in Landing for platform functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "platform",
+      "highlight"
     ]
   },
   {
@@ -1790,6 +1936,20 @@
       "landing-page",
       "submit",
       "reservation"
+    ]
+  },
+  {
+    "id": "tasks-highlight",
+    "definitionId": "dev-div",
+    "name": "Tasks Highlight",
+    "description": "Div component used in Landing for tasks functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "tasks",
+      "highlight"
     ]
   },
   {

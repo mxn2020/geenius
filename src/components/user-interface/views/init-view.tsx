@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { ChevronDown, ChevronUp, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -44,6 +44,58 @@ export function InitView({
   const [message, setMessage] = useState(state.userRequirements || "")
   const [showDialog, setShowDialog] = useState(false)
   const [dialogMessage, setDialogMessage] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-focus textarea when component mounts
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [])
+
+  // Global keydown handler to refocus textarea when typing
+  useEffect(() => {
+    const handleGlobalKeydown = (e: KeyboardEvent) => {
+      // Only handle printable characters and common editing keys
+      const isPrintableChar = e.key.length === 1
+      const isEditingKey = ['Backspace', 'Delete', 'Enter', 'Space'].includes(e.key)
+      
+      // Don't interfere with special key combinations
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      
+      // Don't refocus if user is already typing in an input/textarea
+      const activeElement = document.activeElement
+      if (activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.getAttribute('contenteditable') === 'true'
+      )) {
+        return
+      }
+
+      // If user starts typing and focus is not in textarea, focus it
+      if ((isPrintableChar || isEditingKey) && textareaRef.current) {
+        textareaRef.current.focus()
+        
+        // For printable characters, add them to the textarea
+        if (isPrintableChar) {
+          // Prevent the default behavior and add character to textarea
+          e.preventDefault()
+          const currentValue = textareaRef.current.value
+          const newValue = currentValue + e.key
+          textareaRef.current.value = newValue
+          setMessage(newValue)
+          
+          // Trigger input event for auto-resize
+          const inputEvent = new Event('input', { bubbles: true })
+          textareaRef.current.dispatchEvent(inputEvent)
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleGlobalKeydown)
+    return () => document.removeEventListener('keydown', handleGlobalKeydown)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,6 +127,9 @@ export function InitView({
     updateProjectConfig({ userRequirements: message.trim() })
     
     try {
+      // Update view for smooth transition  
+      setCurrentView('processing')
+      
       // Pass the userRequirements directly to ensure they're used immediately
       await startInitialization(message.trim())
       // Clear the message after successful submission
@@ -111,6 +166,7 @@ export function InitView({
           {/* Textarea */}
           <div className="p-4 mb-4 relative">
             <Textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your project requirements and AI will customize it for you... (e.g., 'Create a medical practice website with patient management and appointment booking')"

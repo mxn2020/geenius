@@ -345,7 +345,7 @@ export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ childr
           setRepositoryUrl(result.repositoryUrl);
         }
         
-        setStep('status'); // This will map to 'processing' view
+        setStep('status'); // This will map to 'processing' view - transition handled by ChatInterface
         
         // Trigger the existing log streaming system from useAppState
         // This will be handled in the ChatInterface component

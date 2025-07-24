@@ -12,7 +12,7 @@ function App() {
       <ProjectInitProvider>
         <div className="min-h-screen bg-background text-foreground">
           <Header />
-          <main className="container mx-auto py-8 z-10">
+          <main className="container mx-auto py-4 z-10">
             <ChatInterface />
           </main>
           <Toaster />

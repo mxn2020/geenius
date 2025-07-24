@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { flushSync } from "react-dom"
 import { ChevronDown } from "lucide-react"
 import { ViewType } from "./view-types"
 import { InitView } from "./views/init-view"
@@ -31,7 +32,28 @@ export function ChatInterface() {
     }
   }
 
-  const [currentView, setCurrentView] = useState<ViewType>(getViewFromStep(state.currentStep))
+  const [currentView, setCurrentView] = useState<ViewType>('init')
+  const [capturedInitHeight, setCapturedInitHeight] = useState<number | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  // Custom setCurrentView that captures height before transitioning
+  const handleViewChange = (newView: ViewType) => {
+    if (currentView === 'init' && newView !== 'init' && cardRef.current) {
+      // Capture the current height of the init view
+      const currentHeight = cardRef.current.offsetHeight
+      setCapturedInitHeight(currentHeight)
+      
+      // Set a brief timeout to allow the height to be captured, then transition
+      setTimeout(() => {
+        setCurrentView(newView)
+        // Reset captured height after transition completes
+        setTimeout(() => setCapturedInitHeight(null), 500)
+      }, 10)
+    } else {
+      setCurrentView(newView)
+      setCapturedInitHeight(null)
+    }
+  }
   const [isConfigExpanded, setIsConfigExpanded] = useState(false)
   const [isQuickActionsVisible, setIsQuickActionsVisible] = useState(true)
   const [activePanel, setActivePanel] = useState<'projects' | 'templates' | 'tasks' | null>(null)
@@ -41,10 +63,6 @@ export function ChatInterface() {
   const [showChevron, setShowChevron] = useState(false)
   const hideChevronTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Update view when context step changes
-  useEffect(() => {
-    setCurrentView(getViewFromStep(state.currentStep))
-  }, [state.currentStep])
 
   // Start log streaming when session starts
   useEffect(() => {
@@ -90,18 +108,26 @@ export function ChatInterface() {
     }
   }, [currentView, isQuickActionsVisible, isInitViewHovered, isChevronHovered, isConfigExpanded, activePanel])
 
-  // Dynamic height based on current view with smooth transitions
+  // Dynamic height based on current view
   const getCardHeight = () => {
     switch (currentView) {
       case 'init':
-        return 'min-h-[160px] max-h-none'  // Allow init view to grow naturally
+        return capturedInitHeight ? '' : 'h-auto min-h-[160px]'  // Remove class when using inline style
       case 'processing':
-        return 'h-[680px]'  // Fixed height for processing view
+        return 'h-[680px]'  // Fixed height for smooth transition
       case 'project':
-        return 'h-[900px]'   // Fixed height for project view
+        return 'h-[900px]'   // Fixed height for smooth transition
       default:
-        return 'min-h-[160px] max-h-none'
+        return 'h-auto min-h-[160px]'
     }
+  }
+
+  // Get inline style for height (used when we have captured height)
+  const getCardStyle = () => {
+    if (capturedInitHeight && currentView === 'init') {
+      return { height: `${capturedInitHeight}px` }
+    }
+    return {}
   }
 
   // Removed transition state management to fix card jumping issue
@@ -138,7 +164,7 @@ export function ChatInterface() {
 
   const viewProps = {
     currentView,
-    setCurrentView,
+    setCurrentView: handleViewChange,
     sessionId: state.sessionId,
     projectName: state.projectName,
     logs,
@@ -157,10 +183,25 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh]">
-
+ {/* Logo */}
+      <div className={`mb-8 z-50 transition-opacity duration-500 ${currentView === 'processing' || currentView === 'project' ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="flex items-center gap-2 text-2xl font-bold">
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+            <div className="w-4 h-4 bg-primary-foreground rounded-full relative">
+              <div className="absolute inset-0 border-2 border-primary rounded-full transform rotate-45"></div>
+            </div>
+          </div>
+          Geenius
+        </div>
+      </div>
+      
       {/* View Content Wrapper */}
       <div className={`w-full relative transition-all duration-500 ease-in-out ${currentView === 'project' ? 'max-w-4xl' : 'max-w-3xl'}`}>
-        <Card className={`relative z-50 overflow-hidden border-muted-foreground/20 shadow-lg rounded-3xl transition-all duration-500 ease-in-out transform-gpu flex flex-col ${getCardHeight()}`}>
+        <Card 
+          ref={cardRef}
+          className={`relative z-50 overflow-hidden border-muted-foreground/20 shadow-lg rounded-3xl transition-all duration-500 ease-in-out transform-gpu flex flex-col ${getCardHeight()}`}
+          style={getCardStyle()}
+        >
           {currentView === 'init' && (
             <div className="flex-1 flex flex-col">
               <InitView {...viewProps} />
