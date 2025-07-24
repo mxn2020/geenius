@@ -1,8 +1,11 @@
+import { useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 import { useProjectInit } from "../project-initialization/ProjectInitializationContext"
 import { useAppState } from "../../app-hooks"
 
@@ -23,6 +26,26 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
     getSelectedOrgProjects
   } = useAppState()
 
+  // Sync default values from useAppState to ProjectInitializationContext
+  useEffect(() => {
+    if (selectedGithubAccount && !state.githubOrg) {
+      updateInfrastructureConfig({ githubOrg: selectedGithubAccount })
+    }
+  }, [selectedGithubAccount, state.githubOrg, updateInfrastructureConfig])
+
+  useEffect(() => {
+    if (selectedOrg && !state.mongodbOrgId) {
+      updateInfrastructureConfig({ mongodbOrgId: selectedOrg })
+    }
+  }, [selectedOrg, state.mongodbOrgId, updateInfrastructureConfig])
+
+  // Auto-select CREATE_NEW for MongoDB project if not already set
+  useEffect(() => {
+    if (selectedOrg && state.mongodbOrgId && !state.mongodbProjectId) {
+      updateInfrastructureConfig({ mongodbProjectId: 'CREATE_NEW' })
+    }
+  }, [selectedOrg, state.mongodbOrgId, state.mongodbProjectId, updateInfrastructureConfig])
+
   return (
     <>
       {/* Wall/mask element */}
@@ -41,6 +64,35 @@ export function ConfigurationPanel({ isExpanded }: ConfigurationPanelProps) {
         }}
       >
         <Card className="pt-6 pb-4 px-4 bg-muted/30 border-muted-foreground/20 rounded-t-none rounded-b-lg border-t-0">
+          {/* AI Processing Toggle - Prominent at top */}
+          <div className="mb-6 p-4 bg-background/50 rounded-lg border border-muted-foreground/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch 
+                  id="ai-processing"
+                  checked={state.useAIProcessing}
+                  onCheckedChange={(checked) => updateInfrastructureConfig({ useAIProcessing: checked })}
+                />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="ai-processing" className="text-base font-medium">
+                    AI-Powered Deployment
+                  </Label>
+                  {state.useAIProcessing && (
+                    <Badge variant="default" className="bg-blue-500 text-white">
+                      Recommended
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2 ml-8">
+              {state.useAIProcessing 
+                ? "AI will analyze your requirements and customize the project with domain-specific features and optimizations."
+                : "Standard template deployment without AI customization."
+              }
+            </p>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
             <Label htmlFor="project-name">Project Name</Label>

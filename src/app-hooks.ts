@@ -235,6 +235,9 @@ export const useAppState = () => {
         let endpoint;
         if (sessionIdParam.startsWith('ge_')) {
           endpoint = `/.netlify/functions/web-init/${sessionIdParam}`;
+        } else if (sessionIdParam.startsWith('init_')) {
+          // Use the initialize-project status endpoint for init sessions
+          endpoint = `/api/initialize-project/${sessionIdParam}`;
         } else {
           endpoint = `/api/process-changes-enhanced/${sessionIdParam}`;
         }

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { ViewType } from "../view-types"
 import { useProjectInit } from "../../project-initialization/ProjectInitializationContext"
+import { useAppState } from "../../../app-hooks"
 
 interface ProjectViewProps {
   currentView: ViewType
@@ -25,7 +26,20 @@ export function ProjectView({
   logs = []
 }: ProjectViewProps) {
   const { state } = useProjectInit()
+  const { sessionLogs, repoUrl, netlifyUrl, sessionStatus, sessionProgress } = useAppState()
   const [activeTab, setActiveTab] = useState("status")
+
+  // Use repository URL from context if available, otherwise from useAppState
+  // If neither is available, try to construct from github org + project name
+  const repositoryUrl = state.repositoryUrl || repoUrl || 
+    (state.githubOrg && state.projectName ? `https://github.com/${state.githubOrg}/${state.projectName}` : null)
+
+  // Use session logs from useAppState if available, otherwise fall back to context logs or props
+  const displayLogs = sessionLogs.length > 0 
+    ? sessionLogs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level?.toUpperCase() || 'INFO'}: ${log.message}`)
+    : state.logs.length > 0 
+      ? state.logs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`)
+      : logs
 
   return (
     <>
@@ -73,16 +87,30 @@ export function ProjectView({
             <Card className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  {sessionStatus === 'completed' ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : sessionStatus === 'failed' || sessionStatus === 'error' ? (
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  ) : (
+                    <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />
+                  )}
                   <span className="font-semibold">Active Session</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    completed
+                  <Badge variant="secondary" className={
+                    sessionStatus === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    sessionStatus === 'failed' || sessionStatus === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                  }>
+                    {sessionStatus || 'initializing'}
                   </Badge>
                 </div>
-                <span className="text-sm text-muted-foreground">100%</span>
+                <span className="text-sm text-muted-foreground">{sessionProgress || 0}%</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">Processing completed successfully</p>
-              <Progress value={100} className="h-2" />
+              <p className="text-sm text-muted-foreground mb-4">
+                {sessionStatus === 'completed' ? 'Processing completed successfully' :
+                 sessionStatus === 'failed' || sessionStatus === 'error' ? 'Processing failed' :
+                 'Processing in progress...'}
+              </p>
+              <Progress value={sessionProgress || 0} className="h-2" />
             </Card>
 
             {/* Project Details */}
@@ -108,32 +136,58 @@ export function ProjectView({
                   <Github className="h-5 w-5 text-muted-foreground" />
                   <h3 className="font-semibold">GitHub Integration</h3>
                 </div>
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">Repository not yet created</p>
-                </div>
+                {repositoryUrl ? (
+                  <div className="space-y-2">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                      <p className="text-sm text-green-800 dark:text-green-200">Repository created successfully</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <code className="text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
+                        {repositoryUrl}
+                      </code>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => window.open(repositoryUrl, '_blank')}
+                      >
+                        View Repo
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">Repository not yet created</p>
+                  </div>
+                )}
               </Card>
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Globe className="h-5 w-5 text-blue-500" />
                   <h3 className="font-semibold">Netlify Deployment</h3>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Live Site</p>
-                  <div className="flex items-center justify-between">
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
-                      {state.deploymentUrl ? new URL(state.deploymentUrl).hostname : 'Not deployed yet'}
-                    </code>
-                    {state.deploymentUrl && (
+                {netlifyUrl ? (
+                  <div className="space-y-2">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                      <p className="text-sm text-green-800 dark:text-green-200">Site deployed successfully</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <code className="text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
+                        {netlifyUrl}
+                      </code>
                       <Button 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => window.open(state.deploymentUrl!, '_blank')}
+                        onClick={() => window.open(netlifyUrl, '_blank')}
                       >
                         Visit Site
                       </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">Site not yet deployed</p>
+                  </div>
+                )}
               </Card>
             </div>
 
@@ -145,12 +199,15 @@ export function ProjectView({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium mb-1">Database</p>
-                  <code className="text-sm bg-muted px-2 py-1 rounded">doctor_mike</code>
+                  <p className="text-sm font-medium mb-1">Organization</p>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">
+                    {state.mongodbOrgId || 'Not configured'}
+                  </code>
                 </div>
                 <div>
+                  <p className="text-sm font-medium mb-1">Project</p>
                   <Badge variant="outline" className="text-muted-foreground">
-                    No Org ID
+                    {state.mongodbProjectId === 'CREATE_NEW' ? 'New Project' : state.mongodbProjectId || 'Not configured'}
                   </Badge>
                 </div>
               </div>
@@ -163,15 +220,27 @@ export function ProjectView({
                 <h3 className="font-semibold">Quick Actions</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 gap-2"
+                  onClick={() => setCurrentView('init')}
+                >
                   <Database className="h-4 w-4" />
-                  Start Development
+                  New Project
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setActiveTab('logs')}
+                >
                   <AlertCircle className="h-4 w-4" />
                   View Logs
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => repositoryUrl && window.open(repositoryUrl, '_blank')}
+                  disabled={!repositoryUrl}
+                >
                   <Github className="h-4 w-4" />
                   Open Repository
                 </Button>
@@ -187,12 +256,18 @@ export function ProjectView({
           <TabsContent value="logs" className="p-6 flex-1 overflow-y-auto">
             <h2 className="text-2xl font-bold mb-4">Logs</h2>
             <Card className="p-4 bg-muted/30">
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {logs.map((log, index) => (
-                  <div key={index} className="text-sm font-mono text-muted-foreground">
-                    {log}
+              <div className="space-y-2 max-h-96 overflow-y-auto font-mono text-sm">
+                {displayLogs.length > 0 ? (
+                  displayLogs.map((log, index) => (
+                    <div key={index} className="text-muted-foreground whitespace-pre-wrap">
+                      {log}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-muted-foreground text-center py-8">
+                    No logs available
                   </div>
-                ))}
+                )}
               </div>
             </Card>
           </TabsContent>
@@ -218,11 +293,23 @@ export function ProjectView({
 
         {/* Right side buttons */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={() => repositoryUrl && window.open(repositoryUrl, '_blank')}
+            disabled={!repositoryUrl}
+          >
             <Github className="h-4 w-4" />
             Repository
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={() => netlifyUrl && window.open(netlifyUrl, '_blank')}
+            disabled={!netlifyUrl}
+          >
             <Globe className="h-4 w-4" />
             Live Site
           </Button>

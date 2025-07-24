@@ -1,15 +1,15 @@
 {
   "template": "vite-react-mongo",
-  "name": "test 24",
-  "repoUrl": "https://github.com/mxn2020/test-24",
+  "name": "test-x258",
+  "repoUrl": "https://github.com/mxn2020/test-x258",
   "aiProvider": "anthropic",
   "agentMode": "single",
   "orchestrationStrategy": "hierarchical",
-  "netlifyProject": "4ca0b4e9-d0ab-44d0-9e0c-52d18e8c37b5",
-  "createdAt": "2025-07-22T16:42:40.991Z",
-  "updatedAt": "2025-07-22T16:42:40.991Z",
-  "repositoryUrl": "https://github.com/mxn2020/test-24",
-  "netlifyUrl": "https://test-24-mderier6.netlify.app",
-  "mongodbDatabase": "test_24",
-  "projectId": "proj_2507_qilj6bvn"
+  "model": "claude-sonnet-4-20250514",
+  "netlifyProject": "db9ccd0f-c5e2-45d4-b362-041325a87258",
+  "createdAt": "2025-07-23T21:18:11.911Z",
+  "updatedAt": "2025-07-23T21:18:11.911Z",
+  "repositoryUrl": "https://github.com/mxn2020/test-x258",
+  "netlifyUrl": "https://test-x258-mdggsi28.netlify.app",
+  "mongodbDatabase": "test_x258"
 }

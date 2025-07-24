@@ -302,44 +302,20 @@ Create a complete new project that fulfills the user requirements while followin
 
 #### **Database & Feature Implementation**:
 - **Database Features**: For ANY features requiring data storage/management → UPDATE THE DASHBOARD with new pages, forms, and functionality
-- **Visitor Features**: For public-facing features → UPDATE THE LANDING PAGE with relevant sections and information
-- **Navigation Structure**: Use the dashboard's existing navigation structure (sidebar, header menu) to add new routes/pages. If none exists, create a simple header menu for the different features
+- **Data Features**: If the user requested features that need additional database models or relationships, add them depending on the given tech stack to the app (for example by adding them to the Prisma schema for MongoDB or create additional migrations files for Supabase)
+- **Navigation Structure**: Use the dashboard's existing navigation structure (sidebar, header menu) to add new routes/pages. If none exists, create a simple header menu for the different new features
 
 #### **Template-Specific Database Handling**:
 - **MongoDB + Prisma Templates**: Update the Prisma schema file (schema.prisma) with new models. Prisma will auto-generate the client during build
 - **Supabase Templates**: Design the database structure but focus on client-side queries and components since Supabase handles the backend
 - **Other Database Templates**: Follow the template's specific database patterns and conventions
 
-#### **Feature Distribution Strategy**:
-- **Public Features** (marketing, info, contact) → Landing Page updates
-- **User Management Features** (accounts, profiles, settings) → Dashboard user sections  
-- **Business Logic Features** (appointments, orders, projects) → Dashboard main functionality
-- **Admin Features** (management, reports, configuration) → Dashboard admin sections
-
-#### **Examples of Proper Implementation**:
-- **"Add appointment booking system"** → Update Landing Page (booking form for visitors) + Dashboard (appointment management for staff) + Prisma Schema (Appointment model)
-- **"Patient management system"** → Dashboard only (patient records, history) + Prisma Schema (Patient, Visit models)  
-- **"Restaurant menu display"** → Landing Page (public menu) + Dashboard (menu management) + Prisma Schema (MenuItem, Category models)
-- **"User profiles"** → Dashboard only (profile management) + Prisma Schema (User model updates)
-- **"Contact forms"** → Landing Page (contact form) + Dashboard (inquiry management) + Prisma Schema (ContactInquiry model)
-
 #### **Page Structure Updates**:
-- **Landing Page**: Create new landing page sections that serve the business domain with relevant information
-- **Dashboard**: Add navigation items, pages, and functionality specific to the database-driven business requirements
-- **Database Schema**: Add appropriate Prisma models for business data with proper relationships
+- **Landing Page**: Create new landing page sections that serve the business domain with relevant information. The given sections are only an example of coding pattern. But you can generate various section designs and types, static, dynamic and interactive.
+- **Dashboard**: Add navigation items, child components, and functionality specific to the database-driven business requirements
+- **Database Schema**: Add appropriate Prisma models or Migrations files for business data with proper relationships
 - **App Structure**: Update routing, authentication flow, and component organization as needed
 - **Tailwind Config**: Customize colors, fonts, and design tokens to match business domain theme
-
-### Business Domain Guidelines:
-- **Medical/Healthcare**: Focus on appointments, patient management, HIPAA considerations. Colors: blues, greens (trust, health)
-- **Legal**: Focus on client management, case tracking, document management. Colors: navy, gold (professionalism, authority)
-- **Restaurant**: Focus on reservations, menu management, ordering. Colors: warm reds, oranges (appetite, warmth)
-- **Retail**: Focus on products, inventory, customer management. Colors: brand-appropriate, vibrant (engagement, sales)
-- **Service**: Focus on bookings, service management, client tracking. Colors: blues, teals (reliability, service)
-- **Finance**: Focus on accounts, transactions, reporting. Colors: greens, blues (money, trust)
-- **Education**: Focus on courses, students, assignments. Colors: blues, purples (learning, growth)
-- **Technology**: Focus on products, features, documentation. Colors: modern grays, blues (innovation, tech)
-- **Other**: Adapt colors and styling to match the specific business needs described
 
 ## Response Format
 Provide your complete response in this exact format:

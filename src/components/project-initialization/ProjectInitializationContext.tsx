@@ -1,7 +1,7 @@
 // Project Initialization Context Provider
 // Centralized state management for the entire project initialization workflow
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 
 // Types
 export interface ProjectInitState {
@@ -23,10 +23,14 @@ export interface ProjectInitState {
   mongodbOrgId: string;
   mongodbProjectId: string;
   
+  // AI Processing configuration (default: true)
+  useAIProcessing: boolean;
+  
   // Session and status
   sessionId: string | null;
   progress: number;
   status: string;
+  repositoryUrl: string | null;
   deploymentUrl: string | null;
   
   // Logs and messages
@@ -49,19 +53,32 @@ export type ProjectInitAction =
   | { type: 'SET_PROCESSING'; payload: boolean }
   | { type: 'SET_PROJECT_CONFIG'; payload: Partial<Pick<ProjectInitState, 'projectName' | 'templateId' | 'userRequirements' | 'businessDomain'>> }
   | { type: 'SET_AI_CONFIG'; payload: Partial<Pick<ProjectInitState, 'aiProvider' | 'model'>> }
-  | { type: 'SET_INFRASTRUCTURE_CONFIG'; payload: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId'>> }
+  | { type: 'SET_INFRASTRUCTURE_CONFIG'; payload: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId' | 'useAIProcessing'>> }
   | { type: 'SET_SESSION'; payload: { sessionId: string; progress: number; status: string } }
   | { type: 'UPDATE_PROGRESS'; payload: { progress: number; status: string } }
+  | { type: 'SET_REPOSITORY_URL'; payload: string }
   | { type: 'SET_DEPLOYMENT_URL'; payload: string }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SYNC_SESSION_STATUS'; payload: { status: string; progress: number; repoUrl?: string; netlifyUrl?: string } }
   | { type: 'RESET_STATE' };
+
+// Generate random project name
+const generateProjectName = (): string => {
+  const adjectives = ['awesome', 'brilliant', 'creative', 'dynamic', 'elegant', 'fantastic', 'genius', 'innovative', 'modern', 'smart'];
+  const nouns = ['app', 'platform', 'project', 'solution', 'system', 'tool', 'workspace', 'hub', 'studio', 'portal'];
+  
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+  
+  return `${randomAdjective}-${randomNoun}`;
+};
 
 // Initial state
 const initialState: ProjectInitState = {
   currentStep: 'init',
   isProcessing: false,
-  projectName: '',
+  projectName: generateProjectName(),
   templateId: 'vite-react-mongo',
   userRequirements: '',
   businessDomain: '',
@@ -70,10 +87,12 @@ const initialState: ProjectInitState = {
   githubOrg: '',
   autoSetup: true,
   mongodbOrgId: '',
-  mongodbProjectId: '',
+  mongodbProjectId: 'CREATE_NEW', // Pre-select new project creation
+  useAIProcessing: true, // Default to AI processing
   sessionId: null,
   progress: 0,
-  status: 'Ready to start',
+  status: 'Ready for AI-powered deployment',
+  repositoryUrl: null,
   deploymentUrl: null,
   logs: [],
   error: null,
@@ -112,6 +131,9 @@ function projectInitReducer(state: ProjectInitState, action: ProjectInitAction):
         status: action.payload.status
       };
     
+    case 'SET_REPOSITORY_URL':
+      return { ...state, repositoryUrl: action.payload };
+    
     case 'SET_DEPLOYMENT_URL':
       return { ...state, deploymentUrl: action.payload };
     
@@ -120,6 +142,29 @@ function projectInitReducer(state: ProjectInitState, action: ProjectInitAction):
     
     case 'SET_ERROR':
       return { ...state, error: action.payload };
+    
+    case 'SYNC_SESSION_STATUS':
+      // Only update if values have actually changed
+      const newIsProcessing = !['completed', 'failed', 'error'].includes(action.payload.status);
+      const newDeploymentUrl = action.payload.netlifyUrl || state.deploymentUrl;
+      const newRepositoryUrl = action.payload.repoUrl || state.repositoryUrl;
+      
+      if (state.status === action.payload.status && 
+          state.progress === action.payload.progress &&
+          state.isProcessing === newIsProcessing &&
+          state.deploymentUrl === newDeploymentUrl &&
+          state.repositoryUrl === newRepositoryUrl) {
+        return state; // No changes, return same state object
+      }
+      
+      return { 
+        ...state, 
+        status: action.payload.status,
+        progress: action.payload.progress,
+        isProcessing: newIsProcessing,
+        repositoryUrl: newRepositoryUrl,
+        deploymentUrl: newDeploymentUrl
+      };
     
     case 'RESET_STATE':
       return { ...initialState };
@@ -139,13 +184,15 @@ interface ProjectInitContextType {
   setProcessing: (processing: boolean) => void;
   updateProjectConfig: (config: Partial<Pick<ProjectInitState, 'projectName' | 'templateId' | 'userRequirements' | 'businessDomain'>>) => void;
   updateAIConfig: (config: Partial<Pick<ProjectInitState, 'aiProvider' | 'model'>>) => void;
-  updateInfrastructureConfig: (config: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId'>>) => void;
+  updateInfrastructureConfig: (config: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId' | 'useAIProcessing'>>) => void;
   addLog: (log: Omit<LogEntry, 'timestamp'>) => void;
   setError: (error: string | null) => void;
   resetState: () => void;
+  setRepositoryUrl: (url: string) => void;
+  syncSessionStatus: (status: string, progress: number, repoUrl?: string, netlifyUrl?: string) => void;
   
   // Workflow methods
-  startInitialization: () => Promise<void>;
+  startInitialization: (userRequirements?: string) => Promise<void>;
   pollStatus: (sessionId: string) => Promise<void>;
 }
 
@@ -158,6 +205,25 @@ interface ProjectInitProviderProps {
 
 export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(projectInitReducer, initialState);
+
+  // Initialize from URL parameters if session exists (only run once on mount)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionIdFromUrl = urlParams.get('session');
+    
+    if (sessionIdFromUrl && !state.sessionId) {
+      // Set session and move to processing view
+      dispatch({ 
+        type: 'SET_SESSION', 
+        payload: { 
+          sessionId: sessionIdFromUrl.trim(), // Remove any trailing spaces
+          progress: 10, 
+          status: 'Loading session...' 
+        } 
+      });
+      dispatch({ type: 'SET_STEP', payload: 'status' });
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   // Convenience methods
   const setStep = (step: ProjectInitState['currentStep']) => {
@@ -176,7 +242,7 @@ export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ childr
     dispatch({ type: 'SET_AI_CONFIG', payload: config });
   };
 
-  const updateInfrastructureConfig = (config: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId'>>) => {
+  const updateInfrastructureConfig = (config: Partial<Pick<ProjectInitState, 'githubOrg' | 'autoSetup' | 'mongodbOrgId' | 'mongodbProjectId' | 'useAIProcessing'>>) => {
     dispatch({ type: 'SET_INFRASTRUCTURE_CONFIG', payload: config });
   };
 
@@ -198,49 +264,93 @@ export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ childr
     dispatch({ type: 'RESET_STATE' });
   };
 
+  const setRepositoryUrl = (url: string) => {
+    dispatch({ type: 'SET_REPOSITORY_URL', payload: url });
+  };
+
+  const syncSessionStatus = (status: string, progress: number, repoUrl?: string, netlifyUrl?: string) => {
+    dispatch({ 
+      type: 'SYNC_SESSION_STATUS', 
+      payload: { status, progress, repoUrl, netlifyUrl } 
+    });
+  };
+
   // Workflow methods
-  const startInitialization = async () => {
+  const startInitialization = async (userRequirements?: string) => {
     try {
       setProcessing(true);
       setError(null);
-      addLog({ level: 'info', message: 'Starting project initialization...' });
+      
+      const initMessage = state.useAIProcessing 
+        ? 'Starting AI-powered project initialization...' 
+        : 'Starting standard project initialization...';
+      addLog({ level: 'info', message: initMessage });
 
-      const response = await fetch('/api/v1/initialize-project', {
+      // Choose endpoint based on AI processing preference
+      const endpoint = state.useAIProcessing ? '/api/initialize-project' : '/api/init';
+      
+      // Use provided userRequirements or fallback to state
+      const finalUserRequirements = userRequirements || state.userRequirements;
+      
+      const requestData = state.useAIProcessing ? {
+        // AI-powered initialization parameters
+        userRequirements: finalUserRequirements.trim(),
+        businessDomain: state.businessDomain.trim(),
+        aiProvider: state.aiProvider,
+        projectName: state.projectName.trim(),
+        templateId: state.templateId.trim(),
+        githubOrg: state.githubOrg.trim(),
+        agentMode: 'single',
+        model: state.model,
+        autoSetup: state.autoSetup,
+        mongodbOrgId: state.mongodbOrgId.trim(),
+        mongodbProjectId: state.mongodbProjectId.trim(),
+      } : {
+        // Standard initialization parameters (legacy format)
+        projectName: state.projectName.trim(),
+        templateId: state.templateId.trim(),
+        projectRequirements: finalUserRequirements.trim(),
+        githubOrg: state.githubOrg.trim(),
+        agentMode: 'single',
+        autoSetup: state.autoSetup,
+        mongodbOrgId: state.mongodbOrgId.trim(),
+        mongodbProjectId: state.mongodbProjectId.trim(),
+      };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectName: state.projectName,
-          templateId: state.templateId,
-          userRequirements: state.userRequirements,
-          businessDomain: state.businessDomain,
-          aiProvider: state.aiProvider,
-          model: state.model,
-          githubOrg: state.githubOrg,
-          autoSetup: state.autoSetup,
-          mongodbOrgId: state.mongodbOrgId,
-          mongodbProjectId: state.mongodbProjectId,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       const result = await response.json();
 
-      if (result.success) {
+      if (response.ok && result.sessionId) {
         dispatch({ 
           type: 'SET_SESSION', 
           payload: { 
-            sessionId: result.sessionId, 
+            sessionId: result.sessionId.trim(), // Remove any trailing spaces
             progress: 10, 
             status: 'Initialization started' 
           } 
         });
         
-        addLog({ level: 'success', message: `Session created: ${result.sessionId}` });
-        setStep('status');
+        const sessionMessage = state.useAIProcessing 
+          ? `AI-powered session created: ${result.sessionId}` 
+          : `Session created: ${result.sessionId}`;
+        addLog({ level: 'success', message: sessionMessage });
         
-        // Start polling for status updates
-        await pollStatus(result.sessionId);
+        // If repository URL is in the response, set it
+        if (result.repositoryUrl) {
+          setRepositoryUrl(result.repositoryUrl);
+        }
+        
+        setStep('status'); // This will map to 'processing' view
+        
+        // Trigger the existing log streaming system from useAppState
+        // This will be handled in the ChatInterface component
       } else {
-        throw new Error(result.message || 'Initialization failed');
+        throw new Error(result.error || result.message || `HTTP ${response.status}: Initialization failed`);
       }
     } catch (error: any) {
       setError(error.message);
@@ -251,56 +361,13 @@ export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ childr
   };
 
   const pollStatus = async (sessionId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/process-changes-enhanced/${sessionId}`);
-        const status = await response.json();
-
-        dispatch({ 
-          type: 'UPDATE_PROGRESS', 
-          payload: { 
-            progress: status.progress || 0, 
-            status: status.status || 'Processing...' 
-          } 
-        });
-
-        // Add new logs
-        if (status.logs && Array.isArray(status.logs)) {
-          status.logs.forEach((log: any) => {
-            if (!state.logs.find(l => l.timestamp === log.timestamp && l.message === log.message)) {
-              addLog({
-                level: log.level || 'info',
-                message: log.message,
-                data: log.data
-              });
-            }
-          });
-        }
-
-        // Check if completed
-        if (status.status === 'deployed' || status.status === 'completed' || status.status === 'error') {
-          clearInterval(pollInterval);
-          setProcessing(false);
-          
-          if (status.deploymentUrl) {
-            dispatch({ type: 'SET_DEPLOYMENT_URL', payload: status.deploymentUrl });
-          }
-          
-          if (status.status === 'error') {
-            setError('Deployment failed');
-          }
-        }
-      } catch (error: any) {
-        console.error('Status polling error:', error);
-        addLog({ level: 'warning', message: `Status update failed: ${error.message}` });
-      }
-    }, 2000); // Poll every 2 seconds
-
-    // Stop polling after 10 minutes
+    // Note: Polling is now handled by useAppState's startLogPolling
+    // This method is kept for compatibility but delegates to the existing system
+    
+    // Set a timeout to stop processing state after reasonable time
     setTimeout(() => {
-      clearInterval(pollInterval);
       setProcessing(false);
-    }, 600000);
+    }, 300000); // 5 minutes timeout
   };
 
   const contextValue: ProjectInitContextType = {
@@ -314,6 +381,8 @@ export const ProjectInitProvider: React.FC<ProjectInitProviderProps> = ({ childr
     addLog,
     setError,
     resetState,
+    setRepositoryUrl,
+    syncSessionStatus,
     startInitialization,
     pollStatus,
   };

@@ -14,6 +14,8 @@
     "preview": "vite preview",
     "dev": "tsx cli/index.ts",
     "dev:web": "vite dev",
+    "dev:offline": "netlify dev --offline",
+    "dev:local": "concurrently \"npm run dev:web\" \"tsx server/local-dev.ts\"",
     "server": "tsx src/server.ts",
     "test": "vitest",
     "test:skip": "echo 'Tests skipped for dev mode'",

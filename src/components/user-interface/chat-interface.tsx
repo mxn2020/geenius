@@ -14,9 +14,11 @@ import { TemplatesPanel } from "./templates-panel"
 import { TasksPanel } from "./tasks-panel"
 import { ItemDetails } from "./item-details"
 import { useProjectInit } from "../project-initialization/ProjectInitializationContext"
+import { useAppState } from "../../app-hooks"
 
 export function ChatInterface() {
-  const { state } = useProjectInit()
+  const { state, syncSessionStatus } = useProjectInit()
+  const { startLogStreaming, sessionStatus, sessionProgress, repoUrl, netlifyUrl } = useAppState()
   
   // Map context steps to view types
   const getViewFromStep = (step: string): ViewType => {
@@ -43,6 +45,20 @@ export function ChatInterface() {
   useEffect(() => {
     setCurrentView(getViewFromStep(state.currentStep))
   }, [state.currentStep])
+
+  // Start log streaming when session starts
+  useEffect(() => {
+    if (state.sessionId && state.currentStep === 'status') {
+      startLogStreaming(state.sessionId, true)
+    }
+  }, [state.sessionId, state.currentStep]) // Removed startLogStreaming from dependencies
+
+  // Sync session status updates from useAppState to ProjectInitializationContext
+  useEffect(() => {
+    if (sessionStatus && sessionProgress !== undefined) {
+      syncSessionStatus(sessionStatus, sessionProgress, repoUrl, netlifyUrl)
+    }
+  }, [sessionStatus, sessionProgress, repoUrl, netlifyUrl]) // Removed syncSessionStatus from dependencies
 
   // Handle chevron visibility with delay
   useEffect(() => {
@@ -74,19 +90,21 @@ export function ChatInterface() {
     }
   }, [currentView, isQuickActionsVisible, isInitViewHovered, isChevronHovered, isConfigExpanded, activePanel])
 
-  // Dynamic height based on current view
+  // Dynamic height based on current view with smooth transitions
   const getCardHeight = () => {
     switch (currentView) {
       case 'init':
-        return 'min-h-[160px]'  // Allow init view to grow
+        return 'min-h-[160px] max-h-none'  // Allow init view to grow naturally
       case 'processing':
-        return 'h-[680px]'  // Increased to accommodate button row
+        return 'h-[680px]'  // Fixed height for processing view
       case 'project':
-        return 'h-[900px]'   // Increased to accommodate button row
+        return 'h-[900px]'   // Fixed height for project view
       default:
-        return 'min-h-[160px]'
+        return 'min-h-[160px] max-h-none'
     }
   }
+
+  // Removed transition state management to fix card jumping issue
   // Get logs from context
   const logs = state.logs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`)
   
@@ -189,7 +207,7 @@ export function ChatInterface() {
         {/* Status Panel - Only show for processing view */}
         {currentView === 'processing' && (
           <div className="relative z-20">
-            <StatusPanel sessionId={sessionId} isVisible={true} />
+            <StatusPanel sessionId={state.sessionId} isVisible={true} />
           </div>
         )}
         

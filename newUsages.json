@@ -28,6 +28,320 @@
     ]
   },
   {
+    "id": "construction-brand-name",
+    "definitionId": "dev-div",
+    "name": "Construction Brand Name",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "brand",
+      "name"
+    ]
+  },
+  {
+    "id": "construction-contact-form-card",
+    "definitionId": "dev-card",
+    "name": "Construction Contact Form Card",
+    "description": "Card component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "contact",
+      "form",
+      "card"
+    ]
+  },
+  {
+    "id": "construction-dashboard-button",
+    "definitionId": "dev-button",
+    "name": "Construction Dashboard Button",
+    "description": "Button component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "dashboard",
+      "button"
+    ]
+  },
+  {
+    "id": "construction-footer",
+    "definitionId": "dev-footer",
+    "name": "Construction Footer",
+    "description": "Footer component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "footer"
+    ]
+  },
+  {
+    "id": "construction-future-highlight",
+    "definitionId": "dev-div",
+    "name": "Construction Future Highlight",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "future",
+      "highlight"
+    ]
+  },
+  {
+    "id": "construction-get-quote-button",
+    "definitionId": "dev-button",
+    "name": "Construction Get Quote Button",
+    "description": "Button component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "get",
+      "quote",
+      "button"
+    ]
+  },
+  {
+    "id": "construction-header",
+    "definitionId": "dev-header",
+    "name": "Construction Header",
+    "description": "Header component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "header"
+    ]
+  },
+  {
+    "id": "construction-hero-content",
+    "definitionId": "dev-div",
+    "name": "Construction Hero Content",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "hero",
+      "content"
+    ]
+  },
+  {
+    "id": "construction-hero-cta",
+    "definitionId": "dev-div",
+    "name": "Construction Hero Cta",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "hero",
+      "cta"
+    ]
+  },
+  {
+    "id": "construction-hero-description",
+    "definitionId": "dev-div",
+    "name": "Construction Hero Description",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "hero",
+      "description"
+    ]
+  },
+  {
+    "id": "construction-hero-title",
+    "definitionId": "dev-heading",
+    "name": "Construction Hero Title",
+    "description": "Heading component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "hero",
+      "title"
+    ]
+  },
+  {
+    "id": "construction-hero-wrapper",
+    "definitionId": "dev-div",
+    "name": "Construction Hero Wrapper",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "hero",
+      "wrapper"
+    ]
+  },
+  {
+    "id": "construction-logo",
+    "definitionId": "dev-div",
+    "name": "Construction Logo",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "logo"
+    ]
+  },
+  {
+    "id": "construction-nav",
+    "definitionId": "dev-nav",
+    "name": "Construction Nav",
+    "description": "Nav component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "nav"
+    ]
+  },
+  {
+    "id": "construction-nav-actions",
+    "definitionId": "dev-div",
+    "name": "Construction Nav Actions",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "nav",
+      "actions"
+    ]
+  },
+  {
+    "id": "construction-register-button",
+    "definitionId": "dev-button",
+    "name": "Construction Register Button",
+    "description": "Button component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "register",
+      "button"
+    ]
+  },
+  {
+    "id": "construction-stats-content",
+    "definitionId": "dev-div",
+    "name": "Construction Stats Content",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "stats",
+      "content"
+    ]
+  },
+  {
+    "id": "construction-stats-grid",
+    "definitionId": "dev-div",
+    "name": "Construction Stats Grid",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "stats",
+      "grid"
+    ]
+  },
+  {
+    "id": "construction-user-section",
+    "definitionId": "dev-section",
+    "name": "Construction User Section",
+    "description": "Section component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "user",
+      "section"
+    ]
+  },
+  {
+    "id": "construction-view-projects-button",
+    "definitionId": "dev-button",
+    "name": "Construction View Projects Button",
+    "description": "Button component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "view",
+      "projects",
+      "button"
+    ]
+  },
+  {
+    "id": "construction-welcome-message",
+    "definitionId": "dev-div",
+    "name": "Construction Welcome Message",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "welcome",
+      "message"
+    ]
+  },
+  {
     "id": "contact-book-appointment",
     "definitionId": "dev-div",
     "name": "Contact Book Appointment",
@@ -87,6 +401,96 @@
     ]
   },
   {
+    "id": "contact-email-input",
+    "definitionId": "dev-input",
+    "name": "Contact Email Input",
+    "description": "Input component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "email",
+      "input"
+    ]
+  },
+  {
+    "id": "contact-enroll-button",
+    "definitionId": "dev-button",
+    "name": "Contact Enroll Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "enroll",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-info-card",
+    "definitionId": "dev-card",
+    "name": "Contact Info Card",
+    "description": "Card component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "info",
+      "card"
+    ]
+  },
+  {
+    "id": "contact-message-input",
+    "definitionId": "dev-input",
+    "name": "Contact Message Input",
+    "description": "Input component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "message",
+      "input"
+    ]
+  },
+  {
+    "id": "contact-name-input",
+    "definitionId": "dev-input",
+    "name": "Contact Name Input",
+    "description": "Input component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "name",
+      "input"
+    ]
+  },
+  {
+    "id": "contact-phone-input",
+    "definitionId": "dev-input",
+    "name": "Contact Phone Input",
+    "description": "Input component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "phone",
+      "input"
+    ]
+  },
+  {
     "id": "contact-quote-button",
     "definitionId": "dev-button",
     "name": "Contact Quote Button",
@@ -113,6 +517,36 @@
       "landing-page",
       "contact",
       "schedule",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-submit-button",
+    "definitionId": "dev-button",
+    "name": "Contact Submit Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "submit",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-tour-button",
+    "definitionId": "dev-button",
+    "name": "Contact Tour Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "tour",
       "button"
     ]
   },
@@ -159,6 +593,36 @@
       "cta",
       "join",
       "community"
+    ]
+  },
+  {
+    "id": "cta-learn-more",
+    "definitionId": "dev-div",
+    "name": "Cta Learn More",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "learn",
+      "more"
+    ]
+  },
+  {
+    "id": "cta-signup-button",
+    "definitionId": "dev-button",
+    "name": "Cta Signup Button",
+    "description": "Button component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "signup",
+      "button"
     ]
   },
   {
@@ -219,6 +683,20 @@
     ]
   },
   {
+    "id": "experience-highlight",
+    "definitionId": "dev-div",
+    "name": "Experience Highlight",
+    "description": "Div component used in Landing for experience functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "experience",
+      "highlight"
+    ]
+  },
+  {
     "id": "expertise-highlight",
     "definitionId": "dev-div",
     "name": "Expertise Highlight",
@@ -243,6 +721,32 @@
     "semanticTags": [
       "landing-page",
       "getFeatureCardId(index)"
+    ]
+  },
+  {
+    "id": "getMenuItemId(index)",
+    "definitionId": "dev-div",
+    "name": "GetMenuItemId(index)",
+    "description": "Div component used in Landing for getMenuItemId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getMenuItemId(index)"
+    ]
+  },
+  {
+    "id": "getProgramCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetProgramCardId(index)",
+    "description": "Div component used in Landing for getProgramCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getProgramCardId(index)"
     ]
   },
   {
@@ -405,6 +909,19 @@
     ]
   },
   {
+    "id": "getTestimonialId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestimonialId(index)",
+    "description": "Div component used in Landing for getTestimonialId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestimonialId(index)"
+    ]
+  },
+  {
     "id": "getValueCardId(index)",
     "definitionId": "dev-div",
     "name": "GetValueCardId(index)",
@@ -537,6 +1054,21 @@
     ]
   },
   {
+    "id": "hero-dashboard-button",
+    "definitionId": "dev-button",
+    "name": "Hero Dashboard Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "dashboard",
+      "button"
+    ]
+  },
+  {
     "id": "hero-description",
     "definitionId": "dev-div",
     "name": "Hero Description",
@@ -612,6 +1144,21 @@
     ]
   },
   {
+    "id": "hero-menu-button",
+    "definitionId": "dev-button",
+    "name": "Hero Menu Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "menu",
+      "button"
+    ]
+  },
+  {
     "id": "hero-patient-portal",
     "definitionId": "dev-div",
     "name": "Hero Patient Portal",
@@ -642,6 +1189,21 @@
     ]
   },
   {
+    "id": "hero-reserve-button",
+    "definitionId": "dev-button",
+    "name": "Hero Reserve Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "reserve",
+      "button"
+    ]
+  },
+  {
     "id": "hero-schedule-appointment",
     "definitionId": "dev-div",
     "name": "Hero Schedule Appointment",
@@ -654,6 +1216,21 @@
       "hero",
       "schedule",
       "appointment"
+    ]
+  },
+  {
+    "id": "hero-signin-button",
+    "definitionId": "dev-button",
+    "name": "Hero Signin Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "signin",
+      "button"
     ]
   },
   {
@@ -672,6 +1249,21 @@
     ]
   },
   {
+    "id": "hero-start-button",
+    "definitionId": "dev-button",
+    "name": "Hero Start Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "button"
+    ]
+  },
+  {
     "id": "hero-start-journey",
     "definitionId": "dev-div",
     "name": "Hero Start Journey",
@@ -684,6 +1276,21 @@
       "hero",
       "start",
       "journey"
+    ]
+  },
+  {
+    "id": "hero-start-managing",
+    "definitionId": "dev-div",
+    "name": "Hero Start Managing",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "managing"
     ]
   },
   {
@@ -713,6 +1320,49 @@
       "landing-page",
       "hero",
       "title"
+    ]
+  },
+  {
+    "id": "hero-tour-button",
+    "definitionId": "dev-button",
+    "name": "Hero Tour Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "tour",
+      "button"
+    ]
+  },
+  {
+    "id": "hours-card",
+    "definitionId": "dev-card",
+    "name": "Hours Card",
+    "description": "Card component used in Landing for hours functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hours",
+      "card"
+    ]
+  },
+  {
+    "id": "location-card",
+    "definitionId": "dev-card",
+    "name": "Location Card",
+    "description": "Card component used in Landing for location functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "location",
+      "card"
     ]
   },
   {
@@ -814,6 +1464,21 @@
     ]
   },
   {
+    "id": "nav-contact-button",
+    "definitionId": "dev-button",
+    "name": "Nav Contact Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "contact",
+      "button"
+    ]
+  },
+  {
     "id": "nav-dashboard-button",
     "definitionId": "dev-button",
     "name": "Nav Dashboard Button",
@@ -829,6 +1494,21 @@
     ]
   },
   {
+    "id": "nav-projects-button",
+    "definitionId": "dev-button",
+    "name": "Nav Projects Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "projects",
+      "button"
+    ]
+  },
+  {
     "id": "nav-register-button",
     "definitionId": "dev-button",
     "name": "Nav Register Button",
@@ -840,6 +1520,21 @@
       "landing-page",
       "nav",
       "register",
+      "button"
+    ]
+  },
+  {
+    "id": "nav-services-button",
+    "definitionId": "dev-button",
+    "name": "Nav Services Button",
+    "description": "Button component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "services",
       "button"
     ]
   },
@@ -872,6 +1567,20 @@
     ]
   },
   {
+    "id": "programs-button",
+    "definitionId": "dev-button",
+    "name": "Programs Button",
+    "description": "Button component used in Landing for programs functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "programs",
+      "button"
+    ]
+  },
+  {
     "id": "projects-button",
     "definitionId": "dev-button",
     "name": "Projects Button",
@@ -883,6 +1592,91 @@
       "landing-page",
       "projects",
       "button"
+    ]
+  },
+  {
+    "id": "reservation-form-card",
+    "definitionId": "dev-card",
+    "name": "Reservation Form Card",
+    "description": "Card component used in Landing for reservation functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "reservation",
+      "form",
+      "card"
+    ]
+  },
+  {
+    "id": "restaurant-footer",
+    "definitionId": "dev-footer",
+    "name": "Restaurant Footer",
+    "description": "Footer component used in Landing for restaurant functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "restaurant",
+      "footer"
+    ]
+  },
+  {
+    "id": "restaurant-header",
+    "definitionId": "dev-header",
+    "name": "Restaurant Header",
+    "description": "Header component used in Landing for restaurant functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "restaurant",
+      "header"
+    ]
+  },
+  {
+    "id": "restaurant-logo",
+    "definitionId": "dev-div",
+    "name": "Restaurant Logo",
+    "description": "Div component used in Landing for restaurant functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "restaurant",
+      "logo"
+    ]
+  },
+  {
+    "id": "restaurant-name",
+    "definitionId": "dev-div",
+    "name": "Restaurant Name",
+    "description": "Div component used in Landing for restaurant functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "restaurant",
+      "name"
+    ]
+  },
+  {
+    "id": "restaurant-nav",
+    "definitionId": "dev-nav",
+    "name": "Restaurant Nav",
+    "description": "Nav component used in Landing for restaurant functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "restaurant",
+      "nav"
     ]
   },
   {
@@ -985,6 +1779,20 @@
     ]
   },
   {
+    "id": "submit-reservation",
+    "definitionId": "dev-div",
+    "name": "Submit Reservation",
+    "description": "Div component used in Landing for submit functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/restaurant-website/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "submit",
+      "reservation"
+    ]
+  },
+  {
     "id": "trust-patient-testimonials",
     "definitionId": "dev-div",
     "name": "Trust Patient Testimonials",
@@ -1054,6 +1862,50 @@
       "landing-page",
       "auth",
       "buttons"
+    ]
+  },
+  {
+    "id": "auth-highlight",
+    "definitionId": "dev-div",
+    "name": "Auth Highlight",
+    "description": "Div component used in Landing for auth functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/test-project-1753302573875/blob/main/src/pages/Landing.tsx",
+    "category": "interactive",
+    "semanticTags": [
+      "landing-page",
+      "auth",
+      "highlight"
+    ]
+  },
+  {
+    "id": "construction-auth-buttons",
+    "definitionId": "dev-div",
+    "name": "Construction Auth Buttons",
+    "description": "Div component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "interactive",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "auth",
+      "buttons"
+    ]
+  },
+  {
+    "id": "construction-login-button",
+    "definitionId": "dev-button",
+    "name": "Construction Login Button",
+    "description": "Button component used in Landing for construction functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio/blob/main/src/pages/Landing.tsx",
+    "category": "interactive",
+    "semanticTags": [
+      "landing-page",
+      "construction",
+      "login",
+      "button"
     ]
   },
   {
