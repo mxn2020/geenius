@@ -2,7 +2,6 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { EnhancedSessionManager } from './shared/enhanced-session-manager';
 import { EnhancedGitHubService, FileChange } from '../src/services/enhanced-github-service';
-import { AIFileProcessor } from './shared/ai-file-processor';
 import { NetlifyService } from '../src/services/netlify';
 import { DevIdRegistryScanner, RegistryContext } from './shared/devid-registry-scanner';
 import { CustomAIAgent } from './shared/custom-ai-agent';
@@ -81,6 +80,16 @@ interface TemplateFileContent {
 const sessionManager = new EnhancedSessionManager();
 const githubService = new EnhancedGitHubService();
 const netlifyService = new NetlifyService();
+
+/**
+ * Add development prefix to service names for easier identification and cleanup
+ */
+function addDevPrefix(name: string): string {
+  if (process.env.NODE_ENV === 'development') {
+    return `dev-${name}`;
+  }
+  return name;
+}
 
 /**
  * Update URL-based environment variables after Netlify site creation
@@ -200,6 +209,11 @@ function getEnvVarsForProvider(provider: string, model?: string): Record<string,
     vars.GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   }
 
+  // Add Pexels API key if available
+  if (process.env.PEXELS_API_KEY) {
+    vars.PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+  }
+
   return vars;
 }
 
@@ -316,6 +330,22 @@ Create a complete new project that fulfills the user requirements while followin
 - **Database Schema**: Add appropriate Prisma models or Migrations files for business data with proper relationships
 - **App Structure**: Update routing, authentication flow, and component organization as needed
 - **Tailwind Config**: Customize colors, fonts, and design tokens to match business domain theme
+
+#### **Media Assets (IMPORTANT)**:
+- **NEVER use placeholder images**: Do NOT use services like placeholder.com, placehold.it, lorem picsum, or via.placeholder.com
+- **Use Pexels API**: The project has access to Pexels API with key configured. Use real image URLs from Pexels
+- **Search for relevant images**: Use search terms related to the business domain (e.g., for a doctor website, search "medical", "healthcare", "doctor", "hospital")
+- **Image URLs**: Use Pexels image URLs directly, for example:
+  - Hero images: https://images.pexels.com/photos/[id]/pexels-photo-[id].jpeg?auto=compress&cs=tinysrgb&w=1920
+  - Thumbnails: https://images.pexels.com/photos/[id]/pexels-photo-[id].jpeg?auto=compress&cs=tinysrgb&w=400
+- **Popular image IDs by domain**:
+  - Healthcare/Medical: 4021258, 4173251, 5722164, 7089392
+  - Technology: 1181244, 1181677, 3861964, 546819
+  - Business/Office: 3184292, 3184339, 3183197, 416320
+  - Food/Restaurant: 1640777, 1565982, 1279330, 262978
+  - Education: 1181519, 5212320, 5905857, 3401403
+  - Fitness: 4164531, 416809, 3768912, 1954524
+- **Videos**: For video backgrounds, use Pexels video URLs like: https://player.vimeo.com/external/[id].sd.mp4?s=[hash]&profile_id=165
 
 ## Response Format
 Provide your complete response in this exact format:
@@ -777,7 +807,7 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
         
         if (selectedOrgId && selectedProjectId) {
           mongodbProject = await mongodbService.createProjectWithSelection(
-            request.projectName,
+            addDevPrefix(request.projectName),
             selectedOrgId,
             selectedProjectId,
             (message: string) => logInitialization(sessionId, 'info', message)
@@ -906,6 +936,14 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
                 templateEnvVars[envVar] = '1.0.0';
                 break;
               
+              // Pexels API variables
+              case 'PEXELS_API_KEY':
+              case 'VITE_PEXELS_API_KEY':
+              case 'NEXT_PUBLIC_PEXELS_API_KEY':
+              case 'NUXT_PUBLIC_PEXELS_API_KEY':
+                templateEnvVars[envVar] = process.env.PEXELS_API_KEY || 'your-pexels-api-key';
+                break;
+              
               // Default fallback for any unhandled env vars
               default:
                 console.warn(`[ENV-SETUP] Unknown environment variable: ${envVar}, setting as placeholder`);
@@ -929,7 +967,7 @@ async function processStandardDeployment(sessionId: string, request: ProjectInit
           console.log(`[ENV-SETUP] Setting ${Object.keys(allEnvVars).length} environment variables:`, Object.keys(allEnvVars));
           await logInitialization(sessionId, 'info', `🔧 Configuring ${Object.keys(allEnvVars).length} environment variables...`);
           
-          netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
+          netlifyProject = await netlifyService.createProject(addDevPrefix(request.projectName), request.repositoryUrl, undefined, allEnvVars);
           
           await netlifyService.configureBranchDeployments(netlifyProject.id, {
             main: { production: true },
@@ -1342,6 +1380,14 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
                   templateEnvVars[envVar] = '1.0.0';
                   break;
                 
+                // Pexels API variables
+                case 'PEXELS_API_KEY':
+                case 'VITE_PEXELS_API_KEY':
+                case 'NEXT_PUBLIC_PEXELS_API_KEY':
+                case 'NUXT_PUBLIC_PEXELS_API_KEY':
+                  templateEnvVars[envVar] = process.env.PEXELS_API_KEY || 'your-pexels-api-key';
+                  break;
+                
                 // Default fallback for any unhandled env vars
                 default:
                   console.warn(`[ENV-SETUP] Unknown environment variable: ${envVar}, setting as placeholder`);
@@ -1366,7 +1412,7 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
             console.log(`[ENV-SETUP] Setting ${Object.keys(allEnvVars).length} environment variables:`, Object.keys(allEnvVars));
             await logInitialization(sessionId, 'info', `🔧 Configuring ${Object.keys(allEnvVars).length} environment variables...`);
             
-            netlifyProject = await netlifyService.createProject(request.projectName, request.repositoryUrl, undefined, allEnvVars);
+            netlifyProject = await netlifyService.createProject(addDevPrefix(request.projectName), request.repositoryUrl, undefined, allEnvVars);
             
             // Configure branch deployments with PR previews
             await netlifyService.configureBranchDeployments(netlifyProject.id, {
@@ -1682,7 +1728,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
           const github = new EnhancedGitHubService();
           const newRepoUrl = await github.createFromTemplate(
             template.repository,
-            normalizedRequest.projectName,
+            addDevPrefix(normalizedRequest.projectName),
             normalizedRequest.githubOrg
           );
           

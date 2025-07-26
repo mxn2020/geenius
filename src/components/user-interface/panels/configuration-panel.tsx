@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { useProjectInit } from "../project-initialization/ProjectInitializationContext"
-import { useAppState } from "../../app-hooks"
+import { useProjectInit } from "../../project-initialization/ProjectInitializationContext"
+import { useAppState } from "../../../app-hooks"
 
 interface ConfigurationPanelProps {
   isExpanded: boolean

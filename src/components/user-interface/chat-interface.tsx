@@ -7,19 +7,19 @@ import { ProcessingView } from "./views/processing-view"
 import { ProjectView } from "./views/project-view"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ConfigurationPanel } from "./configuration-panel"
+import { ConfigurationPanel } from "./panels/configuration-panel"
 import { QuickActionsPanel } from "./quick-actions-panel"
-import { StatusPanel } from "./status-panel"
-import { ProjectsPanel } from "./projects-panel"
-import { TemplatesPanel } from "./templates-panel"
-import { TasksPanel } from "./tasks-panel"
+import { StatusPanel } from "./panels/status-panel"
+import { ProjectsPanel } from "./panels/projects-panel"
+import { TemplatesPanel } from "./panels/templates-panel"
+import { TasksPanel } from "./panels/tasks-panel"
 import { ItemDetails } from "./item-details"
 import { useProjectInit } from "../project-initialization/ProjectInitializationContext"
-import { useAppState } from "../../app-hooks"
+import { useAppState } from "../../app-state-context"
 
 export function ChatInterface() {
   const { state, syncSessionStatus } = useProjectInit()
-  const { startLogStreaming, sessionStatus, sessionProgress, repoUrl, netlifyUrl } = useAppState()
+  const { startLogStreaming, sessionStatus, sessionProgress, repoUrl, netlifyUrl, sessionLogs } = useAppState()
   
   // Map context steps to view types
   const getViewFromStep = (step: string): ViewType => {
@@ -35,6 +35,35 @@ export function ChatInterface() {
   const [currentView, setCurrentView] = useState<ViewType>('init')
   const [capturedInitHeight, setCapturedInitHeight] = useState<number | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+  
+  // Check for existing session in URL on mount and sync with context
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const sessionIdFromUrl = urlParams.get('session')
+    
+    if (sessionIdFromUrl) {
+      console.log('🔄 Found session in URL:', sessionIdFromUrl)
+      // The ProjectInitializationContext will handle setting the session,
+      // but we should ensure the view is correct based on the context state
+      // Wait a tick to let the context update first
+      setTimeout(() => {
+        if (state.currentStep === 'status' || state.currentStep === 'logs') {
+          setCurrentView('processing')
+        }
+      }, 0)
+    }
+  }, []) // Run only on mount
+  
+  // Sync view with context step changes
+  useEffect(() => {
+    // If context has a session and is in status/logs step, ensure we're in processing view
+    if (state.sessionId && (state.currentStep === 'status' || state.currentStep === 'logs')) {
+      const newView = getViewFromStep(state.currentStep)
+      if (newView !== currentView) {
+        handleViewChange(newView)
+      }
+    }
+  }, [state.currentStep, state.sessionId])
 
   // Custom setCurrentView that captures height before transitioning
   const handleViewChange = (newView: ViewType) => {
@@ -62,12 +91,16 @@ export function ChatInterface() {
   const [isChevronHovered, setIsChevronHovered] = useState(false)
   const [showChevron, setShowChevron] = useState(false)
   const hideChevronTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isStatusPanelExpanded, setIsStatusPanelExpanded] = useState(false)
 
 
   // Start log streaming when session starts
   useEffect(() => {
     if (state.sessionId && state.currentStep === 'status') {
+      console.log('🔄 Starting log streaming for session:', state.sessionId)
       startLogStreaming(state.sessionId, true)
+    } else {
+      console.log('⏸️ Not starting log streaming. SessionId:', state.sessionId, 'Step:', state.currentStep)
     }
   }, [state.sessionId, state.currentStep]) // Removed startLogStreaming from dependencies
 
@@ -131,8 +164,12 @@ export function ChatInterface() {
   }
 
   // Removed transition state management to fix card jumping issue
-  // Get logs from context
-  const logs = state.logs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`)
+  // Get logs from useAppState sessionLogs if available, otherwise fall back to context logs
+  const logs = sessionLogs.length > 0 
+    ? sessionLogs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level?.toUpperCase() || 'INFO'}: ${log.message}`)
+    : state.logs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`)
+  
+  console.log('🔍 ChatInterface - sessionLogs:', sessionLogs.length, 'state.logs:', state.logs.length, 'final logs:', logs.length)
   
   const addLog = (message: string) => {
     // This will be handled by the context
@@ -165,7 +202,7 @@ export function ChatInterface() {
   const viewProps = {
     currentView,
     setCurrentView: handleViewChange,
-    sessionId: state.sessionId,
+    sessionId: state.sessionId || undefined,
     projectName: state.projectName,
     logs,
     addLog,
@@ -248,7 +285,7 @@ export function ChatInterface() {
         {/* Status Panel - Only show for processing view */}
         {currentView === 'processing' && (
           <div className="relative z-20">
-            <StatusPanel sessionId={state.sessionId} isVisible={true} />
+            <StatusPanel sessionId={state.sessionId || undefined} />
           </div>
         )}
         

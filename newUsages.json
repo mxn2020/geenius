@@ -14,6 +14,153 @@
     ]
   },
   {
+    "id": "academics-button",
+    "definitionId": "dev-button",
+    "name": "Academics Button",
+    "description": "Button component used in Landing for academics functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "academics",
+      "button"
+    ]
+  },
+  {
+    "id": "admissions-button",
+    "definitionId": "dev-button",
+    "name": "Admissions Button",
+    "description": "Button component used in Landing for admissions functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "admissions",
+      "button"
+    ]
+  },
+  {
+    "id": "bike-shop-brand",
+    "definitionId": "dev-div",
+    "name": "Bike Shop Brand",
+    "description": "Div component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "brand"
+    ]
+  },
+  {
+    "id": "bike-shop-footer",
+    "definitionId": "dev-footer",
+    "name": "Bike Shop Footer",
+    "description": "Footer component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "footer"
+    ]
+  },
+  {
+    "id": "bike-shop-header",
+    "definitionId": "dev-header",
+    "name": "Bike Shop Header",
+    "description": "Header component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "header"
+    ]
+  },
+  {
+    "id": "bike-shop-highlight",
+    "definitionId": "dev-div",
+    "name": "Bike Shop Highlight",
+    "description": "Div component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "highlight"
+    ]
+  },
+  {
+    "id": "bike-shop-logo",
+    "definitionId": "dev-div",
+    "name": "Bike Shop Logo",
+    "description": "Div component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "logo"
+    ]
+  },
+  {
+    "id": "bike-shop-nav",
+    "definitionId": "dev-nav",
+    "name": "Bike Shop Nav",
+    "description": "Nav component used in Landing for bike functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bike",
+      "shop",
+      "nav"
+    ]
+  },
+  {
+    "id": "bikes-content",
+    "definitionId": "dev-div",
+    "name": "Bikes Content",
+    "description": "Div component used in Landing for bikes functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "bikes",
+      "content"
+    ]
+  },
+  {
+    "id": "booking-form-card",
+    "definitionId": "dev-card",
+    "name": "Booking Form Card",
+    "description": "Card component used in Landing for booking functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "booking",
+      "form",
+      "card"
+    ]
+  },
+  {
     "id": "brand-name",
     "definitionId": "dev-div",
     "name": "Brand Name",
@@ -25,6 +172,34 @@
       "landing-page",
       "brand",
       "name"
+    ]
+  },
+  {
+    "id": "checkin-input",
+    "definitionId": "dev-input",
+    "name": "Checkin Input",
+    "description": "Input component used in Landing for checkin functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "checkin",
+      "input"
+    ]
+  },
+  {
+    "id": "checkout-input",
+    "definitionId": "dev-input",
+    "name": "Checkout Input",
+    "description": "Input component used in Landing for checkout functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "checkout",
+      "input"
     ]
   },
   {
@@ -342,6 +517,20 @@
     ]
   },
   {
+    "id": "contact-address",
+    "definitionId": "dev-div",
+    "name": "Contact Address",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "address"
+    ]
+  },
+  {
     "id": "contact-book-appointment",
     "definitionId": "dev-div",
     "name": "Contact Book Appointment",
@@ -401,6 +590,49 @@
     ]
   },
   {
+    "id": "contact-content",
+    "definitionId": "dev-div",
+    "name": "Contact Content",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "content"
+    ]
+  },
+  {
+    "id": "contact-dashboard-button",
+    "definitionId": "dev-button",
+    "name": "Contact Dashboard Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "dashboard",
+      "button"
+    ]
+  },
+  {
+    "id": "contact-email",
+    "definitionId": "dev-div",
+    "name": "Contact Email",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "email"
+    ]
+  },
+  {
     "id": "contact-email-input",
     "definitionId": "dev-input",
     "name": "Contact Email Input",
@@ -428,6 +660,21 @@
       "contact",
       "enroll",
       "button"
+    ]
+  },
+  {
+    "id": "contact-get-started",
+    "definitionId": "dev-div",
+    "name": "Contact Get Started",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "get",
+      "started"
     ]
   },
   {
@@ -473,6 +720,20 @@
       "contact",
       "name",
       "input"
+    ]
+  },
+  {
+    "id": "contact-phone",
+    "definitionId": "dev-div",
+    "name": "Contact Phone",
+    "description": "Div component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "phone"
     ]
   },
   {
@@ -551,6 +812,21 @@
     ]
   },
   {
+    "id": "contact-visit-button",
+    "definitionId": "dev-button",
+    "name": "Contact Visit Button",
+    "description": "Button component used in Landing for contact functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "contact",
+      "visit",
+      "button"
+    ]
+  },
+  {
     "id": "cta-book-consultation",
     "definitionId": "dev-div",
     "name": "Cta Book Consultation",
@@ -563,6 +839,80 @@
       "cta",
       "book",
       "consultation"
+    ]
+  },
+  {
+    "id": "cta-contact-button",
+    "definitionId": "dev-button",
+    "name": "Cta Contact Button",
+    "description": "Button component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "contact",
+      "button"
+    ]
+  },
+  {
+    "id": "cta-contact-sales",
+    "definitionId": "dev-div",
+    "name": "Cta Contact Sales",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio-great-lake/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "contact",
+      "sales"
+    ]
+  },
+  {
+    "id": "cta-contact-us",
+    "definitionId": "dev-div",
+    "name": "Cta Contact Us",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/modern-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "contact"
+    ]
+  },
+  {
+    "id": "cta-enroll-button",
+    "definitionId": "dev-button",
+    "name": "Cta Enroll Button",
+    "description": "Button component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "enroll",
+      "button"
+    ]
+  },
+  {
+    "id": "cta-enroll-now",
+    "definitionId": "dev-div",
+    "name": "Cta Enroll Now",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "enroll",
+      "now"
     ]
   },
   {
@@ -626,6 +976,21 @@
     ]
   },
   {
+    "id": "cta-schedule-tour",
+    "definitionId": "dev-div",
+    "name": "Cta Schedule Tour",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "schedule",
+      "tour"
+    ]
+  },
+  {
     "id": "cta-signup-button",
     "definitionId": "dev-button",
     "name": "Cta Signup Button",
@@ -671,6 +1036,36 @@
     ]
   },
   {
+    "id": "cta-start-testing",
+    "definitionId": "dev-div",
+    "name": "Cta Start Testing",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/modern-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "start",
+      "testing"
+    ]
+  },
+  {
+    "id": "cta-view-demo",
+    "definitionId": "dev-div",
+    "name": "Cta View Demo",
+    "description": "Div component used in Landing for cta functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "cta",
+      "view",
+      "demo"
+    ]
+  },
+  {
     "id": "docs-button",
     "definitionId": "dev-button",
     "name": "Docs Button",
@@ -710,6 +1105,20 @@
       "landing-page",
       "dreams",
       "highlight"
+    ]
+  },
+  {
+    "id": "email-input",
+    "definitionId": "dev-input",
+    "name": "Email Input",
+    "description": "Input component used in Landing for email functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "email",
+      "input"
     ]
   },
   {
@@ -755,6 +1164,49 @@
     ]
   },
   {
+    "id": "getActivityBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetActivityBadgeId(index)",
+    "description": "Div component used in Landing for getActivityBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getActivityBadgeId(index)"
+    ]
+  },
+  {
+    "id": "getActivityIconId(index)",
+    "definitionId": "dev-div",
+    "name": "GetActivityIconId(index)",
+    "description": "Div component used in Landing for getActivityIconId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getActivityIconId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${activity.color"
+    }
+  },
+  {
+    "id": "getAmenityId(index)",
+    "definitionId": "dev-div",
+    "name": "GetAmenityId(index)",
+    "description": "Div component used in Landing for getAmenityId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getAmenityId(index)"
+    ]
+  },
+  {
     "id": "getBenefitCardId(index)",
     "definitionId": "dev-div",
     "name": "GetBenefitCardId(index)",
@@ -768,6 +1220,66 @@
     ]
   },
   {
+    "id": "getBikeCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetBikeCardId(index)",
+    "description": "Div component used in Landing for getBikeCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getBikeCardId(index)"
+    ]
+  },
+  {
+    "id": "getBikeTypeBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetBikeTypeBadgeId(index)",
+    "description": "Div component used in Landing for getBikeTypeBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-dynamic-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getBikeTypeBadgeId(index)"
+    ]
+  },
+  {
+    "id": "getBikeTypeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetBikeTypeId(index)",
+    "description": "Div component used in Landing for getBikeTypeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-dynamic-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getBikeTypeId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${bikeType.color"
+    }
+  },
+  {
+    "id": "getDepartmentCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetDepartmentCardId(index)",
+    "description": "Div component used in Landing for getDepartmentCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getDepartmentCardId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${dept.color"
+    }
+  },
+  {
     "id": "getFeatureCardId(index)",
     "definitionId": "dev-div",
     "name": "GetFeatureCardId(index)",
@@ -778,6 +1290,19 @@
     "semanticTags": [
       "landing-page",
       "getFeatureCardId(index)"
+    ]
+  },
+  {
+    "id": "getFeatureCardId(slideIndex * getCardsPerSlide() + index)",
+    "definitionId": "dev-div",
+    "name": "GetFeatureCardId(slideIndex * getCardsPerSlide() + index)",
+    "description": "Div component used in Landing for getFeatureCardId(slideIndex * getCardsPerSlide() + index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getFeatureCardId(slideIndex * getCardsPerSlide() + index)"
     ]
   },
   {
@@ -817,6 +1342,19 @@
     "semanticTags": [
       "landing-page",
       "getProjectCardId(index)"
+    ]
+  },
+  {
+    "id": "getRoomCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetRoomCardId(index)",
+    "description": "Div component used in Landing for getRoomCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getRoomCardId(index)"
     ]
   },
   {
@@ -953,6 +1491,19 @@
     }
   },
   {
+    "id": "getTestBadgeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestBadgeId(index)",
+    "description": "Div component used in Landing for getTestBadgeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/modern-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestBadgeId(index)"
+    ]
+  },
+  {
     "id": "getTestCardId(index)",
     "definitionId": "dev-div",
     "name": "GetTestCardId(index)",
@@ -990,6 +1541,36 @@
       "landing-page",
       "getTestimonialId(index)"
     ]
+  },
+  {
+    "id": "getTestTypeCardId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestTypeCardId(index)",
+    "description": "Div component used in Landing for getTestTypeCardId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/elegant-studio-great-lake/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestTypeCardId(index)"
+    ]
+  },
+  {
+    "id": "getTestTypeId(index)",
+    "definitionId": "dev-div",
+    "name": "GetTestTypeId(index)",
+    "description": "Div component used in Landing for getTestTypeId(index) functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/modern-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "getTestTypeId(index)",
+      "styled"
+    ],
+    "props": {
+      "className": "`w-16 h-16 mx-auto mb-3 rounded-xl bg-gradient-to-br ${testType.color"
+    }
   },
   {
     "id": "getValueCardId(index)",
@@ -1037,6 +1618,35 @@
     ]
   },
   {
+    "id": "hero-access-portal",
+    "definitionId": "dev-div",
+    "name": "Hero Access Portal",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "access",
+      "portal"
+    ]
+  },
+  {
+    "id": "hero-background",
+    "definitionId": "dev-div",
+    "name": "Hero Background",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "background"
+    ]
+  },
+  {
     "id": "hero-book-appointment",
     "definitionId": "dev-div",
     "name": "Hero Book Appointment",
@@ -1049,6 +1659,51 @@
       "hero",
       "book",
       "appointment"
+    ]
+  },
+  {
+    "id": "hero-book-now",
+    "definitionId": "dev-div",
+    "name": "Hero Book Now",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "book",
+      "now"
+    ]
+  },
+  {
+    "id": "hero-book-service",
+    "definitionId": "dev-div",
+    "name": "Hero Book Service",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "book",
+      "service"
+    ]
+  },
+  {
+    "id": "hero-browse-bikes",
+    "definitionId": "dev-div",
+    "name": "Hero Browse Bikes",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-dynamic-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "browse",
+      "bikes"
     ]
   },
   {
@@ -1182,6 +1837,36 @@
       "landing-page",
       "hero",
       "description"
+    ]
+  },
+  {
+    "id": "hero-enroll-button",
+    "definitionId": "dev-button",
+    "name": "Hero Enroll Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "enroll",
+      "button"
+    ]
+  },
+  {
+    "id": "hero-explore-button",
+    "definitionId": "dev-button",
+    "name": "Hero Explore Button",
+    "description": "Button component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "explore",
+      "button"
     ]
   },
   {
@@ -1321,6 +2006,21 @@
     ]
   },
   {
+    "id": "hero-shop-bikes",
+    "definitionId": "dev-div",
+    "name": "Hero Shop Bikes",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "shop",
+      "bikes"
+    ]
+  },
+  {
     "id": "hero-signin-button",
     "definitionId": "dev-button",
     "name": "Hero Signin Button",
@@ -1363,6 +2063,21 @@
       "hero",
       "start",
       "button"
+    ]
+  },
+  {
+    "id": "hero-start-creating",
+    "definitionId": "dev-div",
+    "name": "Hero Start Creating",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "creating"
     ]
   },
   {
@@ -1426,6 +2141,21 @@
     ]
   },
   {
+    "id": "hero-start-shopping",
+    "definitionId": "dev-div",
+    "name": "Hero Start Shopping",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-dynamic-hub/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "start",
+      "shopping"
+    ]
+  },
+  {
     "id": "hero-start-testing",
     "definitionId": "dev-div",
     "name": "Hero Start Testing",
@@ -1467,6 +2197,105 @@
       "hero",
       "tour",
       "button"
+    ]
+  },
+  {
+    "id": "hero-view-tests",
+    "definitionId": "dev-div",
+    "name": "Hero View Tests",
+    "description": "Div component used in Landing for hero functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hero",
+      "view",
+      "tests"
+    ]
+  },
+  {
+    "id": "hotel-brand",
+    "definitionId": "dev-div",
+    "name": "Hotel Brand",
+    "description": "Div component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "brand"
+    ]
+  },
+  {
+    "id": "hotel-footer",
+    "definitionId": "dev-footer",
+    "name": "Hotel Footer",
+    "description": "Footer component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "footer"
+    ]
+  },
+  {
+    "id": "hotel-header",
+    "definitionId": "dev-header",
+    "name": "Hotel Header",
+    "description": "Header component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "header"
+    ]
+  },
+  {
+    "id": "hotel-location",
+    "definitionId": "dev-div",
+    "name": "Hotel Location",
+    "description": "Div component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "location"
+    ]
+  },
+  {
+    "id": "hotel-logo",
+    "definitionId": "dev-div",
+    "name": "Hotel Logo",
+    "description": "Div component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "logo"
+    ]
+  },
+  {
+    "id": "hotel-nav",
+    "definitionId": "dev-nav",
+    "name": "Hotel Nav",
+    "description": "Nav component used in Landing for hotel functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "hotel",
+      "nav"
     ]
   },
   {
@@ -1568,6 +2397,20 @@
     ]
   },
   {
+    "id": "medical-highlight",
+    "definitionId": "dev-div",
+    "name": "Medical Highlight",
+    "description": "Div component used in Landing for medical functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-workspace-new-tech/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "medical",
+      "highlight"
+    ]
+  },
+  {
     "id": "mongodb-highlight",
     "definitionId": "dev-div",
     "name": "Mongodb Highlight",
@@ -1579,6 +2422,20 @@
       "landing-page",
       "mongodb",
       "highlight"
+    ]
+  },
+  {
+    "id": "name-input",
+    "definitionId": "dev-input",
+    "name": "Name Input",
+    "description": "Input component used in Landing for name functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "name",
+      "input"
     ]
   },
   {
@@ -1626,6 +2483,34 @@
     ]
   },
   {
+    "id": "nav-links",
+    "definitionId": "dev-div",
+    "name": "Nav Links",
+    "description": "Div component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "links"
+    ]
+  },
+  {
+    "id": "nav-menu",
+    "definitionId": "dev-menu",
+    "name": "Nav Menu",
+    "description": "Menu component used in Landing for nav functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nav",
+      "menu"
+    ]
+  },
+  {
     "id": "nav-projects-button",
     "definitionId": "dev-button",
     "name": "Nav Projects Button",
@@ -1668,6 +2553,34 @@
       "nav",
       "services",
       "button"
+    ]
+  },
+  {
+    "id": "nijmegen-highlight",
+    "definitionId": "dev-div",
+    "name": "Nijmegen Highlight",
+    "description": "Div component used in Landing for nijmegen functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "nijmegen",
+      "highlight"
+    ]
+  },
+  {
+    "id": "phone-input",
+    "definitionId": "dev-input",
+    "name": "Phone Input",
+    "description": "Input component used in Landing for phone functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "phone",
+      "input"
     ]
   },
   {
@@ -1840,6 +2753,20 @@
     ]
   },
   {
+    "id": "services-content",
+    "definitionId": "dev-div",
+    "name": "Services Content",
+    "description": "Div component used in Landing for services functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "services",
+      "content"
+    ]
+  },
+  {
     "id": "simplified-highlight",
     "definitionId": "dev-div",
     "name": "Simplified Highlight",
@@ -1878,6 +2805,20 @@
     "semanticTags": [
       "landing-page",
       "specialty",
+      "highlight"
+    ]
+  },
+  {
+    "id": "stars-highlight",
+    "definitionId": "dev-div",
+    "name": "Stars Highlight",
+    "description": "Div component used in Landing for stars functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dynamic-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "stars",
       "highlight"
     ]
   },
@@ -1925,6 +2866,21 @@
     ]
   },
   {
+    "id": "submit-booking-button",
+    "definitionId": "dev-button",
+    "name": "Submit Booking Button",
+    "description": "Button component used in Landing for submit functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/dev-awesome-solution/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "submit",
+      "booking",
+      "button"
+    ]
+  },
+  {
     "id": "submit-reservation",
     "definitionId": "dev-div",
     "name": "Submit Reservation",
@@ -1949,6 +2905,62 @@
     "semanticTags": [
       "landing-page",
       "tasks",
+      "highlight"
+    ]
+  },
+  {
+    "id": "template-highlight",
+    "definitionId": "dev-div",
+    "name": "Template Highlight",
+    "description": "Div component used in Landing for template functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/brilliant-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "template",
+      "highlight"
+    ]
+  },
+  {
+    "id": "testimonials-content",
+    "definitionId": "dev-div",
+    "name": "Testimonials Content",
+    "description": "Div component used in Landing for testimonials functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/fantastic-app/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "testimonials",
+      "content"
+    ]
+  },
+  {
+    "id": "testing-highlight",
+    "definitionId": "dev-div",
+    "name": "Testing Highlight",
+    "description": "Div component used in Landing for testing functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/modern-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "testing",
+      "highlight"
+    ]
+  },
+  {
+    "id": "tests-highlight",
+    "definitionId": "dev-div",
+    "name": "Tests Highlight",
+    "description": "Div component used in Landing for tests functionality",
+    "filePath": "src/pages/Landing.tsx",
+    "repositoryPath": "https://github.com/mxn2020/genius-platform/blob/main/src/pages/Landing.tsx",
+    "category": "content",
+    "semanticTags": [
+      "landing-page",
+      "tests",
       "highlight"
     ]
   },

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { ViewType } from "../view-types"
 import { useProjectInit } from "../../project-initialization/ProjectInitializationContext"
-import { useAppState } from "../../../app-hooks"
+import { useAppState } from "../../../app-state-context"
 
 interface ProcessingViewProps {
   currentView: ViewType
@@ -37,6 +37,8 @@ export function ProcessingView({
     : state.logs.length > 0 
       ? state.logs.map(log => `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.level.toUpperCase()}: ${log.message}`)
       : logs
+
+  console.log('🖥️ ProcessingView render - sessionLogs:', sessionLogs.length, 'state.logs:', state.logs.length, 'displayLogs:', displayLogs.length)
 
   // Auto-scroll to bottom when logs update
   useEffect(() => {

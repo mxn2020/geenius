@@ -123,7 +123,7 @@ export class NetlifyService {
           dir: 'dist',
           functions_dir: 'api',
           cmd: 'pnpm build',
-          allowed_branches: ['main'],
+          allowed_branches: ['main', 'develop', 'feature/*'],
           public_repo: true,
           repo_url: repoUrl
         }
@@ -268,7 +268,7 @@ export class NetlifyService {
           dir: 'dist',
           functions_dir: 'api',
           cmd: 'pnpm build',
-          allowed_branches: ['main'],
+          allowed_branches: ['main', 'develop', 'feature/*'],
           public_repo: true,
           repo_url: repoUrl
         }
@@ -571,7 +571,7 @@ export class NetlifyService {
       // Configure deploy settings to ensure PR previews work
       const deploySettings = {
         deploy_hook: null, // Let Netlify handle GitHub webhooks automatically
-        allowed_branches: ['main'], // Only main branch for production
+        allowed_branches: ['main', 'develop', 'feature/*'], // Only main branch for production
         context: {
           production: {
             publish_dir: 'dist',

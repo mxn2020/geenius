@@ -10,6 +10,16 @@ import { join } from 'path';
 const netlifyService = new NetlifyService();
 const mongodbService = new MongoDBService();
 
+/**
+ * Add development prefix to service names for easier identification and cleanup
+ */
+function addDevPrefix(name: string): string {
+  if (process.env.NODE_ENV === 'development') {
+    return `dev-${name}`;
+  }
+  return name;
+}
+
 export class ProjectWorkflow {
   private logs: string[];
   private logger?: (level: string, message: string) => void;
@@ -85,7 +95,7 @@ export class ProjectWorkflow {
       this.addLog('🍴 Forking template repository...');
       const repoUrl = await github.forkTemplate(
         template.repository,
-        options.projectName,
+        addDevPrefix(options.projectName),
         options.githubOrg
       );
 
@@ -154,7 +164,7 @@ export class ProjectWorkflow {
             while (retryCount < maxRetries) {
               try {
                 mongodbProject = await mongodbService.createProjectWithSelection(
-                  options.projectName,
+                  addDevPrefix(options.projectName),
                   selectedOrg.id,
                   selectedProjectId,
                   (message: string) => this.addLog(message) // Pass progress callback
@@ -205,7 +215,7 @@ export class ProjectWorkflow {
         } else {
           try {
             this.addLog('🚀 Setting up Netlify project...');
-            netlifyProject = await netlifyService.createProject(options.projectName, repoUrl);
+            netlifyProject = await netlifyService.createProject(addDevPrefix(options.projectName), repoUrl);
 
             // Prepare environment variables
             const templateEnvVars = template.envVars.reduce((acc, envVar) => ({ ...acc, [envVar]: '' }), {});

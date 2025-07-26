@@ -1,4 +1,4 @@
-// DevId Registry Scanner - Auto-registration system for component usages
+// api/shared/devid-registry-scanner    DevId Registry Scanner - Auto-registration system for component usages
 import { promises as fs } from 'fs';
 import path from 'path';
 

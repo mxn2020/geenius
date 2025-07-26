@@ -70,6 +70,11 @@ export class AIFileProcessor {
         structure: 'typescript'
       }
     });
+    
+    // Note: We're not calling aiAgent.initialize() here to keep it lightweight
+    // The AI will use Pexels URLs directly in generated code based on prompt instructions
+    // If you need the AI to actively search Pexels, uncomment: await this.aiAgent.initialize();
+    
     this.githubService = new EnhancedGitHubService();
   }
 
@@ -276,6 +281,18 @@ Please:
 4. Keep the existing import structure and dependencies
 5. Preserve component structure and naming conventions
 6. Focus on modifying component usage, NOT component definitions
+
+IMPORTANT - MEDIA ASSETS:
+- NEVER use placeholder image services (placeholder.com, placehold.it, lorem picsum, via.placeholder.com)
+- Use real Pexels image URLs when updating images
+- For any image changes, use URLs like: https://images.pexels.com/photos/[id]/pexels-photo-[id].jpeg?auto=compress&cs=tinysrgb&w=1920
+- Common Pexels image IDs:
+  - Business/Office: 3184292, 3184339, 3183197, 416320
+  - Technology: 1181244, 1181677, 3861964, 546819
+  - Healthcare: 4021258, 4173251, 5722164, 7089392
+  - Food: 1640777, 1565982, 1279330, 262978
+  - People/Teams: 3184418, 3184465, 3153201, 1181519
+- Include alt text that describes the actual image content
 
 Provide your response in this exact format:
 

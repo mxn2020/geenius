@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { anthropic } from '@ai-sdk/anthropic';
 import { openai } from '@ai-sdk/openai';
 import { google } from '@ai-sdk/google';
+import { PexelsService } from '../../src/services/pexels';
 
 interface AgentConfig {
   sessionId: string;
@@ -54,11 +55,13 @@ export class CustomAIAgent {
   private config: AgentConfig;
   private memory: AgentMemory;
   private tools: Map<string, any>;
+  private pexelsService: PexelsService;
 
   constructor(config: AgentConfig) {
     this.config = config;
     this.memory = this.initializeMemory();
     this.tools = new Map();
+    this.pexelsService = new PexelsService();
   }
 
   private initializeMemory(): AgentMemory {
@@ -197,6 +200,195 @@ export class CustomAIAgent {
         return await this.waitForDeployment(branchName);
       }
     }));
+
+    // Pexels media tools
+    this.tools.set('search_pexels_media', tool({
+      description: 'Search for stock photos and videos on Pexels. Use this when you need real images or videos instead of placeholders.',
+      parameters: z.object({
+        query: z.string().describe('Search query for the media (e.g., "modern office", "healthy food", "technology")'),
+        type: z.enum(['photos', 'videos', 'both']).default('photos').describe('Type of media to search'),
+        orientation: z.enum(['landscape', 'portrait', 'square']).optional().describe('Media orientation'),
+        size: z.enum(['large', 'medium', 'small']).optional().describe('Media size'),
+        color: z.string().optional().describe('Dominant color (e.g., "red", "blue", "#FF5733")'),
+        perPage: z.number().min(1).max(80).default(10).describe('Number of results per page'),
+        page: z.number().min(1).default(1).describe('Page number for pagination')
+      }),
+      execute: async ({ query, type, orientation, size, color, perPage, page }) => {
+        try {
+          const result = await this.pexelsService.searchMedia({
+            query,
+            type,
+            orientation,
+            size,
+            color,
+            perPage,
+            page,
+            includeMetadata: true
+          });
+          
+          return {
+            success: true,
+            totalResults: result.totalResults,
+            assets: result.assets.map(asset => ({
+              id: asset.id,
+              type: asset.type,
+              url: asset.url,
+              downloadUrl: asset.downloadUrl,
+              thumbnailUrl: asset.thumbnailUrl,
+              alt: asset.alt,
+              photographer: asset.photographer,
+              width: asset.width,
+              height: asset.height,
+              avgColor: asset.avgColor
+            }))
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    }));
+
+    this.tools.set('get_curated_photos', tool({
+      description: 'Get high-quality curated photos from Pexels. Use this for hero sections, backgrounds, or featured content.',
+      parameters: z.object({
+        perPage: z.number().min(1).max(80).default(10).describe('Number of results'),
+        page: z.number().min(1).default(1).describe('Page number for pagination')
+      }),
+      execute: async ({ perPage, page }) => {
+        try {
+          const result = await this.pexelsService.getCuratedContent({
+            perPage,
+            page,
+            includeMetadata: true
+          });
+          
+          return {
+            success: true,
+            assets: result.assets.map(asset => ({
+              id: asset.id,
+              url: asset.url,
+              downloadUrl: asset.downloadUrl,
+              thumbnailUrl: asset.thumbnailUrl,
+              alt: asset.alt,
+              photographer: asset.photographer,
+              width: asset.width,
+              height: asset.height,
+              avgColor: asset.avgColor
+            }))
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    }));
+
+    this.tools.set('get_popular_videos', tool({
+      description: 'Get popular videos from Pexels for backgrounds, hero sections, or video content.',
+      parameters: z.object({
+        perPage: z.number().min(1).max(80).default(10).describe('Number of results'),
+        page: z.number().min(1).default(1).describe('Page number'),
+        minWidth: z.number().optional().describe('Minimum video width'),
+        minHeight: z.number().optional().describe('Minimum video height'),
+        minDuration: z.number().optional().describe('Minimum duration in seconds'),
+        maxDuration: z.number().optional().describe('Maximum duration in seconds')
+      }),
+      execute: async ({ perPage, page, minWidth, minHeight, minDuration, maxDuration }) => {
+        try {
+          const result = await this.pexelsService.getPopularVideos({
+            perPage,
+            page,
+            minWidth,
+            minHeight,
+            minDuration,
+            maxDuration,
+            includeMetadata: true
+          });
+          
+          return {
+            success: true,
+            assets: result.assets.map(asset => ({
+              id: asset.id,
+              type: asset.type,
+              url: asset.url,
+              downloadUrl: asset.downloadUrl,
+              thumbnailUrl: asset.thumbnailUrl,
+              duration: asset.duration,
+              quality: asset.quality,
+              photographer: asset.photographer,
+              width: asset.width,
+              height: asset.height
+            }))
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    }));
+
+    this.tools.set('get_media_recommendations', tool({
+      description: 'Get AI-powered media recommendations based on a seed image or video',
+      parameters: z.object({
+        seedAssetId: z.number().describe('ID of the seed asset to base recommendations on'),
+        seedAssetType: z.enum(['photo', 'video']).describe('Type of the seed asset'),
+        count: z.number().min(1).max(50).default(10).describe('Number of recommendations'),
+        similarColor: z.boolean().default(true).describe('Find assets with similar colors'),
+        sameType: z.boolean().default(true).describe('Only recommend same type (photo/video)')
+      }),
+      execute: async ({ seedAssetId, seedAssetType, count, similarColor, sameType }) => {
+        try {
+          // First, we need to construct a seed asset object
+          // In a real implementation, we might cache previously fetched assets
+          const seedAsset = {
+            id: seedAssetId,
+            type: seedAssetType,
+            url: '',
+            downloadUrl: '',
+            thumbnailUrl: '',
+            alt: 'Seed asset',
+            photographer: '',
+            photographerUrl: '',
+            width: 1920,
+            height: 1080,
+            aspectRatio: 16/9
+          };
+          
+          const result = await this.pexelsService.getRecommendations(seedAsset, {
+            count,
+            similarColor,
+            sameType
+          });
+          
+          return {
+            success: true,
+            recommendations: result.recommendations.map(asset => ({
+              id: asset.id,
+              type: asset.type,
+              url: asset.url,
+              downloadUrl: asset.downloadUrl,
+              thumbnailUrl: asset.thumbnailUrl,
+              alt: asset.alt,
+              photographer: asset.photographer,
+              similarityScore: asset.similarityScore
+            })),
+            confidence: result.confidence
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message
+          };
+        }
+      }
+    }));
   }
 
   async processTask(
@@ -229,7 +421,7 @@ export class CustomAIAgent {
         if (options.onProgress) await options.onProgress('Analyzing task and generating execution plan...');
       }
 
-      const systemPrompt = `You are an advanced AI development assistant with access to powerful tools for code analysis, file manipulation, testing, and GitHub integration.
+      const systemPrompt = `You are an advanced AI development assistant with access to powerful tools for code analysis, file manipulation, testing, GitHub integration, and media assets.
 
 **AVAILABLE TOOLS:**
 ${Array.from(this.tools.keys()).map(tool => `- ${tool}`).join('\n')}
@@ -246,8 +438,17 @@ ${Array.from(this.tools.keys()).map(tool => `- ${tool}`).join('\n')}
 4. Validate your work with tests
 5. Ensure code quality and maintainability
 
+**MEDIA ASSETS:**
+- When you need images or videos, use the Pexels tools (search_pexels_media, get_curated_photos, get_popular_videos)
+- NEVER use placeholder image services like placeholder.com, placehold.it, or lorem picsum
+- ALWAYS search for real, high-quality images that match the business context
+- For hero sections and backgrounds, prefer using get_curated_photos or search with relevant business terms
+- Include proper attribution when required (photographer name from Pexels)
+- Use appropriate image sizes and orientations for different components
+
 **IMPORTANT:**
 - Always use tools to interact with the codebase
+- Replace ALL placeholder images with real Pexels images
 - Make incremental changes and test frequently
 - Follow React/TypeScript best practices
 - Consider component relationships and dependencies

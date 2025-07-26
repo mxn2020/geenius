@@ -245,6 +245,7 @@ export const useAppState = () => {
         const response = await fetch(endpoint);
         if (response.ok) {
           const data = await response.json();
+          console.log('📊 Polling response for', sessionIdParam, ':', data);
 
           const previousStatus = sessionStatus;
           const previousLogCount = sessionLogs.length;
@@ -253,9 +254,9 @@ export const useAppState = () => {
           setSessionProgress(data.progress || 0);
 
           const newLogs = data.logs || [];
-          if (newLogs.length !== previousLogCount || data.status !== previousStatus) {
-            setSessionLogs(newLogs);
-          }
+          // Always update logs to ensure UI stays in sync
+          setSessionLogs(newLogs);
+          console.log('📝 Updated sessionLogs with', newLogs.length, 'logs');
 
           if (data.repoUrl) setRepoUrl(data.repoUrl);
           if (data.netlifyUrl) setNetlifyUrl(data.netlifyUrl);
