@@ -129,3 +129,6 @@ package-lock.json
 .netlify
 
 _*.md
+
+# Debug output files
+debug-output/

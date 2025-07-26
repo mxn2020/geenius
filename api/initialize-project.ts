@@ -400,13 +400,25 @@ function parseAIResponse(response: string): {
   try {
     console.log(`[PROJECT-INIT] Parsing AI response (${response.length} chars)`);
     
+    // Log response structure for debugging
+    console.log(`[PROJECT-INIT] Response contains:`);
+    console.log(`  - "---METADATA---": ${response.includes('---METADATA---')}`);
+    console.log(`  - "---FILES---": ${response.includes('---FILES---')}`);
+    console.log(`  - "---END---": ${response.includes('---END---')}`);
+    
     // Extract metadata
     const metadataMatch = response.match(/---METADATA---\s*([\s\S]*?)\s*---(?:FILES|END)---/);
     if (!metadataMatch) {
+      console.error(`[PROJECT-INIT] Metadata regex failed to match`);
+      console.log(`[PROJECT-INIT] First 1000 chars of response: ${response.substring(0, 1000)}`);
       throw new Error('No metadata section found in AI response');
     }
     
-    const metadata = JSON.parse(metadataMatch[1].trim());
+    console.log(`[PROJECT-INIT] Metadata match found, extracting...`);
+    const metadataText = metadataMatch[1].trim();
+    console.log(`[PROJECT-INIT] Metadata text (first 500 chars): ${metadataText.substring(0, 500)}`);
+    
+    const metadata = JSON.parse(metadataText);
     console.log(`[PROJECT-INIT] Parsed metadata:`, metadata);
     
     if (!metadata.success) {
@@ -421,8 +433,19 @@ function parseAIResponse(response: string): {
     // Extract files
     const files: { path: string; content: string }[] = [];
     
+    // First, let's see all file markers in the response
+    const allFileMarkers = response.match(/---FILE:([^-]+)---/g) || [];
+    console.log(`[PROJECT-INIT] Found file markers: ${allFileMarkers.join(', ')}`);
+    
     for (const filePath of CORE_TEMPLATE_FILES) {
-      const fileRegex = new RegExp(`---FILE:${filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}---\\s*([\\s\\S]*?)\\s*---END:${filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}---`, 'm');
+      console.log(`[PROJECT-INIT] Looking for file: ${filePath}`);
+      
+      // Create a more flexible regex that handles potential whitespace/newline issues
+      const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const fileRegex = new RegExp(`---FILE:${escapedPath}---\\s*([\\s\\S]*?)\\s*---END:${escapedPath}---`, 'm');
+      
+      console.log(`[PROJECT-INIT] Using regex: ${fileRegex.source}`);
+      
       const fileMatch = response.match(fileRegex);
       
       if (fileMatch) {
@@ -431,13 +454,38 @@ function parseAIResponse(response: string): {
           path: filePath,
           content
         });
-        console.log(`[PROJECT-INIT] Extracted file: ${filePath} (${content.length} chars)`);
+        console.log(`[PROJECT-INIT] ✓ Extracted file: ${filePath} (${content.length} chars)`);
+        console.log(`[PROJECT-INIT]   Content preview: ${content.substring(0, 100)}...`);
       } else {
-        console.warn(`[PROJECT-INIT] File not found in response: ${filePath}`);
+        console.warn(`[PROJECT-INIT] ✗ File not found in response: ${filePath}`);
+        
+        // Try to find partial matches to debug
+        const partialStartMatch = response.includes(`---FILE:${filePath}---`);
+        const partialEndMatch = response.includes(`---END:${filePath}---`);
+        console.log(`[PROJECT-INIT]   Has start marker: ${partialStartMatch}`);
+        console.log(`[PROJECT-INIT]   Has end marker: ${partialEndMatch}`);
+        
+        if (partialStartMatch && !partialEndMatch) {
+          console.log(`[PROJECT-INIT]   WARNING: File ${filePath} has start marker but no end marker - response might be truncated`);
+        }
       }
     }
     
+    // Also check for any unexpected files
+    const unexpectedFiles = allFileMarkers.filter(marker => {
+      const path = marker.match(/---FILE:([^-]+)---/)?.[1];
+      return path && !CORE_TEMPLATE_FILES.includes(path);
+    });
+    
+    if (unexpectedFiles.length > 0) {
+      console.log(`[PROJECT-INIT] WARNING: Found unexpected files in response: ${unexpectedFiles.join(', ')}`);
+    }
+    
+    console.log(`[PROJECT-INIT] Total files extracted: ${files.length}/${CORE_TEMPLATE_FILES.length}`);
+    
     if (files.length === 0) {
+      console.error(`[PROJECT-INIT] No files were extracted from AI response`);
+      console.log(`[PROJECT-INIT] Last 1000 chars of response: ${response.substring(response.length - 1000)}`);
       throw new Error('No files were extracted from AI response');
     }
     
@@ -449,6 +497,7 @@ function parseAIResponse(response: string): {
     
   } catch (error) {
     console.error(`[PROJECT-INIT] Error parsing AI response:`, error);
+    console.error(`[PROJECT-INIT] Error stack:`, error.stack);
     return {
       success: false,
       metadata: {},
@@ -1134,13 +1183,66 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
     const prompt = generateProjectInitPrompt(request.userRequirements, request.businessDomain, templateFiles);
     console.log(`[PROJECT-INIT] Generated prompt (${prompt.length} chars)`);
     
+    // Save prompt to file for debugging
+    const debugDir = 'debug-output';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    try {
+      const fs = require('fs').promises;
+      const path = require('path');
+      await fs.mkdir(debugDir, { recursive: true });
+      await fs.writeFile(path.join(debugDir, `prompt-${timestamp}.txt`), prompt);
+      console.log(`[PROJECT-INIT] Saved prompt to debug-output/prompt-${timestamp}.txt`);
+    } catch (debugError) {
+      console.error(`[PROJECT-INIT] Failed to save prompt to file:`, debugError);
+    }
+    
     const aiResponse = await aiAgent.processRequest(prompt);
     console.log(`[PROJECT-INIT] AI response received (${aiResponse.length} chars)`);
     
+    // Save AI response to file for debugging
+    try {
+      const fs = require('fs').promises;
+      const path = require('path');
+      await fs.writeFile(path.join(debugDir, `response-${timestamp}.txt`), aiResponse);
+      console.log(`[PROJECT-INIT] Saved AI response to debug-output/response-${timestamp}.txt`);
+    } catch (debugError) {
+      console.error(`[PROJECT-INIT] Failed to save response to file:`, debugError);
+    }
+    
+    // Log first 500 chars of response to see structure
+    console.log(`[PROJECT-INIT] AI response preview: ${aiResponse.substring(0, 500)}...`);
+    
+    // Check for expected markers in response
+    const hasMetadata = aiResponse.includes('---METADATA---');
+    const hasFiles = aiResponse.includes('---FILES---');
+    const hasEnd = aiResponse.includes('---END---');
+    console.log(`[PROJECT-INIT] Response markers - Metadata: ${hasMetadata}, Files: ${hasFiles}, End: ${hasEnd}`);
+    
+    // Count potential file markers
+    const fileMatches = aiResponse.match(/---FILE:/g);
+    const fileCount = fileMatches ? fileMatches.length : 0;
+    console.log(`[PROJECT-INIT] Found ${fileCount} potential file markers in response`);
+    
     // Phase 3: Parse and Validate Response
     await sessionManager.updateSessionStatus(sessionId, 'processing', 50, 'Processing AI-generated files...');
+    await logInitialization(sessionId, 'info', `🔍 Parsing AI response with ${fileCount} potential files...`);
     
     const parseResult = parseAIResponse(aiResponse);
+    
+    // Log detailed parsing results
+    console.log(`[PROJECT-INIT] Parse result - Success: ${parseResult.success}, Files extracted: ${parseResult.files.length}`);
+    if (parseResult.files.length > 0) {
+      parseResult.files.forEach((file, index) => {
+        console.log(`[PROJECT-INIT] File ${index + 1}: ${file.path} (${file.content.length} chars)`);
+      });
+    } else {
+      console.log(`[PROJECT-INIT] WARNING: No files were extracted from AI response`);
+    }
+    
+    // Log expected vs actual files
+    console.log(`[PROJECT-INIT] Expected files: ${CORE_TEMPLATE_FILES.join(', ')}`);
+    console.log(`[PROJECT-INIT] Extracted files: ${parseResult.files.map(f => f.path).join(', ')}`);
+    
     if (!parseResult.success) {
       throw new Error(parseResult.error || 'Failed to generate project files');
     }
@@ -1150,7 +1252,8 @@ async function processProjectInitialization(sessionId: string, request: ProjectI
       { 
         businessFocus: parseResult.metadata.businessFocus,
         databaseModels: parseResult.metadata.databaseModels,
-        generatedFiles: parseResult.metadata.generatedFiles
+        generatedFiles: parseResult.metadata.generatedFiles,
+        extractedFiles: parseResult.files.map(f => f.path)
       }
     );
 
